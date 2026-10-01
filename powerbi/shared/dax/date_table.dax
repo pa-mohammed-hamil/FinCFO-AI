@@ -1,0 +1,815 @@
+-- Add shared date table DAX here
+/*
+====================================================================
+ FinCo AI — Date Table
+ File: powerbi/shared/dax/date_table.dax
+
+ Purpose:
+   Enterprise Date / Calendar dimension for FinCo AI Power BI.
+
+ Compatible with:
+   - calendar_table.pq
+   - RiskTransformations
+   - RiskFactors
+   - RiskScores
+   - Credit Risk
+   - Liquidity Risk
+   - Market Risk
+   - Operational Risk
+   - Forecasting
+   - Executive / Financial / Risk dashboards
+
+ Fiscal Year:
+   April → March
+
+ Example:
+   FY2026 = 01-Apr-2025 → 31-Mar-2026
+
+ Recommended:
+   Mark this table as the Power BI Date table using [Date].
+====================================================================
+*/
+
+
+// ==================================================================
+// 1. DATE TABLE
+// ==================================================================
+
+DateTable =
+VAR StartDate =
+    DATE ( 2020, 1, 1 )
+
+VAR EndDate =
+    DATE ( 2035, 12, 31 )
+
+VAR FiscalStartMonth =
+    4
+
+RETURN
+ADDCOLUMNS (
+    CALENDAR ( StartDate, EndDate ),
+
+    // --------------------------------------------------------------
+    // Basic Date Attributes
+    // --------------------------------------------------------------
+
+    "DateKey",
+        VALUE ( FORMAT ( [Date], "YYYYMMDD" ) ),
+
+    "Year",
+        YEAR ( [Date] ),
+
+    "MonthNumber",
+        MONTH ( [Date] ),
+
+    "MonthName",
+        FORMAT ( [Date], "MMMM" ),
+
+    "MonthShort",
+        FORMAT ( [Date], "MMM" ),
+
+    "Day",
+        DAY ( [Date] ),
+
+    "DayOfYear",
+        INT ( [Date] - DATE ( YEAR ( [Date] ), 1, 1 ) ) + 1,
+
+    // --------------------------------------------------------------
+    // Day of Week
+    // --------------------------------------------------------------
+
+    "DayOfWeekNumber",
+        WEEKDAY ( [Date], 2 ),
+
+    "DayOfWeekName",
+        FORMAT ( [Date], "dddd" ),
+
+    "DayOfWeekShort",
+        FORMAT ( [Date], "ddd" ),
+
+    // --------------------------------------------------------------
+    // Week
+    // --------------------------------------------------------------
+
+    "WeekOfYear",
+        WEEKNUM ( [Date], 2 ),
+
+    "WeekStart",
+        [Date] - WEEKDAY ( [Date], 2 ) + 1,
+
+    "WeekEnd",
+        [Date] - WEEKDAY ( [Date], 2 ) + 7,
+
+    "WeekKey",
+        YEAR ( [Date] - WEEKDAY ( [Date], 2 ) + 4 )
+            * 100
+            + WEEKNUM ( [Date], 2 ),
+
+    // --------------------------------------------------------------
+    // Calendar Quarter
+    // --------------------------------------------------------------
+
+    "QuarterNumber",
+        QUARTER ( [Date] ),
+
+    "QuarterName",
+        "Q" & QUARTER ( [Date] ),
+
+    "QuarterStart",
+        DATE (
+            YEAR ( [Date] ),
+            ( QUARTER ( [Date] ) - 1 ) * 3 + 1,
+            1
+        ),
+
+    "QuarterEnd",
+        EOMONTH (
+            DATE (
+                YEAR ( [Date] ),
+                ( QUARTER ( [Date] ) - 1 ) * 3 + 1,
+                1
+            ),
+            2
+        ),
+
+    "QuarterKey",
+        YEAR ( [Date] ) * 10
+            + QUARTER ( [Date] ),
+
+    // --------------------------------------------------------------
+    // Month Boundaries
+    // --------------------------------------------------------------
+
+    "MonthStart",
+        DATE (
+            YEAR ( [Date] ),
+            MONTH ( [Date] ),
+            1
+        ),
+
+    "MonthEnd",
+        EOMONTH ( [Date], 0 ),
+
+    "MonthKey",
+        YEAR ( [Date] ) * 100
+            + MONTH ( [Date] ),
+
+    "YearMonth",
+        FORMAT ( [Date], "YYYY-MM" ),
+
+    "MonthYear",
+        FORMAT ( [Date], "MMM YYYY" ),
+
+    // --------------------------------------------------------------
+    // Fiscal Year
+    //
+    // April = fiscal month 1
+    // March = fiscal month 12
+    // --------------------------------------------------------------
+
+    "FiscalYear",
+        YEAR ( [Date] )
+            + IF (
+                MONTH ( [Date] ) >= FiscalStartMonth,
+                1,
+                0
+            ),
+
+    "FiscalYearLabel",
+        "FY"
+            & FORMAT (
+                YEAR ( [Date] )
+                    + IF (
+                        MONTH ( [Date] ) >= FiscalStartMonth,
+                        1,
+                        0
+                    ),
+                "0000"
+            ),
+
+    "FiscalMonthNumber",
+        MOD (
+            MONTH ( [Date] ) - FiscalStartMonth,
+            12
+        ) + 1,
+
+    "FiscalQuarterNumber",
+        ROUNDUP (
+            (
+                MOD (
+                    MONTH ( [Date] ) - FiscalStartMonth,
+                    12
+                ) + 1
+            ) / 3,
+            0
+        ),
+
+    "FiscalQuarter",
+        "FQ"
+            & ROUNDUP (
+                (
+                    MOD (
+                        MONTH ( [Date] ) - FiscalStartMonth,
+                        12
+                    ) + 1
+                ) / 3,
+                0
+            ),
+
+    "FiscalPeriod",
+        "P"
+            & FORMAT (
+                MOD (
+                    MONTH ( [Date] ) - FiscalStartMonth,
+                    12
+                ) + 1,
+                "00"
+            ),
+
+    "FiscalQuarterKey",
+        (
+            YEAR ( [Date] )
+                + IF (
+                    MONTH ( [Date] ) >= FiscalStartMonth,
+                    1,
+                    0
+                )
+        ) * 10
+            +
+            ROUNDUP (
+                (
+                    MOD (
+                        MONTH ( [Date] ) - FiscalStartMonth,
+                        12
+                    ) + 1
+                ) / 3,
+                0
+            ),
+
+    // --------------------------------------------------------------
+    // Fiscal Period Key
+    // --------------------------------------------------------------
+
+    "FiscalPeriodKey",
+        (
+            YEAR ( [Date] )
+                + IF (
+                    MONTH ( [Date] ) >= FiscalStartMonth,
+                    1,
+                    0
+                )
+        ) * 100
+            +
+            MOD (
+                MONTH ( [Date] ) - FiscalStartMonth,
+                12
+            ) + 1,
+
+    // --------------------------------------------------------------
+    // Start / End Flags
+    // --------------------------------------------------------------
+
+    "IsMonthStart",
+        [Date]
+            = DATE (
+                YEAR ( [Date] ),
+                MONTH ( [Date] ),
+                1
+            ),
+
+    "IsMonthEnd",
+        [Date]
+            = EOMONTH ( [Date], 0 ),
+
+    "IsQuarterStart",
+        [Date]
+            = DATE (
+                YEAR ( [Date] ),
+                ( QUARTER ( [Date] ) - 1 ) * 3 + 1,
+                1
+            ),
+
+    "IsQuarterEnd",
+        [Date]
+            = EOMONTH (
+                DATE (
+                    YEAR ( [Date] ),
+                    ( QUARTER ( [Date] ) - 1 ) * 3 + 1,
+                    1
+                ),
+                2
+            ),
+
+    "IsYearStart",
+        [Date]
+            = DATE (
+                YEAR ( [Date] ),
+                1,
+                1
+            ),
+
+    "IsYearEnd",
+        [Date]
+            = DATE (
+                YEAR ( [Date] ),
+                12,
+                31
+            ),
+
+    // --------------------------------------------------------------
+    // Working Day
+    // --------------------------------------------------------------
+
+    "IsWeekend",
+        WEEKDAY ( [Date], 2 ) >= 6,
+
+    "IsWorkingDay",
+        WEEKDAY ( [Date], 2 ) <= 5,
+
+    "DayType",
+        IF (
+            WEEKDAY ( [Date], 2 ) <= 5,
+            "Working Day",
+            "Weekend"
+        ),
+
+    // --------------------------------------------------------------
+    // Current Period Flags
+    // --------------------------------------------------------------
+
+    "IsToday",
+        [Date] = TODAY (),
+
+    "IsCurrentYear",
+        YEAR ( [Date] ) = YEAR ( TODAY () ),
+
+    "IsCurrentMonth",
+        YEAR ( [Date] ) = YEAR ( TODAY () )
+            && MONTH ( [Date] ) = MONTH ( TODAY () ),
+
+    "IsCurrentQuarter",
+        YEAR ( [Date] ) = YEAR ( TODAY () )
+            && QUARTER ( [Date] ) = QUARTER ( TODAY () ),
+
+    // --------------------------------------------------------------
+    // Relative Period Offsets
+    // --------------------------------------------------------------
+
+    "YearOffset",
+        YEAR ( [Date] ) - YEAR ( TODAY () ),
+
+    "MonthOffset",
+        DATEDIFF (
+            DATE (
+                YEAR ( [Date] ),
+                MONTH ( [Date] ),
+                1
+            ),
+            DATE (
+                YEAR ( TODAY () ),
+                MONTH ( TODAY () ),
+                1
+            ),
+            MONTH
+        ) * -1,
+
+    "QuarterOffset",
+        (
+            YEAR ( [Date] ) * 4
+                + QUARTER ( [Date] )
+        )
+        -
+        (
+            YEAR ( TODAY () ) * 4
+                + QUARTER ( TODAY () )
+        ),
+
+    // --------------------------------------------------------------
+    // Period Labels
+    // --------------------------------------------------------------
+
+    "YearPeriod",
+        IF (
+            YEAR ( [Date] ) = YEAR ( TODAY () ),
+            "Current Year",
+            IF (
+                YEAR ( [Date] ) < YEAR ( TODAY () ),
+                "Historical",
+                "Future"
+            )
+        ),
+
+    "MonthPeriod",
+        IF (
+            YEAR ( [Date] ) = YEAR ( TODAY () )
+                && MONTH ( [Date] ) = MONTH ( TODAY () ),
+            "Current Month",
+            IF (
+                [Date] < TODAY (),
+                "Historical",
+                "Future"
+            )
+        ),
+
+    "QuarterPeriod",
+        IF (
+            YEAR ( [Date] ) = YEAR ( TODAY () )
+                && QUARTER ( [Date] ) = QUARTER ( TODAY () ),
+            "Current Quarter",
+            IF (
+                [Date] < TODAY (),
+                "Historical",
+                "Future"
+            )
+        ),
+
+    "PeriodKey",
+        YEAR ( [Date] ) * 10000
+            + MONTH ( [Date] ) * 100
+            + DAY ( [Date] ),
+
+    "YearQuarterKey",
+        YEAR ( [Date] ) * 10
+            + QUARTER ( [Date] ),
+
+    // --------------------------------------------------------------
+    // Risk Period Attributes
+    // --------------------------------------------------------------
+
+    "RiskYear",
+        YEAR ( [Date] ),
+
+    "RiskMonth",
+        MONTH ( [Date] ),
+
+    "RiskQuarter",
+        QUARTER ( [Date] ),
+
+    "RiskPeriodKey",
+        YEAR ( [Date] ) * 100
+            + MONTH ( [Date] ),
+
+    // --------------------------------------------------------------
+    // Forecast Period
+    // --------------------------------------------------------------
+
+    "ForecastPeriod",
+        IF (
+            [Date] > TODAY (),
+            "Forecast",
+            "Actual"
+        ),
+
+    "ActualForecastFlag",
+        IF (
+            [Date] > TODAY (),
+            "FORECAST",
+            "ACTUAL"
+        ),
+
+    // --------------------------------------------------------------
+    // Sorting Columns
+    // --------------------------------------------------------------
+
+    "MonthSort",
+        MONTH ( [Date] ),
+
+    "MonthYearSort",
+        YEAR ( [Date] ) * 100
+            + MONTH ( [Date] ),
+
+    "QuarterSort",
+        YEAR ( [Date] ) * 10
+            + QUARTER ( [Date] ),
+
+    "FiscalMonthSort",
+        (
+            YEAR ( [Date] )
+                + IF (
+                    MONTH ( [Date] ) >= FiscalStartMonth,
+                    1,
+                    0
+                )
+        ) * 100
+            +
+            MOD (
+                MONTH ( [Date] ) - FiscalStartMonth,
+                12
+            ) + 1,
+
+    "FiscalQuarterSort",
+        (
+            YEAR ( [Date] )
+                + IF (
+                    MONTH ( [Date] ) >= FiscalStartMonth,
+                    1,
+                    0
+                )
+        ) * 10
+            +
+            ROUNDUP (
+                (
+                    MOD (
+                        MONTH ( [Date] ) - FiscalStartMonth,
+                        12
+                    ) + 1
+                ) / 3,
+                0
+            ),
+
+    // --------------------------------------------------------------
+    // Presentation Labels
+    // --------------------------------------------------------------
+
+    "DateLabel",
+        FORMAT ( [Date], "dd MMM yyyy" ),
+
+    "QuarterLabel",
+        "Q"
+            & QUARTER ( [Date] )
+            & " "
+            & YEAR ( [Date] ),
+
+    "FiscalQuarterLabel",
+        "FY"
+            & FORMAT (
+                YEAR ( [Date] )
+                    + IF (
+                        MONTH ( [Date] ) >= FiscalStartMonth,
+                        1,
+                        0
+                    ),
+                "0000"
+            )
+            & " FQ"
+            & ROUNDUP (
+                (
+                    MOD (
+                        MONTH ( [Date] ) - FiscalStartMonth,
+                        12
+                    ) + 1
+                ) / 3,
+                0
+            ),
+
+    // --------------------------------------------------------------
+    // Data Validation
+    // --------------------------------------------------------------
+
+    "DateValid",
+        IF (
+            [Date] >= StartDate
+                && [Date] <= EndDate,
+            TRUE (),
+            FALSE ()
+        ),
+
+    "CalendarStatus",
+        "VALID"
+)
+
+
+// ==================================================================
+// 2. OPTIONAL TIME-INTELLIGENCE MEASURES
+// ==================================================================
+//
+// These measures should be created separately from the calculated
+// table above.
+//
+// They assume the fact table contains a [Date] column related to:
+//
+//     DateTable[Date]
+//
+// ==================================================================
+
+
+// ==================================================================
+// 3. STANDARD DATE MEASURES
+// ==================================================================
+
+Total Days =
+COUNTROWS ( 'DateTable' )
+
+
+Selected Date =
+MAX ( 'DateTable'[Date] )
+
+
+Selected Year =
+SELECTEDVALUE (
+    'DateTable'[Year]
+)
+
+
+Selected Month =
+SELECTEDVALUE (
+    'DateTable'[MonthName]
+)
+
+
+Selected Quarter =
+SELECTEDVALUE (
+    'DateTable'[QuarterName]
+)
+
+
+// ==================================================================
+// 4. TIME INTELLIGENCE
+// ==================================================================
+
+Previous Year Revenue =
+CALCULATE (
+    [Total Revenue],
+    SAMEPERIODLASTYEAR (
+        'DateTable'[Date]
+    )
+)
+
+
+Revenue YoY % =
+VAR CurrentRevenue =
+    [Total Revenue]
+
+VAR PreviousRevenue =
+    [Previous Year Revenue]
+
+RETURN
+IF (
+    NOT ISBLANK ( PreviousRevenue ),
+    DIVIDE (
+        CurrentRevenue - PreviousRevenue,
+        ABS ( PreviousRevenue )
+    )
+)
+
+
+Previous Month Revenue =
+CALCULATE (
+    [Total Revenue],
+    DATEADD (
+        'DateTable'[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Revenue MoM % =
+VAR CurrentRevenue =
+    [Total Revenue]
+
+VAR PreviousRevenue =
+    [Previous Month Revenue]
+
+RETURN
+IF (
+    NOT ISBLANK ( PreviousRevenue ),
+    DIVIDE (
+        CurrentRevenue - PreviousRevenue,
+        ABS ( PreviousRevenue )
+    )
+)
+
+
+YTD Revenue =
+TOTALYTD (
+    [Total Revenue],
+    'DateTable'[Date]
+)
+
+
+YTD Net Profit =
+TOTALYTD (
+    [Total Net Profit],
+    'DateTable'[Date]
+)
+
+
+YTD Operating Cash Flow =
+TOTALYTD (
+    [Total Operating Cash Flow],
+    'DateTable'[Date]
+)
+
+
+// ==================================================================
+// 5. FISCAL YEAR TIME INTELLIGENCE
+// ==================================================================
+
+Fiscal YTD Revenue =
+TOTALYTD (
+    [Total Revenue],
+    'DateTable'[Date],
+    "03/31"
+)
+
+
+Fiscal YTD Net Profit =
+TOTALYTD (
+    [Total Net Profit],
+    'DateTable'[Date],
+    "03/31"
+)
+
+
+Fiscal YTD Operating Cash Flow =
+TOTALYTD (
+    [Total Operating Cash Flow],
+    'DateTable'[Date],
+    "03/31"
+)
+
+
+// ==================================================================
+// 6. RISK PERIOD MEASURES
+// ==================================================================
+
+Current Risk Period =
+MAX (
+    'DateTable'[RiskPeriodKey]
+)
+
+
+Previous Risk Period =
+CALCULATE (
+    MAX (
+        'DateTable'[RiskPeriodKey]
+    ),
+    DATEADD (
+        'DateTable'[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+// ==================================================================
+// 7. DATE FILTER STATUS
+// ==================================================================
+
+Selected Period Status =
+VAR MaxDate =
+    MAX ( 'DateTable'[Date] )
+
+VAR TodayDate =
+    TODAY ()
+
+RETURN
+SWITCH (
+    TRUE (),
+    MaxDate > TodayDate, "FORECAST",
+    MaxDate = TodayDate, "CURRENT",
+    "HISTORICAL"
+)
+
+
+// ==================================================================
+// 8. DASHBOARD DISPLAY
+// ==================================================================
+
+Selected Period Display =
+VAR SelectedDate =
+    MAX ( 'DateTable'[Date] )
+
+RETURN
+FORMAT (
+    SelectedDate,
+    "dd MMM yyyy"
+)
+
+
+Selected Fiscal Year Display =
+VAR FY =
+    MAX (
+        'DateTable'[FiscalYear]
+    )
+
+RETURN
+"FY"
+    & FORMAT ( FY, "0000" )
+
+
+// ==================================================================
+// 9. DATA QUALITY
+// ==================================================================
+
+Date Table Row Count =
+COUNTROWS (
+    'DateTable'
+)
+
+
+Date Table Valid Rows =
+CALCULATE (
+    COUNTROWS ( 'DateTable' ),
+    'DateTable'[DateValid] = TRUE ()
+)
+
+
+Date Table Quality =
+IF (
+    [Date Table Row Count]
+        = [Date Table Valid Rows],
+    "VALID",
+    "CHECK"
+)

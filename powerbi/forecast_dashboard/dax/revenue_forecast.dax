@@ -1,0 +1,1139 @@
+// ============================================================
+// FinCo AI — Revenue Forecast Measures
+// File: revenue_forecast.dax
+//
+// Primary table:
+//     ForecastResults
+//
+// Revenue metric:
+//     ForecastResults[Metric] = "Revenue"
+//
+// Purpose:
+//     Revenue forecasting, variance, growth, confidence,
+//     accuracy, risk, alerts, executive status and
+//     decision-support KPIs.
+// ============================================================
+
+
+// ============================================================
+// 1. REVENUE ACTUAL
+// ============================================================
+
+Revenue Actual =
+CALCULATE(
+    SUM(ForecastResults[Actual]),
+    ForecastResults[Metric] = "Revenue"
+)
+
+
+// ============================================================
+// 2. REVENUE FORECAST
+// ============================================================
+
+Revenue Forecast =
+CALCULATE(
+    SUM(ForecastResults[Forecast]),
+    ForecastResults[Metric] = "Revenue"
+)
+
+
+// ============================================================
+// 3. REVENUE VARIANCE
+// ============================================================
+
+Revenue Forecast Variance =
+[Revenue Forecast]
+    - [Revenue Actual]
+
+
+// ============================================================
+// 4. REVENUE VARIANCE %
+// ============================================================
+
+Revenue Forecast Variance % =
+DIVIDE(
+    [Revenue Forecast Variance],
+    ABS([Revenue Actual])
+)
+
+
+// ============================================================
+// 5. REVENUE ABSOLUTE VARIANCE
+// ============================================================
+
+Revenue Forecast Absolute Variance =
+ABS(
+    [Revenue Forecast Variance]
+)
+
+
+// ============================================================
+// 6. REVENUE LOWER BOUND
+// ============================================================
+
+Revenue Forecast Lower Bound =
+CALCULATE(
+    SUM(ForecastResults[LowerBound]),
+    ForecastResults[Metric] = "Revenue"
+)
+
+
+// ============================================================
+// 7. REVENUE UPPER BOUND
+// ============================================================
+
+Revenue Forecast Upper Bound =
+CALCULATE(
+    SUM(ForecastResults[UpperBound]),
+    ForecastResults[Metric] = "Revenue"
+)
+
+
+// ============================================================
+// 8. REVENUE CONFIDENCE BAND
+// ============================================================
+
+Revenue Forecast Band Width =
+[Revenue Forecast Upper Bound]
+    - [Revenue Forecast Lower Bound]
+
+
+// ============================================================
+// 9. REVENUE CONFIDENCE BAND %
+// ============================================================
+
+Revenue Forecast Band Width % =
+DIVIDE(
+    [Revenue Forecast Band Width],
+    ABS([Revenue Forecast])
+)
+
+
+// ============================================================
+// 10. REVENUE FORECAST CONFIDENCE
+// ============================================================
+
+Revenue Forecast Confidence =
+CALCULATE(
+    AVERAGE(ForecastResults[Confidence]),
+    ForecastResults[Metric] = "Revenue"
+)
+
+
+// ============================================================
+// 11. REVENUE FORECAST ERROR
+// ============================================================
+
+Revenue Forecast Error =
+SUMX(
+    FILTER(
+        ForecastResults,
+        ForecastResults[Metric] = "Revenue"
+            &&
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    ForecastResults[Forecast]
+        - ForecastResults[Actual]
+)
+
+
+// ============================================================
+// 12. REVENUE MAE
+// ============================================================
+
+Revenue Forecast MAE =
+AVERAGEX(
+    FILTER(
+        ForecastResults,
+        ForecastResults[Metric] = "Revenue"
+            &&
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    ABS(
+        ForecastResults[Actual]
+            - ForecastResults[Forecast]
+    )
+)
+
+
+// ============================================================
+// 13. REVENUE MAPE
+// ============================================================
+
+Revenue Forecast MAPE =
+AVERAGEX(
+    FILTER(
+        ForecastResults,
+        ForecastResults[Metric] = "Revenue"
+            &&
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        ForecastResults[Actual] <> 0
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    DIVIDE(
+        ABS(
+            ForecastResults[Actual]
+                - ForecastResults[Forecast]
+        ),
+        ABS(ForecastResults[Actual])
+    )
+)
+
+
+// ============================================================
+// 14. REVENUE FORECAST ACCURACY
+// ============================================================
+
+Revenue Forecast Accuracy =
+VAR MAPEValue =
+    [Revenue Forecast MAPE]
+
+RETURN
+    IF(
+        ISBLANK(MAPEValue),
+        BLANK(),
+        MAX(
+            0,
+            1 - MAPEValue
+        )
+    )
+
+
+// ============================================================
+// 15. REVENUE FORECAST BIAS
+// ============================================================
+
+Revenue Forecast Bias =
+[Revenue Forecast Error]
+
+
+// ============================================================
+// 16. REVENUE FORECAST BIAS %
+// ============================================================
+
+Revenue Forecast Bias % =
+DIVIDE(
+    [Revenue Forecast Bias],
+    ABS([Revenue Actual])
+)
+
+
+// ============================================================
+// 17. REVENUE FORECAST GROWTH
+// ============================================================
+
+Revenue Forecast Growth =
+VAR CurrentForecast =
+    [Revenue Forecast]
+
+VAR PreviousForecast =
+    CALCULATE(
+        [Revenue Forecast],
+        DATEADD(
+            ForecastResults[ForecastDate],
+            -1,
+            MONTH
+        )
+    )
+
+RETURN
+    DIVIDE(
+        CurrentForecast - PreviousForecast,
+        ABS(PreviousForecast)
+    )
+
+
+// ============================================================
+// 18. REVENUE ACTUAL GROWTH
+// ============================================================
+
+Revenue Actual Growth =
+VAR CurrentActual =
+    [Revenue Actual]
+
+VAR PreviousActual =
+    CALCULATE(
+        [Revenue Actual],
+        DATEADD(
+            ForecastResults[ForecastDate],
+            -1,
+            MONTH
+        )
+    )
+
+RETURN
+    DIVIDE(
+        CurrentActual - PreviousActual,
+        ABS(PreviousActual)
+    )
+
+
+// ============================================================
+// 19. REVENUE FORECAST VS ACTUAL GROWTH
+// ============================================================
+
+Revenue Forecast Growth Variance =
+[Revenue Forecast Growth]
+    - [Revenue Actual Growth]
+
+
+// ============================================================
+// 20. REVENUE FORECAST DIRECTION
+// ============================================================
+
+Revenue Forecast Direction =
+VAR Growth =
+    [Revenue Forecast Growth]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(Growth),
+            "No Data",
+
+        Growth > 0.05,
+            "Growing",
+
+        Growth < -0.05,
+            "Declining",
+
+        "Stable"
+    )
+
+
+// ============================================================
+// 21. REVENUE FORECAST TREND
+// ============================================================
+
+Revenue Forecast Trend =
+VAR CurrentForecast =
+    [Revenue Forecast]
+
+VAR PreviousForecast =
+    CALCULATE(
+        [Revenue Forecast],
+        DATEADD(
+            ForecastResults[ForecastDate],
+            -1,
+            MONTH
+        )
+    )
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(CurrentForecast),
+            "No Data",
+
+        ISBLANK(PreviousForecast),
+            "No Prior Period",
+
+        CurrentForecast > PreviousForecast,
+            "Increasing",
+
+        CurrentForecast < PreviousForecast,
+            "Decreasing",
+
+        "Stable"
+    )
+
+
+// ============================================================
+// 22. REVENUE FORECAST MOMENTUM
+// ============================================================
+
+Revenue Forecast Momentum =
+VAR CurrentForecast =
+    [Revenue Forecast]
+
+VAR PreviousForecast =
+    CALCULATE(
+        [Revenue Forecast],
+        DATEADD(
+            ForecastResults[ForecastDate],
+            -1,
+            MONTH
+        )
+    )
+
+RETURN
+    CurrentForecast
+        - PreviousForecast
+
+
+// ============================================================
+// 23. REVENUE FORECAST RISK SCORE
+// ============================================================
+
+Revenue Forecast Risk Score =
+VAR ConfidenceValue =
+    [Revenue Forecast Confidence]
+
+VAR BandWidthPct =
+    [Revenue Forecast Band Width %]
+
+VAR VariancePct =
+    [Revenue Forecast Variance %]
+
+VAR ConfidenceRisk =
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(ConfidenceValue),
+            40,
+
+        ConfidenceValue < 0.40,
+            40,
+
+        ConfidenceValue < 0.60,
+            30,
+
+        ConfidenceValue < 0.75,
+            20,
+
+        ConfidenceValue < 0.90,
+            10,
+
+        0
+    )
+
+VAR VolatilityRisk =
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(BandWidthPct),
+            20,
+
+        BandWidthPct >= 0.50,
+            40,
+
+        BandWidthPct >= 0.30,
+            30,
+
+        BandWidthPct >= 0.15,
+            20,
+
+        BandWidthPct >= 0.05,
+            10,
+
+        0
+    )
+
+VAR DownsideRisk =
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(VariancePct),
+            20,
+
+        VariancePct <= -0.30,
+            40,
+
+        VariancePct <= -0.20,
+            30,
+
+        VariancePct <= -0.10,
+            20,
+
+        VariancePct < 0,
+            10,
+
+        0
+    )
+
+RETURN
+    MIN(
+        100,
+        ConfidenceRisk
+            + VolatilityRisk
+            + DownsideRisk
+    )
+
+
+// ============================================================
+// 24. REVENUE FORECAST RISK LEVEL
+// ============================================================
+
+Revenue Forecast Risk Level =
+VAR RiskScore =
+    [Revenue Forecast Risk Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        RiskScore >= 75,
+            "CRITICAL",
+
+        RiskScore >= 50,
+            "HIGH",
+
+        RiskScore >= 25,
+            "MEDIUM",
+
+        "LOW"
+    )
+
+
+// ============================================================
+// 25. REVENUE FORECAST HEALTH SCORE
+// ============================================================
+
+Revenue Forecast Health Score =
+MAX(
+    0,
+    100 - [Revenue Forecast Risk Score]
+)
+
+
+// ============================================================
+// 26. REVENUE FORECAST HEALTH STATUS
+// ============================================================
+
+Revenue Forecast Health Status =
+VAR HealthScore =
+    [Revenue Forecast Health Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        HealthScore >= 80,
+            "Excellent",
+
+        HealthScore >= 65,
+            "Healthy",
+
+        HealthScore >= 50,
+            "Watch",
+
+        HealthScore >= 30,
+            "Weak",
+
+        "Critical"
+    )
+
+
+// ============================================================
+// 27. REVENUE FORECAST STATUS
+// ============================================================
+
+Revenue Forecast Status =
+VAR RiskLevel =
+    [Revenue Forecast Risk Level]
+
+VAR Accuracy =
+    [Revenue Forecast Accuracy]
+
+VAR VariancePct =
+    [Revenue Forecast Variance %]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        RiskLevel = "CRITICAL",
+            "Critical",
+
+        RiskLevel = "HIGH",
+            "High Risk",
+
+        NOT ISBLANK(VariancePct)
+            && VariancePct <= -0.20,
+            "Severe Revenue Shortfall",
+
+        NOT ISBLANK(VariancePct)
+            && VariancePct <= -0.10,
+            "Revenue Shortfall",
+
+        NOT ISBLANK(Accuracy)
+            && Accuracy >= 0.90,
+            "Accurate",
+
+        NOT ISBLANK(Accuracy)
+            && Accuracy >= 0.75,
+            "Acceptable",
+
+        "Needs Review"
+    )
+
+
+// ============================================================
+// 28. REVENUE FORECAST ALERT FLAG
+// ============================================================
+
+Revenue Forecast Alert Flag =
+VAR RiskLevel =
+    [Revenue Forecast Risk Level]
+
+VAR VariancePct =
+    [Revenue Forecast Variance %]
+
+RETURN
+    IF(
+        RiskLevel IN {
+            "CRITICAL",
+            "HIGH"
+        }
+            ||
+        (
+            NOT ISBLANK(VariancePct)
+                &&
+            VariancePct <= -0.10
+        ),
+        "YES",
+        "NO"
+    )
+
+
+// ============================================================
+// 29. REVENUE FORECAST ALERT TYPE
+// ============================================================
+
+Revenue Forecast Alert Type =
+VAR RiskLevel =
+    [Revenue Forecast Risk Level]
+
+VAR VariancePct =
+    [Revenue Forecast Variance %]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        RiskLevel = "CRITICAL",
+            "Critical Revenue Forecast Risk",
+
+        RiskLevel = "HIGH",
+            "High Revenue Forecast Risk",
+
+        VariancePct <= -0.30,
+            "Severe Revenue Shortfall",
+
+        VariancePct <= -0.20,
+            "Major Revenue Shortfall",
+
+        VariancePct <= -0.10,
+            "Revenue Shortfall",
+
+        RiskLevel = "MEDIUM",
+            "Revenue Forecast Monitoring",
+
+        BLANK()
+    )
+
+
+// ============================================================
+// 30. REVENUE FORECAST RECOMMENDED ACTION
+// ============================================================
+
+Revenue Forecast Recommended Action =
+VAR RiskLevel =
+    [Revenue Forecast Risk Level]
+
+VAR VariancePct =
+    [Revenue Forecast Variance %]
+
+VAR Growth =
+    [Revenue Forecast Growth]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        RiskLevel = "CRITICAL",
+            "Immediate management review, revenue recovery analysis and scenario testing",
+
+        RiskLevel = "HIGH",
+            "Investigate revenue drivers and execute mitigation plan",
+
+        VariancePct <= -0.20,
+            "Perform root-cause analysis and implement revenue recovery actions",
+
+        VariancePct <= -0.10,
+            "Review sales pipeline, pricing, demand and forecast assumptions",
+
+        Growth >= 0.20,
+            "Evaluate capacity, investment and growth opportunities",
+
+        Growth >= 0.10,
+            "Review growth assumptions and operational readiness",
+
+        Growth < -0.10,
+            "Investigate declining revenue drivers and prepare contingency plan",
+
+        "Continue normal revenue monitoring"
+    )
+
+
+// ============================================================
+// 31. FUTURE REVENUE FORECAST
+// ============================================================
+
+Future Revenue Forecast =
+CALCULATE(
+    [Revenue Forecast],
+    FILTER(
+        ForecastResults,
+        ForecastResults[Metric] = "Revenue"
+            &&
+        ForecastResults[ForecastDate] > TODAY()
+    )
+)
+
+
+// ============================================================
+// 32. NEXT 30 DAYS REVENUE FORECAST
+// ============================================================
+
+Revenue Forecast Next 30 Days =
+CALCULATE(
+    [Revenue Forecast],
+    FILTER(
+        ForecastResults,
+        ForecastResults[Metric] = "Revenue"
+            &&
+        ForecastResults[ForecastDate] >= TODAY()
+            &&
+        ForecastResults[ForecastDate] <= TODAY() + 30
+    )
+)
+
+
+// ============================================================
+// 33. NEXT 90 DAYS REVENUE FORECAST
+// ============================================================
+
+Revenue Forecast Next 90 Days =
+CALCULATE(
+    [Revenue Forecast],
+    FILTER(
+        ForecastResults,
+        ForecastResults[Metric] = "Revenue"
+            &&
+        ForecastResults[ForecastDate] >= TODAY()
+            &&
+        ForecastResults[ForecastDate] <= TODAY() + 90
+    )
+)
+
+
+// ============================================================
+// 34. NEXT 12 MONTHS REVENUE FORECAST
+// ============================================================
+
+Revenue Forecast Next 12 Months =
+CALCULATE(
+    [Revenue Forecast],
+    FILTER(
+        ForecastResults,
+        ForecastResults[Metric] = "Revenue"
+            &&
+        ForecastResults[ForecastDate] >= TODAY()
+            &&
+        ForecastResults[ForecastDate] <= EDATE(TODAY(), 12)
+    )
+)
+
+
+// ============================================================
+// 35. REVENUE FORECAST RECORDS
+// ============================================================
+
+Revenue Forecast Records =
+CALCULATE(
+    COUNTROWS(ForecastResults),
+    ForecastResults[Metric] = "Revenue",
+    NOT ISBLANK(ForecastResults[Forecast])
+)
+
+
+// ============================================================
+// 36. EVALUATED REVENUE FORECASTS
+// ============================================================
+
+Evaluated Revenue Forecasts =
+CALCULATE(
+    COUNTROWS(ForecastResults),
+    ForecastResults[Metric] = "Revenue",
+    NOT ISBLANK(ForecastResults[Actual]),
+    NOT ISBLANK(ForecastResults[Forecast])
+)
+
+
+// ============================================================
+// 37. FUTURE REVENUE FORECAST RECORDS
+// ============================================================
+
+Future Revenue Forecast Records =
+CALCULATE(
+    COUNTROWS(ForecastResults),
+    ForecastResults[Metric] = "Revenue",
+    ISBLANK(ForecastResults[Actual]),
+    NOT ISBLANK(ForecastResults[Forecast])
+)
+
+
+// ============================================================
+// 38. REVENUE FORECAST COVERAGE
+// ============================================================
+
+Revenue Forecast Coverage % =
+DIVIDE(
+    [Revenue Forecast Records],
+    CALCULATE(
+        COUNTROWS(ForecastResults),
+        ForecastResults[Metric] = "Revenue"
+    )
+)
+
+
+// ============================================================
+// 39. REVENUE FORECAST ACCURACY STATUS
+// ============================================================
+
+Revenue Forecast Accuracy Status =
+VAR Accuracy =
+    [Revenue Forecast Accuracy]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(Accuracy),
+            "Not Evaluated",
+
+        Accuracy >= 0.90,
+            "Excellent",
+
+        Accuracy >= 0.80,
+            "Good",
+
+        Accuracy >= 0.70,
+            "Acceptable",
+
+        "Needs Improvement"
+    )
+
+
+// ============================================================
+// 40. REVENUE FORECAST QUALITY SCORE
+// ============================================================
+
+Revenue Forecast Quality Score =
+VAR AccuracyScore =
+    COALESCE(
+        [Revenue Forecast Accuracy],
+        0
+    ) * 60
+
+VAR ConfidenceScore =
+    COALESCE(
+        [Revenue Forecast Confidence],
+        0
+    ) * 25
+
+VAR CoverageScore =
+    COALESCE(
+        [Revenue Forecast Coverage %],
+        0
+    ) * 15
+
+RETURN
+    ROUND(
+        AccuracyScore
+            + ConfidenceScore
+            + CoverageScore,
+        1
+    )
+
+
+// ============================================================
+// 41. REVENUE FORECAST QUALITY LEVEL
+// ============================================================
+
+Revenue Forecast Quality Level =
+VAR Score =
+    [Revenue Forecast Quality Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        Score >= 90,
+            "EXCELLENT",
+
+        Score >= 80,
+            "GOOD",
+
+        Score >= 70,
+            "ACCEPTABLE",
+
+        Score >= 50,
+            "WEAK",
+
+        "POOR"
+    )
+
+
+// ============================================================
+// 42. REVENUE FORECAST DECISION PRIORITY
+// ============================================================
+
+Revenue Forecast Decision Priority =
+VAR RiskLevel =
+    [Revenue Forecast Risk Level]
+
+VAR VariancePct =
+    [Revenue Forecast Variance %]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        RiskLevel = "CRITICAL"
+            || VariancePct <= -0.30,
+            "P0 — Immediate Executive Action",
+
+        RiskLevel = "HIGH"
+            || VariancePct <= -0.20,
+            "P1 — Management Action",
+
+        RiskLevel = "MEDIUM"
+            || VariancePct <= -0.10,
+            "P2 — Management Review",
+
+        "P3 — Normal Monitoring"
+    )
+
+
+// ============================================================
+// 43. REVENUE FORECAST SCORECARD
+// ============================================================
+
+Revenue Forecast Scorecard =
+VAR HealthScore =
+    [Revenue Forecast Health Score] * 0.30
+
+VAR AccuracyScore =
+    COALESCE(
+        [Revenue Forecast Accuracy],
+        0
+    ) * 100 * 0.25
+
+VAR ConfidenceScore =
+    COALESCE(
+        [Revenue Forecast Confidence],
+        0
+    ) * 100 * 0.20
+
+VAR QualityScore =
+    [Revenue Forecast Quality Score] * 0.15
+
+VAR CoverageScore =
+    COALESCE(
+        [Revenue Forecast Coverage %],
+        0
+    ) * 100 * 0.10
+
+RETURN
+    ROUND(
+        HealthScore
+            + AccuracyScore
+            + ConfidenceScore
+            + QualityScore
+            + CoverageScore,
+        1
+    )
+
+
+// ============================================================
+// 44. REVENUE FORECAST EXECUTIVE STATUS
+// ============================================================
+
+Revenue Forecast Executive Status =
+VAR RiskLevel =
+    [Revenue Forecast Risk Level]
+
+VAR VariancePct =
+    [Revenue Forecast Variance %]
+
+VAR Growth =
+    [Revenue Forecast Growth]
+
+VAR Accuracy =
+    [Revenue Forecast Accuracy]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        RiskLevel = "CRITICAL",
+            "CRITICAL — Revenue forecast requires immediate executive review",
+
+        RiskLevel = "HIGH",
+            "HIGH RISK — Revenue forecast requires management attention",
+
+        VariancePct <= -0.20,
+            "WARNING — Significant revenue shortfall detected",
+
+        VariancePct <= -0.10,
+            "WATCH — Revenue is below forecast",
+
+        Growth >= 0.20,
+            "OPPORTUNITY — Strong revenue growth forecast",
+
+        NOT ISBLANK(Accuracy)
+            && Accuracy >= 0.90,
+            "HEALTHY — Revenue forecast is highly accurate",
+
+        "NORMAL — Revenue forecast within expected range"
+    )
+
+
+// ============================================================
+// 45. REVENUE FORECAST DISPLAY
+// ============================================================
+
+Revenue Forecast Display =
+VAR ForecastValue =
+    [Revenue Forecast]
+
+RETURN
+    IF(
+        ISBLANK(ForecastValue),
+        "N/A",
+        FORMAT(
+            ForecastValue,
+            "#,##0.00"
+        )
+    )
+
+
+// ============================================================
+// 46. REVENUE VARIANCE DISPLAY
+// ============================================================
+
+Revenue Forecast Variance Display =
+VAR VarianceValue =
+    [Revenue Forecast Variance]
+
+RETURN
+    IF(
+        ISBLANK(VarianceValue),
+        "N/A",
+        FORMAT(
+            VarianceValue,
+            "#,##0.00;(#,##0.00);-"
+        )
+    )
+
+
+// ============================================================
+// 47. REVENUE VARIANCE % DISPLAY
+// ============================================================
+
+Revenue Forecast Variance % Display =
+VAR VariancePct =
+    [Revenue Forecast Variance %]
+
+RETURN
+    IF(
+        ISBLANK(VariancePct),
+        "N/A",
+        FORMAT(
+            VariancePct,
+            "0.0%;(0.0%);-"
+        )
+    )
+
+
+// ============================================================
+// 48. REVENUE CONFIDENCE DISPLAY
+// ============================================================
+
+Revenue Forecast Confidence Display =
+VAR ConfidenceValue =
+    [Revenue Forecast Confidence]
+
+RETURN
+    IF(
+        ISBLANK(ConfidenceValue),
+        "N/A",
+        FORMAT(
+            ConfidenceValue,
+            "0.0%"
+        )
+    )
+
+
+// ============================================================
+// 49. REVENUE RISK DISPLAY
+// ============================================================
+
+Revenue Forecast Risk Display =
+VAR RiskScore =
+    [Revenue Forecast Risk Score]
+
+VAR RiskLevel =
+    [Revenue Forecast Risk Level]
+
+RETURN
+    IF(
+        ISBLANK(RiskScore),
+        "N/A",
+        FORMAT(
+            RiskScore,
+            "0"
+        )
+            & " — "
+            & RiskLevel
+    )
+
+
+// ============================================================
+// 50. REVENUE FORECAST KPI STATUS
+// ============================================================
+
+Revenue Forecast KPI Status =
+VAR Risk =
+    [Revenue Forecast Risk Level]
+
+VAR Accuracy =
+    [Revenue Forecast Accuracy]
+
+VAR Growth =
+    [Revenue Forecast Growth]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        Risk = "CRITICAL",
+            "CRITICAL",
+
+        Risk = "HIGH",
+            "HIGH RISK",
+
+        NOT ISBLANK(Accuracy)
+            && Accuracy < 0.70,
+            "LOW ACCURACY",
+
+        NOT ISBLANK(Growth)
+            && Growth < -0.10,
+            "DECLINING",
+
+        NOT ISBLANK(Growth)
+            && Growth > 0.10,
+            "GROWING",
+
+        "HEALTHY"
+    )

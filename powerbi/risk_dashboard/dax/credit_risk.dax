@@ -1,0 +1,674 @@
+/*
+====================================================================
+ FinCo AI — Credit Risk Measures
+ File:
+   powerbi/risk_dashboard/credit_risk.dax
+
+ Purpose:
+   Credit-risk analytics for the FinCo AI Risk Dashboard.
+
+ Recommended tables:
+   RiskTransformations
+   RiskFactors
+   RiskScores
+
+ Assumed columns:
+   CompanyId
+   CompanyName
+   Period
+   TotalDebt
+   TotalEquity
+   TotalAssets
+   Cash
+   CurrentAssets
+   CurrentLiabilities
+   OperatingCashFlow
+   Revenue
+   NetProfit
+   CurrentRatio
+   DebtToEquity
+   DebtToAssets
+   CashToDebt
+   CashToCurrentLiabilities
+   FinancialRiskScore
+   BusinessContinuityRiskScore
+   OverallRiskScore
+   RiskSeverity
+====================================================================
+*/
+
+
+// ==================================================================
+// 1. CORE CREDIT EXPOSURE
+// ==================================================================
+
+Total Debt =
+SUM ( RiskTransformations[TotalDebt] )
+
+
+Total Equity =
+SUM ( RiskTransformations[TotalEquity] )
+
+
+Total Assets =
+SUM ( RiskTransformations[TotalAssets] )
+
+
+Total Cash =
+SUM ( RiskTransformations[Cash] )
+
+
+Total Current Assets =
+SUM ( RiskTransformations[CurrentAssets] )
+
+
+Total Current Liabilities =
+SUM ( RiskTransformations[CurrentLiabilities] )
+
+
+Total Operating Cash Flow =
+SUM ( RiskTransformations[OperatingCashFlow] )
+
+
+// ==================================================================
+// 2. CREDIT LEVERAGE
+// ==================================================================
+
+Credit Debt to Equity =
+DIVIDE (
+    [Total Debt],
+    [Total Equity],
+    BLANK ()
+)
+
+
+Credit Debt to Assets =
+DIVIDE (
+    [Total Debt],
+    [Total Assets],
+    BLANK ()
+)
+
+
+Credit Equity Ratio =
+DIVIDE (
+    [Total Equity],
+    [Total Assets],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 3. LIQUIDITY / REPAYMENT CAPACITY
+// ==================================================================
+
+Credit Current Ratio =
+DIVIDE (
+    [Total Current Assets],
+    [Total Current Liabilities],
+    BLANK ()
+)
+
+
+Credit Cash Ratio =
+DIVIDE (
+    [Total Cash],
+    [Total Current Liabilities],
+    BLANK ()
+)
+
+
+Credit Cash to Debt =
+DIVIDE (
+    [Total Cash],
+    [Total Debt],
+    BLANK ()
+)
+
+
+Credit Cash Coverage =
+DIVIDE (
+    [Total Cash] + [Total Operating Cash Flow],
+    [Total Debt],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 4. OPERATING DEBT CAPACITY
+// ==================================================================
+
+Debt to Operating Cash Flow =
+DIVIDE (
+    [Total Debt],
+    [Total Operating Cash Flow],
+    BLANK ()
+)
+
+
+Operating Cash Flow to Debt =
+DIVIDE (
+    [Total Operating Cash Flow],
+    [Total Debt],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 5. PROFITABILITY SUPPORTING CREDIT QUALITY
+// ==================================================================
+
+Total Revenue =
+SUM ( RiskTransformations[Revenue] )
+
+
+Total Net Profit =
+SUM ( RiskTransformations[NetProfit] )
+
+
+Credit Net Margin =
+DIVIDE (
+    [Total Net Profit],
+    [Total Revenue],
+    BLANK ()
+)
+
+
+Credit Profit Coverage =
+DIVIDE (
+    [Total Net Profit],
+    [Total Debt],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 6. CREDIT LEVERAGE SCORE
+//
+// 0   = healthy
+// 25  = watch
+// 50  = moderate
+// 75  = high
+// 100 = critical
+// ==================================================================
+
+Credit Leverage Score =
+VAR DTE = [Credit Debt to Equity]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( DTE ), BLANK (),
+        DTE >= 4.00, 100,
+        DTE >= 3.00, 90,
+        DTE >= 2.00, 75,
+        DTE >= 1.00, 50,
+        DTE >= 0.50, 25,
+        0
+    )
+
+
+// ==================================================================
+// 7. CREDIT LIQUIDITY SCORE
+// ==================================================================
+
+Credit Liquidity Score =
+VAR CR = [Credit Current Ratio]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( CR ), BLANK (),
+        CR < 0.50, 100,
+        CR < 0.75, 90,
+        CR < 1.00, 75,
+        CR < 1.25, 50,
+        CR < 1.50, 25,
+        0
+    )
+
+
+// ==================================================================
+// 8. CASH COVERAGE SCORE
+// ==================================================================
+
+Credit Cash Coverage Score =
+VAR Coverage = [Credit Cash Coverage]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Coverage ), BLANK (),
+        Coverage < 0, 100,
+        Coverage < 0.25, 90,
+        Coverage < 0.50, 75,
+        Coverage < 1.00, 50,
+        Coverage < 1.50, 25,
+        0
+    )
+
+
+// ==================================================================
+// 9. OPERATING CASH FLOW SCORE
+// ==================================================================
+
+Credit Operating Cash Flow Score =
+VAR OCF = [Total Operating Cash Flow]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( OCF ), BLANK (),
+        OCF < 0, 100,
+        OCF = 0, 75,
+        OCF < [Total Debt] * 0.10, 50,
+        OCF < [Total Debt] * 0.25, 25,
+        0
+    )
+
+
+// ==================================================================
+// 10. PROFITABILITY CREDIT SCORE
+// ==================================================================
+
+Credit Profitability Score =
+VAR Margin = [Credit Net Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), BLANK (),
+        Margin < -0.10, 100,
+        Margin < 0, 90,
+        Margin < 0.05, 50,
+        Margin < 0.10, 25,
+        0
+    )
+
+
+// ==================================================================
+// 11. OVERALL CREDIT RISK SCORE
+//
+// Weighting:
+//   Leverage          30%
+//   Liquidity         25%
+//   Cash Coverage     20%
+//   Operating CF      15%
+//   Profitability     10%
+// ==================================================================
+
+Credit Risk Score =
+VAR Leverage =
+    [Credit Leverage Score]
+
+VAR Liquidity =
+    [Credit Liquidity Score]
+
+VAR CashCoverage =
+    [Credit Cash Coverage Score]
+
+VAR OperatingCF =
+    [Credit Operating Cash Flow Score]
+
+VAR Profitability =
+    [Credit Profitability Score]
+
+VAR WeightedScore =
+      COALESCE ( Leverage, 0 ) * 0.30
+    + COALESCE ( Liquidity, 0 ) * 0.25
+    + COALESCE ( CashCoverage, 0 ) * 0.20
+    + COALESCE ( OperatingCF, 0 ) * 0.15
+    + COALESCE ( Profitability, 0 ) * 0.10
+
+VAR AvailableWeight =
+      IF ( NOT ISBLANK ( Leverage ), 0.30, 0 )
+    + IF ( NOT ISBLANK ( Liquidity ), 0.25, 0 )
+    + IF ( NOT ISBLANK ( CashCoverage ), 0.20, 0 )
+    + IF ( NOT ISBLANK ( OperatingCF ), 0.15, 0 )
+    + IF ( NOT ISBLANK ( Profitability ), 0.10, 0 )
+
+RETURN
+    IF (
+        AvailableWeight = 0,
+        BLANK (),
+        ROUND (
+            DIVIDE (
+                WeightedScore,
+                AvailableWeight
+            ),
+            2
+        )
+    )
+
+
+// ==================================================================
+// 12. CREDIT RISK BAND
+// ==================================================================
+
+Credit Risk Band =
+VAR Score = [Credit Risk Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "UNKNOWN",
+        Score >= 80, "CRITICAL",
+        Score >= 60, "HIGH",
+        Score >= 35, "MEDIUM",
+        Score >= 15, "LOW",
+        "INFO"
+    )
+
+
+// ==================================================================
+// 13. CREDIT RISK RATING
+// ==================================================================
+
+Credit Risk Rating =
+VAR Score = [Credit Risk Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "NOT_AVAILABLE",
+        Score >= 90, "VERY_HIGH_RISK",
+        Score >= 80, "HIGH_RISK",
+        Score >= 60, "ELEVATED_RISK",
+        Score >= 35, "MODERATE_RISK",
+        Score >= 15, "LOW_RISK",
+        "STRONG"
+    )
+
+
+// ==================================================================
+// 14. CREDIT DECISION
+// ==================================================================
+
+Credit Decision =
+VAR Score = [Credit Risk Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "INSUFFICIENT_DATA",
+        Score >= 80, "ESCALATE",
+        Score >= 60, "MANAGEMENT_REVIEW",
+        Score >= 35, "MONITOR",
+        "NORMAL"
+    )
+
+
+// ==================================================================
+// 15. CREDIT ALERT
+// ==================================================================
+
+Credit Risk Alert =
+VAR Score = [Credit Risk Score]
+VAR SevereLoss =
+    CALCULATE (
+        COUNTROWS ( RiskTransformations ),
+        RiskTransformations[SevereLossRiskFlag] = TRUE ()
+    )
+RETURN
+    SWITCH (
+        TRUE (),
+        SevereLoss > 0 && Score >= 60,
+            "CRITICAL_CREDIT_RISK",
+        Score >= 80,
+            "CRITICAL_CREDIT_RISK",
+        Score >= 60,
+            "HIGH_CREDIT_RISK",
+        Score >= 35,
+            "CREDIT_RISK_WATCH",
+        "NO_CREDIT_ALERT"
+    )
+
+
+// ==================================================================
+// 16. PRIMARY CREDIT RISK FACTOR
+// ==================================================================
+
+Primary Credit Risk Factor =
+VAR Leverage = [Credit Leverage Score]
+VAR Liquidity = [Credit Liquidity Score]
+VAR CashCoverage = [Credit Cash Coverage Score]
+VAR OperatingCF = [Credit Operating Cash Flow Score]
+VAR Profitability = [Credit Profitability Score]
+
+VAR MaxScore =
+    MAX (
+        MAX (
+            MAX (
+                MAX (
+                    COALESCE ( Leverage, 0 ),
+                    COALESCE ( Liquidity, 0 )
+                ),
+                COALESCE ( CashCoverage, 0 )
+            ),
+            COALESCE ( OperatingCF, 0 )
+        ),
+        COALESCE ( Profitability, 0 )
+    )
+
+RETURN
+    SWITCH (
+        TRUE (),
+        MaxScore = 0, "NONE",
+        MaxScore = Leverage, "LEVERAGE",
+        MaxScore = Liquidity, "LIQUIDITY",
+        MaxScore = CashCoverage, "CASH_COVERAGE",
+        MaxScore = OperatingCF, "OPERATING_CASH_FLOW",
+        MaxScore = Profitability, "PROFITABILITY",
+        "UNKNOWN"
+    )
+
+
+// ==================================================================
+// 17. CREDIT RISK FLAGS
+// ==================================================================
+
+High Leverage Flag =
+IF (
+    [Credit Debt to Equity] >= 2,
+    1,
+    0
+)
+
+
+Critical Leverage Flag =
+IF (
+    [Credit Debt to Equity] >= 3,
+    1,
+    0
+)
+
+
+Liquidity Risk Flag =
+IF (
+    [Credit Current Ratio] < 1,
+    1,
+    0
+)
+
+
+Critical Liquidity Flag =
+IF (
+    [Credit Current Ratio] < 0.75,
+    1,
+    0
+)
+
+
+Negative Cash Flow Flag =
+IF (
+    [Total Operating Cash Flow] < 0,
+    1,
+    0
+)
+
+
+Negative Profit Flag =
+IF (
+    [Total Net Profit] < 0,
+    1,
+    0
+)
+
+
+Credit Deterioration Flag =
+IF (
+    [High Leverage Flag]
+        + [Liquidity Risk Flag]
+        + [Negative Cash Flow Flag]
+        + [Negative Profit Flag] >= 2,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 18. CREDIT RISK FACTOR COUNT
+// ==================================================================
+
+Credit Risk Factor Count =
+    [High Leverage Flag]
+    + [Liquidity Risk Flag]
+    + [Negative Cash Flow Flag]
+    + [Negative Profit Flag]
+
+
+// ==================================================================
+// 19. CREDIT HEALTH SCORE
+//
+// Inverse of risk:
+//   100 = strongest
+//   0   = weakest
+// ==================================================================
+
+Credit Health Score =
+VAR Risk = [Credit Risk Score]
+RETURN
+    IF (
+        ISBLANK ( Risk ),
+        BLANK (),
+        ROUND (
+            100 - Risk,
+            2
+        )
+    )
+
+
+// ==================================================================
+// 20. CREDIT HEALTH BAND
+// ==================================================================
+
+Credit Health Band =
+VAR Health = [Credit Health Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Health ), "UNKNOWN",
+        Health >= 80, "STRONG",
+        Health >= 60, "HEALTHY",
+        Health >= 40, "WATCH",
+        Health >= 20, "WEAK",
+        "CRITICAL"
+    )
+
+
+// ==================================================================
+// 21. CREDIT ACTION
+// ==================================================================
+
+Credit Recommended Action =
+VAR Risk = [Credit Risk Score]
+VAR Factor = [Primary Credit Risk Factor]
+RETURN
+    SWITCH (
+        TRUE (),
+
+        Risk >= 80 && Factor = "LIQUIDITY",
+            "Immediate liquidity review and short-term funding assessment required.",
+
+        Risk >= 80 && Factor = "LEVERAGE",
+            "Immediate debt and refinancing review required.",
+
+        Risk >= 80 && Factor = "CASH_COVERAGE",
+            "Assess debt-service capacity and near-term cash requirements.",
+
+        Risk >= 80 && Factor = "OPERATING_CASH_FLOW",
+            "Investigate operating cash-flow deterioration and repayment capacity.",
+
+        Risk >= 80 && Factor = "PROFITABILITY",
+            "Investigate sustained losses and their impact on debt servicing.",
+
+        Risk >= 60,
+            "Management review and detailed credit-risk assessment recommended.",
+
+        Risk >= 35,
+            "Monitor leverage, liquidity and operating cash-flow indicators.",
+
+        "No immediate credit-risk action required."
+    )
+
+
+// ==================================================================
+// 22. CREDIT RISK SUMMARY
+// ==================================================================
+
+Credit Risk Summary =
+VAR Score = [Credit Risk Score]
+VAR Band = [Credit Risk Band]
+VAR Factor = [Primary Credit Risk Factor]
+RETURN
+    IF (
+        ISBLANK ( Score ),
+        "Credit risk cannot be assessed because sufficient financial data is unavailable.",
+        "Credit risk score is "
+            & FORMAT ( Score, "0.0" )
+            & " ("
+            & Band
+            & "). Primary risk factor: "
+            & Factor
+            & "."
+    )
+
+
+// ==================================================================
+// 23. POWER BI CARD FORMATTING
+// ==================================================================
+
+Credit Risk Score Display =
+IF (
+    ISBLANK ( [Credit Risk Score] ),
+    "N/A",
+    FORMAT (
+        [Credit Risk Score],
+        "0.0"
+    )
+)
+
+
+Credit Debt to Equity Display =
+IF (
+    ISBLANK ( [Credit Debt to Equity] ),
+    "N/A",
+    FORMAT (
+        [Credit Debt to Equity],
+        "0.00x"
+    )
+)
+
+
+Credit Current Ratio Display =
+IF (
+    ISBLANK ( [Credit Current Ratio] ),
+    "N/A",
+    FORMAT (
+        [Credit Current Ratio],
+        "0.00x"
+    )
+)
+
+
+Credit Cash Coverage Display =
+IF (
+    ISBLANK ( [Credit Cash Coverage] ),
+    "N/A",
+    FORMAT (
+        [Credit Cash Coverage],
+        "0.00x"
+    )
+)

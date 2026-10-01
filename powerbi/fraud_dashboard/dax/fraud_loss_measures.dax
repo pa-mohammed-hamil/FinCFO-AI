@@ -1,0 +1,232 @@
+/*
+    FinCo AI - Fraud Loss Measures
+    File: powerbi/shared/dax/fraud_loss_measures.dax
+
+    Assumed Transactions columns:
+        Transactions[TransactionID]
+        Transactions[TransactionDate]
+        Transactions[Amount]
+        Transactions[FraudFlag]
+        Transactions[FraudProbability]
+        Transactions[FraudLossAmount]
+        Transactions[RecoveryAmount]
+        Transactions[Status]
+*/
+
+Fraud Loss Amount =
+CALCULATE(
+    SUM(Transactions[FraudLossAmount]),
+    Transactions[FraudFlag] = 1
+)
+
+
+Fraud Loss Amount Previous Period =
+CALCULATE(
+    [Fraud Loss Amount],
+    DATEADD(
+        'Date'[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Fraud Loss Change =
+[Fraud Loss Amount]
+    - [Fraud Loss Amount Previous Period]
+
+
+Fraud Loss Change % =
+DIVIDE(
+    [Fraud Loss Change],
+    [Fraud Loss Amount Previous Period],
+    0
+)
+
+
+Potential Fraud Loss =
+CALCULATE(
+    SUMX(
+        Transactions,
+        IF(
+            Transactions[FraudFlag] = 1,
+            Transactions[Amount],
+            Transactions[Amount]
+                * Transactions[FraudProbability]
+        )
+    )
+)
+
+
+Confirmed Fraud Loss =
+CALCULATE(
+    SUM(Transactions[Amount]),
+    Transactions[FraudFlag] = 1
+)
+
+
+Recovered Fraud Amount =
+CALCULATE(
+    SUM(Transactions[RecoveryAmount]),
+    Transactions[FraudFlag] = 1
+)
+
+
+Net Fraud Loss =
+MAX(
+    0,
+    [Confirmed Fraud Loss]
+        - [Recovered Fraud Amount]
+)
+
+
+Fraud Recovery Rate =
+DIVIDE(
+    [Recovered Fraud Amount],
+    [Confirmed Fraud Loss],
+    0
+)
+
+
+Fraud Loss Rate =
+DIVIDE(
+    [Confirmed Fraud Loss],
+    [Total Transaction Amount],
+    0
+)
+
+
+Fraud Loss per Fraud Transaction =
+DIVIDE(
+    [Confirmed Fraud Loss],
+    [Fraud Transaction Count],
+    0
+)
+
+
+Average Fraud Transaction Amount =
+CALCULATE(
+    AVERAGE(Transactions[Amount]),
+    Transactions[FraudFlag] = 1
+)
+
+
+Maximum Fraud Transaction =
+CALCULATE(
+    MAX(Transactions[Amount]),
+    Transactions[FraudFlag] = 1
+)
+
+
+Minimum Fraud Transaction =
+CALCULATE(
+    MIN(Transactions[Amount]),
+    Transactions[FraudFlag] = 1
+)
+
+
+Fraud Loss Previous Year =
+CALCULATE(
+    [Confirmed Fraud Loss],
+    DATEADD(
+        'Date'[Date],
+        -1,
+        YEAR
+    )
+)
+
+
+Fraud Loss YoY Change =
+[Confirmed Fraud Loss]
+    - [Fraud Loss Previous Year]
+
+
+Fraud Loss YoY % =
+DIVIDE(
+    [Fraud Loss YoY Change],
+    [Fraud Loss Previous Year],
+    0
+)
+
+
+Cumulative Fraud Loss =
+CALCULATE(
+    [Confirmed Fraud Loss],
+    FILTER(
+        ALLSELECTED('Date'[Date]),
+        'Date'[Date] <= MAX('Date'[Date])
+    )
+)
+
+
+Fraud Loss 30D =
+CALCULATE(
+    [Confirmed Fraud Loss],
+    DATESINPERIOD(
+        'Date'[Date],
+        MAX('Date'[Date]),
+        -30,
+        DAY
+    )
+)
+
+
+Fraud Loss 90D =
+CALCULATE(
+    [Confirmed Fraud Loss],
+    DATESINPERIOD(
+        'Date'[Date],
+        MAX('Date'[Date]),
+        -90,
+        DAY
+    )
+)
+
+
+Fraud Loss 12M =
+CALCULATE(
+    [Confirmed Fraud Loss],
+    DATESINPERIOD(
+        'Date'[Date],
+        MAX('Date'[Date]),
+        -12,
+        MONTH
+    )
+)
+
+
+Fraud Loss Risk Contribution =
+VAR LossRate = [Fraud Loss Rate]
+VAR LossGrowth = [Fraud Loss YoY %]
+RETURN
+    MIN(
+        100,
+        (LossRate * 70)
+            + (MAX(0, LossGrowth) * 30)
+    )
+
+
+Fraud Loss Severity =
+SWITCH(
+    TRUE(),
+    [Net Fraud Loss] >= 10000000, "CRITICAL",
+    [Net Fraud Loss] >= 5000000, "HIGH",
+    [Net Fraud Loss] >= 1000000, "MEDIUM",
+    [Net Fraud Loss] > 0, "LOW",
+    "NONE"
+)
+
+
+Fraud Loss Alert =
+SWITCH(
+    TRUE(),
+    [Net Fraud Loss] >= 10000000,
+        "CRITICAL: Severe fraud loss exposure detected",
+    [Net Fraud Loss] >= 5000000,
+        "HIGH: Significant fraud loss detected",
+    [Net Fraud Loss] >= 1000000,
+        "MEDIUM: Fraud loss requires investigation",
+    [Net Fraud Loss] > 0,
+        "LOW: Fraud loss detected",
+    "No material fraud loss detected"
+)

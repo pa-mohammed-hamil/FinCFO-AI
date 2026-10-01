@@ -1,0 +1,1508 @@
+-- Add shared risk measures here
+/*
+====================================================================
+ FinCo AI — Risk Measures
+ File: powerbi/shared/dax/risk_measures.dax
+
+ Purpose:
+   Enterprise risk analytics measure layer.
+
+ Covers:
+   - Financial Risk
+   - Liquidity Risk
+   - Credit Risk
+   - Market Risk
+   - Operational Risk
+   - Enterprise Risk
+   - Risk Factors
+   - Risk Severity
+   - Risk Trends
+   - Risk Concentration
+   - Alerts
+   - Decisions
+   - Recommendations
+   - Supervisor Agent Signals
+   - Human Review
+   - Risk Data Quality
+
+ Dependencies:
+   DateTable
+   RiskTransformations
+   RiskFactors
+   RiskScores
+   financial_measures.dax
+   credit_risk.dax
+   liquidity_risk.dax
+   market_risk.dax
+   operational_risk.dax
+   risk_kpis.dax
+   overall_risk_score.dax
+
+ IMPORTANT:
+   Backend risk_scoring.py remains authoritative for production
+   risk calculations. This file is the Power BI analytical layer.
+====================================================================
+*/
+
+
+// ==================================================================
+// 1. CANONICAL FINANCIAL RISK
+// ==================================================================
+
+Risk — Financial Score =
+MAX (
+    RiskScores[OverallRiskScore]
+)
+
+
+Risk — Financial Health =
+MAX (
+    0,
+    MIN (
+        100,
+        100 - [Risk — Financial Score]
+    )
+)
+
+
+Risk — Financial Band =
+SWITCH (
+    TRUE (),
+    [Risk — Financial Score] >= 80, "CRITICAL",
+    [Risk — Financial Score] >= 60, "HIGH",
+    [Risk — Financial Score] >= 35, "MEDIUM",
+    [Risk — Financial Score] >= 15, "LOW",
+    "INFO"
+)
+
+
+Risk — Financial Status =
+SWITCH (
+    TRUE (),
+    [Risk — Financial Score] >= 80, "CRITICAL_RISK",
+    [Risk — Financial Score] >= 60, "HIGH_RISK",
+    [Risk — Financial Score] >= 35, "AT_RISK",
+    [Risk — Financial Score] >= 15, "WATCH",
+    "STABLE"
+)
+
+
+// ==================================================================
+// 2. LIQUIDITY RISK
+// ==================================================================
+
+Risk — Liquidity Score =
+[Liquidity Risk Score]
+
+
+Risk — Liquidity Health =
+[Liquidity Health Score]
+
+
+Risk — Liquidity Band =
+[Liquidity Risk Band]
+
+
+Risk — Liquidity Status =
+[Liquidity Status]
+
+
+Risk — Liquidity Alert =
+[Liquidity Alert Level]
+
+
+Risk — Liquidity Decision =
+[Liquidity Decision]
+
+
+// ==================================================================
+// 3. CREDIT RISK
+// ==================================================================
+
+Risk — Credit Score =
+[Credit Risk Score]
+
+
+Risk — Credit Health =
+[Credit Health Score]
+
+
+Risk — Credit Band =
+[Credit Risk Band]
+
+
+Risk — Credit Rating =
+[Credit Risk Rating]
+
+
+Risk — Credit Decision =
+[Credit Decision]
+
+
+Risk — Credit Alert =
+[Credit Risk Alert]
+
+
+// ==================================================================
+// 4. MARKET RISK
+// ==================================================================
+
+Risk — Market Score =
+[Market Risk Score]
+
+
+Risk — Market Health =
+[Market Health Score]
+
+
+Risk — Market Band =
+[Market Risk Band]
+
+
+Risk — Market Status =
+[Market Risk Status]
+
+
+Risk — Market Alert =
+[Market Risk Alert]
+
+
+Risk — Market Decision =
+[Market Decision]
+
+
+// ==================================================================
+// 5. OPERATIONAL RISK
+// ==================================================================
+
+Risk — Operational Score =
+[Operational Risk Score]
+
+
+Risk — Operational Health =
+[Operational Health Score]
+
+
+Risk — Operational Band =
+[Operational Risk Band]
+
+
+Risk — Operational Status =
+[Operational Risk Status]
+
+
+Risk — Operational Alert =
+[Operational Risk Alert]
+
+
+Risk — Operational Decision =
+[Operational Decision]
+
+
+// ==================================================================
+// 6. ENTERPRISE RISK
+// ==================================================================
+
+Risk — Enterprise Score =
+[Overall Risk Score]
+
+
+Risk — Enterprise Health =
+[Overall Health Score]
+
+
+Risk — Enterprise Band =
+[Overall Risk Band]
+
+
+Risk — Enterprise Health Band =
+[Overall Health Band]
+
+
+Risk — Enterprise Status =
+[Overall Risk Status]
+
+
+Risk — Enterprise Alert =
+[Overall Risk Alert Level]
+
+
+Risk — Enterprise Decision =
+[Overall Risk Decision]
+
+
+// ==================================================================
+// 7. ENTERPRISE RISK DIMENSIONS
+// ==================================================================
+
+Risk — Dimension Count =
+[Overall Risk Available Dimensions]
+
+
+Risk — Highest Dimension Score =
+[Highest Risk Dimension Score]
+
+
+Risk — Primary Dimension =
+[Primary Overall Risk Dimension]
+
+
+Risk — Secondary Dimension =
+[Secondary Overall Risk Dimension]
+
+
+Risk — Average Dimension Score =
+[Average Risk Dimension Score]
+
+
+Risk — Dimension Spread =
+[Overall Risk Dimension Spread]
+
+
+Risk — Concentration Ratio =
+[Risk Concentration Ratio]
+
+
+Risk — Balance Status =
+[Risk Balance Status]
+
+
+// ==================================================================
+// 8. DIMENSION SCORECARD
+// ==================================================================
+
+Risk — Scorecard Financial =
+[Overall Risk Scorecard — Financial]
+
+
+Risk — Scorecard Liquidity =
+[Overall Risk Scorecard — Liquidity]
+
+
+Risk — Scorecard Credit =
+[Overall Risk Scorecard — Credit]
+
+
+Risk — Scorecard Market =
+[Overall Risk Scorecard — Market]
+
+
+Risk — Scorecard Operational =
+[Overall Risk Scorecard — Operational]
+
+
+Risk — Scorecard Maximum =
+[Overall Risk Scorecard Maximum]
+
+
+Risk — Scorecard Minimum =
+[Overall Risk Scorecard Minimum]
+
+
+// ==================================================================
+// 9. RISK FACTOR COUNTS
+// ==================================================================
+
+Risk — Total Factors =
+[Overall Total Risk Factor Count]
+
+
+Risk — Critical Factors =
+[Overall Critical Risk Count]
+
+
+Risk — High Factors =
+[Overall High Risk Count]
+
+
+Risk — Critical Dimensions =
+[Critical Risk Dimension Count]
+
+
+Risk — High Dimensions =
+[High Risk Dimension Count]
+
+
+Risk — At Risk Dimensions =
+[At Risk Dimension Count]
+
+
+// ==================================================================
+// 10. RISK FACTOR STATUS
+// ==================================================================
+
+Risk — Loss Flag =
+[Loss Flag]
+
+
+Risk — Revenue Decline Flag =
+[Revenue Decline Flag]
+
+
+Risk — Profit Decline Flag =
+[Profit Decline Flag]
+
+
+Risk — Negative Cash Flow Flag =
+[Negative Cash Flow Flag]
+
+
+Risk — Negative Margin Flag =
+[Negative Margin Flag]
+
+
+Risk — Liquidity Pressure Flag =
+[Liquidity Pressure Flag]
+
+
+Risk — Critical Liquidity Flag =
+[Critical Liquidity Flag]
+
+
+Risk — High Leverage Flag =
+[High Leverage Flag]
+
+
+Risk — Critical Leverage Flag =
+[Critical Leverage Flag]
+
+
+// ==================================================================
+// 11. FINANCIAL RISK COMPONENTS
+// ==================================================================
+
+Risk — Revenue Component =
+[Financial Revenue Risk Score]
+
+
+Risk — Profit Component =
+[Financial Profit Risk Score]
+
+
+Risk — Liquidity Component =
+[Financial Liquidity Risk Score]
+
+
+Risk — Debt Component =
+[Financial Debt Risk Score]
+
+
+Risk — Margin Component =
+[Financial Margin Risk Score]
+
+
+Risk — Cash Flow Component =
+[Financial Cash Flow Risk Score]
+
+
+// ==================================================================
+// 12. PRIMARY RISK FACTOR
+// ==================================================================
+
+Risk — Primary Financial Factor =
+[Primary Financial Risk Factor]
+
+
+Risk — Financial Factor Count =
+[Financial Risk Factor Count]
+
+
+Risk — Financial Stress =
+[Financial Stress Signal]
+
+
+// ==================================================================
+// 13. RISK SEVERITY
+// ==================================================================
+
+Risk — Severity =
+SWITCH (
+    TRUE (),
+
+    [Risk — Enterprise Score] >= 80,
+        "CRITICAL",
+
+    [Risk — Enterprise Score] >= 60,
+        "HIGH",
+
+    [Risk — Enterprise Score] >= 35,
+        "MEDIUM",
+
+    [Risk — Enterprise Score] >= 15,
+        "LOW",
+
+    "INFO"
+)
+
+
+Risk — Severity Rank =
+SWITCH (
+    [Risk — Severity],
+    "CRITICAL", 5,
+    "HIGH", 4,
+    "MEDIUM", 3,
+    "LOW", 2,
+    "INFO", 1,
+    0
+)
+
+
+// ==================================================================
+// 14. RISK HEALTH
+// ==================================================================
+
+Risk — Health Score =
+MAX (
+    0,
+    MIN (
+        100,
+        100 - [Risk — Enterprise Score]
+    )
+)
+
+
+Risk — Health Status =
+SWITCH (
+    TRUE (),
+    [Risk — Health Score] >= 80, "STRONG",
+    [Risk — Health Score] >= 60, "HEALTHY",
+    [Risk — Health Score] >= 40, "WATCH",
+    [Risk — Health Score] >= 20, "WEAK",
+    "CRITICAL"
+)
+
+
+// ==================================================================
+// 15. RISK TREND
+// ==================================================================
+
+Risk — Previous Enterprise Score =
+[Previous Overall Risk Score]
+
+
+Risk — Change =
+[Overall Risk Change]
+
+
+Risk — Trend =
+[Overall Risk Trend]
+
+
+Risk — Deterioration =
+[Overall Risk Deterioration Flag]
+
+
+Risk — Improvement =
+[Overall Risk Improvement Flag]
+
+
+Risk — Trend Status =
+SWITCH (
+    TRUE (),
+
+    [Risk — Change] >= 10,
+        "RAPID_DETERIORATION",
+
+    [Risk — Change] >= 3,
+        "DETERIORATING",
+
+    [Risk — Change] <= -10,
+        "RAPID_IMPROVEMENT",
+
+    [Risk — Change] <= -3,
+        "IMPROVING",
+
+    "STABLE"
+)
+
+
+// ==================================================================
+// 16. RISK MOMENTUM
+// ==================================================================
+
+Risk — Momentum =
+VAR CurrentScore =
+    [Risk — Enterprise Score]
+
+VAR PreviousScore =
+    [Risk — Previous Enterprise Score]
+
+RETURN
+SWITCH (
+    TRUE (),
+
+    ISBLANK ( PreviousScore ),
+        "NO_BASELINE",
+
+    CurrentScore - PreviousScore >= 10,
+        "STRONG_NEGATIVE_MOMENTUM",
+
+    CurrentScore - PreviousScore >= 3,
+        "NEGATIVE_MOMENTUM",
+
+    CurrentScore - PreviousScore <= -10,
+        "STRONG_POSITIVE_MOMENTUM",
+
+    CurrentScore - PreviousScore <= -3,
+        "POSITIVE_MOMENTUM",
+
+    "NEUTRAL_MOMENTUM"
+)
+
+
+// ==================================================================
+// 17. RISK ACCELERATION
+// ==================================================================
+
+Risk — Acceleration =
+VAR CurrentChange =
+    [Risk — Change]
+
+VAR PreviousChange =
+    CALCULATE (
+        [Risk — Change],
+        DATEADD (
+            'DateTable'[Date],
+            -1,
+            MONTH
+        )
+    )
+
+RETURN
+IF (
+    ISBLANK ( PreviousChange ),
+    BLANK (),
+    CurrentChange - PreviousChange
+)
+
+
+Risk — Acceleration Status =
+SWITCH (
+    TRUE (),
+
+    [Risk — Acceleration] >= 10,
+        "RAPIDLY_WORSENING",
+
+    [Risk — Acceleration] >= 3,
+        "WORSENING",
+
+    [Risk — Acceleration] <= -10,
+        "RAPIDLY_IMPROVING",
+
+    [Risk — Acceleration] <= -3,
+        "IMPROVING",
+
+    "STABLE"
+)
+
+
+// ==================================================================
+// 18. RISK CONCENTRATION
+// ==================================================================
+
+Risk — Concentration =
+VAR Highest =
+    [Highest Risk Dimension Score]
+
+VAR Total =
+    [Average Risk Dimension Score]
+        * [Risk — Dimension Count]
+
+RETURN
+IF (
+    Total > 0,
+    DIVIDE (
+        Highest,
+        Total
+    ),
+    BLANK ()
+)
+
+
+Risk — Concentration Status =
+SWITCH (
+    TRUE (),
+
+    [Risk — Concentration] >= 0.60,
+        "HIGH_CONCENTRATION",
+
+    [Risk — Concentration] >= 0.40,
+        "MODERATE_CONCENTRATION",
+
+    "BALANCED"
+)
+
+
+// ==================================================================
+// 19. RISK BALANCE
+// ==================================================================
+
+Risk — Balance =
+SWITCH (
+    TRUE (),
+
+    [Risk — Dimension Spread] >= 40,
+        "HIGHLY_UNBALANCED",
+
+    [Risk — Dimension Spread] >= 25,
+        "UNBALANCED",
+
+    [Risk — Dimension Spread] >= 15,
+        "MODERATE",
+
+    "BALANCED"
+)
+
+
+// ==================================================================
+// 20. ALERT ENGINE
+// ==================================================================
+
+Risk — Alert Level =
+SWITCH (
+    TRUE (),
+
+    [Risk — Enterprise Score] >= 80,
+        "CRITICAL",
+
+    [Risk — Enterprise Score] >= 60,
+        "HIGH",
+
+    [Risk — Enterprise Score] >= 35,
+        "MEDIUM",
+
+    [Risk — Enterprise Score] >= 15,
+        "LOW",
+
+    "INFO"
+)
+
+
+Risk — Alert Priority =
+SWITCH (
+    TRUE (),
+
+    [Risk — Enterprise Score] >= 80,
+        "P0",
+
+    [Risk — Enterprise Score] >= 60,
+        "P1",
+
+    [Risk — Enterprise Score] >= 35,
+        "P2",
+
+    [Risk — Enterprise Score] >= 15,
+        "P3",
+
+    "P4"
+)
+
+
+Risk — Alert Required =
+IF (
+    [Risk — Enterprise Score] >= 35,
+    "YES",
+    "NO"
+)
+
+
+Risk — Critical Alert =
+IF (
+    [Risk — Enterprise Score] >= 80,
+    1,
+    0
+)
+
+
+Risk — High Alert =
+IF (
+    [Risk — Enterprise Score] >= 60,
+    1,
+    0
+)
+
+
+Risk — Medium Alert =
+IF (
+    [Risk — Enterprise Score] >= 35,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 21. DECISION ENGINE
+// ==================================================================
+
+Risk — Decision =
+SWITCH (
+    TRUE (),
+
+    [Risk — Enterprise Score] >= 80,
+        "EXECUTIVE_ESCALATION",
+
+    [Risk — Enterprise Score] >= 60,
+        "MANAGEMENT_REVIEW",
+
+    [Risk — Enterprise Score] >= 35,
+        "CLOSE_MONITORING",
+
+    [Risk — Enterprise Score] >= 15,
+        "ROUTINE_MONITORING",
+
+    "NORMAL_OPERATIONS"
+)
+
+
+// ==================================================================
+// 22. RISK RECOMMENDATION
+// ==================================================================
+
+Risk — Recommendation =
+SWITCH (
+    TRUE (),
+
+    [Risk — Enterprise Score] >= 80,
+        "Immediate executive intervention required. Stabilize liquidity, cash flow, leverage and loss exposure.",
+
+    [Risk — Enterprise Score] >= 60,
+        "Management review required. Address the primary risk dimension and execute corrective actions.",
+
+    [Risk — Enterprise Score] >= 35,
+        "Increase monitoring and implement targeted mitigation for emerging risk factors.",
+
+    [Risk — Enterprise Score] >= 15,
+        "Maintain preventive controls and continue routine risk monitoring.",
+
+    "Risk profile is currently stable. Maintain existing controls."
+)
+
+
+// ==================================================================
+// 23. PRIMARY MANAGEMENT ACTION
+// ==================================================================
+
+Risk — Management Action =
+SWITCH (
+    [Risk — Primary Dimension],
+
+    "FINANCIAL",
+        "Review profitability, revenue growth, margins and cash generation.",
+
+    "LIQUIDITY",
+        "Protect cash reserves, working capital and short-term obligations.",
+
+    "CREDIT",
+        "Review leverage, debt servicing capacity and credit exposure.",
+
+    "MARKET",
+        "Review revenue concentration, volatility and market exposure.",
+
+    "OPERATIONAL",
+        "Review operating efficiency, cost pressure and cash conversion.",
+
+    "Maintain standard risk controls."
+)
+
+
+// ==================================================================
+// 24. SUPERVISOR AGENT
+// ==================================================================
+
+Risk — Supervisor Signal =
+SWITCH (
+    TRUE (),
+
+    [Risk — Enterprise Score] >= 80,
+        "SUPERVISOR_ESCALATE",
+
+    [Risk — Enterprise Score] >= 60,
+        "SUPERVISOR_REVIEW",
+
+    [Risk — Enterprise Score] >= 35,
+        "SUPERVISOR_MONITOR",
+
+    "SUPERVISOR_NORMAL"
+)
+
+
+Risk — Agent Priority =
+SWITCH (
+    TRUE (),
+
+    [Risk — Enterprise Score] >= 80,
+        "CRITICAL",
+
+    [Risk — Enterprise Score] >= 60,
+        "HIGH",
+
+    [Risk — Enterprise Score] >= 35,
+        "MEDIUM",
+
+    "NORMAL"
+)
+
+
+// ==================================================================
+// 25. HUMAN REVIEW
+// ==================================================================
+
+Risk — Human Review Required =
+IF (
+    [Risk — Enterprise Score] >= 60
+        || [Risk — Critical Alert] = 1
+        || [Critical Liquidity Flag] = 1
+        || [Critical Leverage Flag] = 1
+        || [Loss Flag] = 1,
+    "YES",
+    "NO"
+)
+
+
+Risk — Human Review Priority =
+SWITCH (
+    TRUE (),
+
+    [Risk — Enterprise Score] >= 80,
+        "P0",
+
+    [Risk — Enterprise Score] >= 60,
+        "P1",
+
+    [Risk — Human Review Required] = "YES",
+        "P2",
+
+    "NONE"
+)
+
+
+// ==================================================================
+// 26. RISK ROOT-CAUSE SIGNAL
+// ==================================================================
+
+Risk — Root Cause Signal =
+SWITCH (
+    [Risk — Primary Dimension],
+
+    "FINANCIAL",
+        [Primary Financial Risk Factor],
+
+    "LIQUIDITY",
+        [Primary Liquidity Risk Factor],
+
+    "CREDIT",
+        [Primary Credit Risk Factor],
+
+    "MARKET",
+        [Primary Market Risk Factor],
+
+    "OPERATIONAL",
+        [Primary Operational Risk Factor],
+
+    "NONE"
+)
+
+
+// ==================================================================
+// 27. RISK ESCALATION LOGIC
+// ==================================================================
+
+Risk — Escalation Required =
+IF (
+    [Risk — Enterprise Score] >= 80
+        || (
+            [Risk — Enterprise Score] >= 60
+            && [Risk — Deterioration] = 1
+        ),
+    "YES",
+    "NO"
+)
+
+
+Risk — Escalation Level =
+SWITCH (
+    TRUE (),
+
+    [Risk — Enterprise Score] >= 80,
+        "EXECUTIVE",
+
+    [Risk — Enterprise Score] >= 60
+        && [Risk — Deterioration] = 1,
+        "SENIOR_MANAGEMENT",
+
+    [Risk — Enterprise Score] >= 60,
+        "MANAGEMENT",
+
+    [Risk — Enterprise Score] >= 35,
+        "RISK_OWNER",
+
+    "NONE"
+)
+
+
+// ==================================================================
+// 28. SEVERE LOSS RISK
+// ==================================================================
+
+Risk — Severe Loss Risk =
+IF (
+    [Total Net Profit] < 0
+        && [Net Profit Margin] <= -0.10,
+    1,
+    0
+)
+
+
+Risk — Severe Loss Status =
+IF (
+    [Risk — Severe Loss Risk] = 1,
+    "SEVERE_LOSS_RISK",
+    "NORMAL"
+)
+
+
+// ==================================================================
+// 29. FINANCIAL PROFILE DOWN
+// ==================================================================
+
+Risk — Financial Profile Down =
+IF (
+    [Revenue Decline Flag] = 1
+        || [Profit Decline Flag] = 1
+        || [Liquidity Pressure Flag] = 1
+        || [Negative Cash Flow Flag] = 1
+        || [High Leverage Flag] = 1,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 30. MULTI-FACTOR RISK
+// ==================================================================
+
+Risk — Multi Factor Risk =
+VAR FactorCount =
+    [Risk — Total Factors]
+
+RETURN
+SWITCH (
+    TRUE (),
+
+    FactorCount >= 5,
+        "SEVERE_MULTI_FACTOR",
+
+    FactorCount >= 3,
+        "HIGH_MULTI_FACTOR",
+
+    FactorCount >= 2,
+        "MODERATE_MULTI_FACTOR",
+
+    FactorCount = 1,
+        "SINGLE_FACTOR",
+
+    "NO_MAJOR_FACTOR"
+)
+
+
+// ==================================================================
+// 31. RISK WATCHLIST
+// ==================================================================
+
+Risk — Watchlist Status =
+SWITCH (
+    TRUE (),
+
+    [Risk — Enterprise Score] >= 80,
+        "CRITICAL_WATCHLIST",
+
+    [Risk — Enterprise Score] >= 60,
+        "HIGH_RISK_WATCHLIST",
+
+    [Risk — Enterprise Score] >= 35,
+        "MONITOR_WATCHLIST",
+
+    "NORMAL"
+)
+
+
+// ==================================================================
+// 32. RISK DATA QUALITY
+// ==================================================================
+
+Risk — Data Quality =
+VAR Quality =
+    SELECTEDVALUE (
+        RiskTransformations[RiskDataQuality]
+    )
+
+RETURN
+COALESCE (
+    Quality,
+    "UNKNOWN"
+)
+
+
+Risk — Data Quality Status =
+SWITCH (
+    [Risk — Data Quality],
+
+    "VALID",
+        "VALID",
+
+    "PARTIAL",
+        "PARTIAL",
+
+    "WARNING",
+        "WARNING",
+
+    "INVALID",
+        "INVALID",
+
+    "UNKNOWN"
+)
+
+
+// ==================================================================
+// 33. RISK COMPLETENESS
+// ==================================================================
+
+Risk — Data Completeness =
+VAR Revenue =
+    IF (
+        NOT ISBLANK ( [Total Revenue] ),
+        1,
+        0
+    )
+
+VAR Profit =
+    IF (
+        NOT ISBLANK ( [Total Net Profit] ),
+        1,
+        0
+    )
+
+VAR Liquidity =
+    IF (
+        NOT ISBLANK ( [Current Ratio] ),
+        1,
+        0
+    )
+
+VAR Debt =
+    IF (
+        NOT ISBLANK ( [Debt to Equity] ),
+        1,
+        0
+    )
+
+VAR CashFlow =
+    IF (
+        NOT ISBLANK ( [Total Operating Cash Flow] ),
+        1,
+        0
+    )
+
+RETURN
+DIVIDE (
+    Revenue
+        + Profit
+        + Liquidity
+        + Debt
+        + CashFlow,
+    5
+) * 100
+
+
+Risk — Completeness Status =
+SWITCH (
+    TRUE (),
+
+    [Risk — Data Completeness] >= 95,
+        "EXCELLENT",
+
+    [Risk — Data Completeness] >= 80,
+        "GOOD",
+
+    [Risk — Data Completeness] >= 60,
+        "PARTIAL",
+
+    "POOR"
+)
+
+
+// ==================================================================
+// 34. RISK QUALITY GATE
+// ==================================================================
+
+Risk — Quality Gate =
+IF (
+    [Risk — Data Completeness] >= 80
+        && [Risk — Data Quality] = "VALID",
+    "PASS",
+    "REVIEW"
+)
+
+
+// ==================================================================
+// 35. RISK DECISION GATE
+// ==================================================================
+
+Risk — Decision Gate =
+IF (
+    [Risk — Quality Gate] = "PASS"
+        && [Risk — Human Review Required] = "NO",
+    "AUTO_MONITOR",
+    "HUMAN_REVIEW"
+)
+
+
+// ==================================================================
+// 36. RISK DISPLAY
+// ==================================================================
+
+Risk — Score Display =
+FORMAT (
+    [Risk — Enterprise Score],
+    "0.0"
+)
+    & " / 100"
+
+
+Risk — Health Display =
+FORMAT (
+    [Risk — Enterprise Health],
+    "0.0"
+)
+    & " / 100"
+
+
+Risk — Change Display =
+IF (
+    ISBLANK ( [Risk — Change] ),
+    "N/A",
+    FORMAT (
+        [Risk — Change],
+        "+0.0;-0.0;0.0"
+    )
+)
+
+
+Risk — Dimension Display =
+FORMAT (
+    [Risk — Dimension Count],
+    "0"
+)
+
+
+Risk — Factor Display =
+FORMAT (
+    [Risk — Total Factors],
+    "0"
+)
+
+
+Risk — Concentration Display =
+FORMAT (
+    [Risk — Concentration Ratio],
+    "0.0%"
+)
+
+
+// ==================================================================
+// 37. RISK SCORECARD DISPLAY
+// ==================================================================
+
+Risk — Financial Display =
+FORMAT (
+    [Risk — Scorecard Financial],
+    "0.0"
+)
+
+
+Risk — Liquidity Display =
+FORMAT (
+    [Risk — Scorecard Liquidity],
+    "0.0"
+)
+
+
+Risk — Credit Display =
+FORMAT (
+    [Risk — Scorecard Credit],
+    "0.0"
+)
+
+
+Risk — Market Display =
+FORMAT (
+    [Risk — Scorecard Market],
+    "0.0"
+)
+
+
+Risk — Operational Display =
+FORMAT (
+    [Risk — Scorecard Operational],
+    "0.0"
+)
+
+
+// ==================================================================
+// 38. DASHBOARD TITLE
+// ==================================================================
+
+Risk — Dashboard Title =
+"FINCO AI — ENTERPRISE RISK DASHBOARD"
+
+
+Risk — Dashboard Subtitle =
+"Financial, liquidity, credit, market and operational risk intelligence"
+
+
+Risk — Scorecard Header =
+"RISK DIMENSION SCORECARD"
+
+
+Risk — Alert Header =
+"RISK ALERTS"
+
+
+Risk — Decision Header =
+"RISK DECISION"
+
+
+Risk — Agent Header =
+"SUPERVISOR AGENT"
+
+
+// ==================================================================
+// 39. RISK EXECUTIVE SUMMARY
+// ==================================================================
+
+Risk — Executive Summary =
+VAR Score =
+    [Risk — Enterprise Score]
+
+VAR Band =
+    [Risk — Enterprise Band]
+
+VAR Primary =
+    [Risk — Primary Dimension]
+
+VAR Trend =
+    [Risk — Trend]
+
+VAR Alert =
+    [Risk — Alert Level]
+
+RETURN
+"Enterprise Risk "
+    & FORMAT ( Score, "0.0" )
+    & " / 100"
+    & " | "
+    & Band
+    & " | Primary Risk: "
+    & Primary
+    & " | Trend: "
+    & Trend
+    & " | Alert: "
+    & Alert
+
+
+// ==================================================================
+// 40. RISK ACTION SUMMARY
+// ==================================================================
+
+Risk — Action Summary =
+VAR Decision =
+    [Risk — Decision]
+
+VAR Primary =
+    [Risk — Primary Dimension]
+
+VAR Action =
+    [Risk — Management Action]
+
+RETURN
+Decision
+    & " | Primary Risk: "
+    & Primary
+    & " | "
+    & Action
+
+
+// ==================================================================
+// 41. RISK AGENT CONTEXT
+// ==================================================================
+
+Risk — Agent Context =
+VAR Score =
+    [Risk — Enterprise Score]
+
+VAR Primary =
+    [Risk — Primary Dimension]
+
+VAR Factor =
+    [Risk — Root Cause Signal]
+
+VAR Trend =
+    [Risk — Trend]
+
+VAR Severity =
+    [Risk — Severity]
+
+RETURN
+"Risk Score="
+    & FORMAT ( Score, "0.0" )
+    & "; Severity="
+    & Severity
+    & "; PrimaryDimension="
+    & Primary
+    & "; RootCause="
+    & Factor
+    & "; Trend="
+    & Trend
+
+
+// ==================================================================
+// 42. RAG / EVIDENCE TRIGGER
+// ==================================================================
+
+Risk — RAG Evidence Required =
+IF (
+    [Risk — Enterprise Score] >= 60
+        || [Risk — Deterioration] = 1
+        || [Risk — Multi Factor Risk]
+            IN {
+                "SEVERE_MULTI_FACTOR",
+                "HIGH_MULTI_FACTOR"
+            },
+    "YES",
+    "NO"
+)
+
+
+// ==================================================================
+// 43. FORECAST TRIGGER
+// ==================================================================
+
+Risk — Forecast Required =
+IF (
+    [Risk — Enterprise Score] >= 35
+        || [Risk — Deterioration] = 1
+        || [Risk — Severe Loss Risk] = 1,
+    "YES",
+    "NO"
+)
+
+
+// ==================================================================
+// 44. WHAT-IF TRIGGER
+// ==================================================================
+
+Risk — What If Required =
+IF (
+    [Risk — Enterprise Score] >= 60
+        || [Risk — Severe Loss Risk] = 1
+        || [Risk — Liquidity Pressure Flag] = 1
+        || [Risk — High Leverage Flag] = 1,
+    "YES",
+    "NO"
+)
+
+
+// ==================================================================
+// 45. RECOMMENDATION TRIGGER
+// ==================================================================
+
+Risk — Recommendation Required =
+IF (
+    [Risk — Enterprise Score] >= 35
+        || [Risk — Deterioration] = 1,
+    "YES",
+    "NO"
+)
+
+
+// ==================================================================
+// 46. END-TO-END AI DECISION SIGNAL
+// ==================================================================
+
+Risk — AI Decision Signal =
+SWITCH (
+    TRUE (),
+
+    [Risk — Enterprise Score] >= 80,
+        "ALERT → RAG → FORECAST → WHAT_IF → RECOMMENDATION → HUMAN_REVIEW",
+
+    [Risk — Enterprise Score] >= 60,
+        "ALERT → RAG → FORECAST → RECOMMENDATION → HUMAN_REVIEW",
+
+    [Risk — Enterprise Score] >= 35,
+        "MONITOR → FORECAST → RECOMMENDATION",
+
+    [Risk — Deterioration] = 1,
+        "DETERIORATION → RAG → FORECAST",
+
+    "NORMAL_MONITORING"
+)
+
+
+// ==================================================================
+// 47. RISK CONTROL STATUS
+// ==================================================================
+
+Risk — Control Status =
+SWITCH (
+    TRUE (),
+
+    [Risk — Enterprise Score] >= 80
+        && [Risk — Human Review Required] = "YES",
+        "CONTROL_BREACH",
+
+    [Risk — Enterprise Score] >= 60,
+        "CONTROL_ATTENTION",
+
+    [Risk — Enterprise Score] >= 35,
+        "CONTROL_MONITOR",
+
+    "CONTROL_STABLE"
+)
+
+
+// ==================================================================
+// 48. FINAL EXECUTIVE RISK STATUS
+// ==================================================================
+
+Risk — Executive Status =
+SWITCH (
+    TRUE (),
+
+    [Risk — Enterprise Score] >= 80
+        && [Risk — Deterioration] = 1,
+        "CRITICAL_ESCALATION",
+
+    [Risk — Enterprise Score] >= 80,
+        "CRITICAL_REVIEW",
+
+    [Risk — Enterprise Score] >= 60
+        && [Risk — Deterioration] = 1,
+        "HIGH_PRIORITY_ACTION",
+
+    [Risk — Enterprise Score] >= 60,
+        "MANAGEMENT_REVIEW",
+
+    [Risk — Enterprise Score] >= 35,
+        "CLOSE_MONITORING",
+
+    [Risk — Improvement] = 1,
+        "IMPROVING",
+
+    "STABLE"
+)
+
+
+// ==================================================================
+// END OF FILE
+// ==================================================================

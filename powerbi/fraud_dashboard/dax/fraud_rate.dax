@@ -1,0 +1,162 @@
+ /*
+    FinCo AI - Fraud Rate Measures
+    File: powerbi/shared/dax/fraud_rate.dax
+ */
+
+Fraud Transaction Count =
+CALCULATE(
+    COUNTROWS(Transactions),
+    Transactions[FraudFlag] = 1
+)
+
+
+Total Transaction Count =
+COUNTROWS(Transactions)
+
+
+Fraud Transaction Rate =
+DIVIDE(
+    [Fraud Transaction Count],
+    [Total Transaction Count],
+    0
+)
+
+
+Fraud Rate % =
+[Fraud Transaction Rate] * 100
+
+
+Fraud Rate Previous Period =
+CALCULATE(
+    [Fraud Transaction Rate],
+    DATEADD(
+        'Date'[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Fraud Rate Change =
+[Fraud Transaction Rate]
+    - [Fraud Rate Previous Period]
+
+
+Fraud Rate Change % =
+DIVIDE(
+    [Fraud Rate Change],
+    [Fraud Rate Previous Period],
+    0
+)
+
+
+Fraud Rate YoY =
+CALCULATE(
+    [Fraud Transaction Rate],
+    DATEADD(
+        'Date'[Date],
+        -1,
+        YEAR
+    )
+)
+
+
+Fraud Rate YoY Change =
+[Fraud Transaction Rate]
+    - [Fraud Rate YoY]
+
+
+Fraud Rate YoY Change % =
+DIVIDE(
+    [Fraud Rate YoY Change],
+    [Fraud Rate YoY],
+    0
+)
+
+
+Fraud Rate 30D =
+DIVIDE(
+    CALCULATE(
+        [Fraud Transaction Count],
+        DATESINPERIOD(
+            'Date'[Date],
+            MAX('Date'[Date]),
+            -30,
+            DAY
+        )
+    ),
+    CALCULATE(
+        [Total Transaction Count],
+        DATESINPERIOD(
+            'Date'[Date],
+            MAX('Date'[Date]),
+            -30,
+            DAY
+        )
+    ),
+    0
+)
+
+
+Fraud Rate 90D =
+DIVIDE(
+    CALCULATE(
+        [Fraud Transaction Count],
+        DATESINPERIOD(
+            'Date'[Date],
+            MAX('Date'[Date]),
+            -90,
+            DAY
+        )
+    ),
+    CALCULATE(
+        [Total Transaction Count],
+        DATESINPERIOD(
+            'Date'[Date],
+            MAX('Date'[Date]),
+            -90,
+            DAY
+        )
+    ),
+    0
+)
+
+
+Fraud Rate Risk Score =
+VAR Rate = [Fraud Transaction Rate]
+RETURN
+    SWITCH(
+        TRUE(),
+        Rate >= 0.10, 100,
+        Rate >= 0.05, 80,
+        Rate >= 0.03, 60,
+        Rate >= 0.01, 40,
+        Rate > 0, 20,
+        0
+    )
+
+
+Fraud Rate Severity =
+SWITCH(
+    TRUE(),
+    [Fraud Transaction Rate] >= 0.10, "CRITICAL",
+    [Fraud Transaction Rate] >= 0.05, "HIGH",
+    [Fraud Transaction Rate] >= 0.03, "MEDIUM",
+    [Fraud Transaction Rate] >= 0.01, "LOW",
+    "NORMAL"
+)
+
+
+Fraud Rate Alert =
+SWITCH(
+    TRUE(),
+    [Fraud Transaction Rate] >= 0.10,
+        "CRITICAL: Fraud transaction rate is extremely high",
+    [Fraud Transaction Rate] >= 0.05,
+        "HIGH: Fraud transaction rate requires immediate investigation",
+    [Fraud Transaction Rate] >= 0.03,
+        "MEDIUM: Fraud transaction rate is above acceptable level",
+    [Fraud Transaction Rate] >= 0.01,
+        "LOW: Elevated fraud transaction rate detected",
+    "NORMAL: Fraud transaction rate within acceptable range"
+)

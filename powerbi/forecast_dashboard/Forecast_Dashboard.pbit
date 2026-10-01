@@ -1,0 +1,72 @@
+Revenue Actual =
+CALCULATE(
+    SUM(FactForecast[Actual]),
+    FactForecast[Metric] = "Revenue"
+)
+
+Revenue Forecast =
+CALCULATE(
+    SUM(FactForecast[Forecast]),
+    FactForecast[Metric] = "Revenue"
+)
+
+Profit Actual =
+CALCULATE(
+    SUM(FactForecast[Actual]),
+    FactForecast[Metric] = "Profit"
+)
+
+Profit Forecast =
+CALCULATE(
+    SUM(FactForecast[Forecast]),
+    FactForecast[Metric] = "Profit"
+)
+
+Cash Flow Actual =
+CALCULATE(
+    SUM(FactForecast[Actual]),
+    FactForecast[Metric] = "Cash Flow"
+)
+
+Cash Flow Forecast =
+CALCULATE(
+    SUM(FactForecast[Forecast]),
+    FactForecast[Metric] = "Cash Flow"
+)
+
+Forecast Error =
+SUM(FactForecast[ForecastError])
+
+Forecast MAE =
+AVERAGEX(
+    FILTER(
+        FactForecast,
+        NOT ISBLANK(FactForecast[Actual])
+    ),
+    ABS(FactForecast[Actual] - FactForecast[Forecast])
+)
+
+Forecast MAPE =
+AVERAGEX(
+    FILTER(
+        FactForecast,
+        NOT ISBLANK(FactForecast[Actual]) &&
+        FactForecast[Actual] <> 0
+    ),
+    DIVIDE(
+        ABS(FactForecast[Actual] - FactForecast[Forecast]),
+        ABS(FactForecast[Actual])
+    )
+)
+
+Forecast Accuracy =
+1 - [Forecast MAPE]
+
+Average Confidence =
+AVERAGE(FactForecast[Confidence])
+
+High Risk Forecasts =
+CALCULATE(
+    COUNTROWS(FactForecast),
+    FactForecast[ForecastRiskFlag] = "HIGH"
+)

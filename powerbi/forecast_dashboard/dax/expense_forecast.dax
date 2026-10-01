@@ -1,0 +1,884 @@
+// ============================================================
+// FinCo AI — Expense Forecast Measures
+// File: expense_forecast.dax
+//
+// Primary table:
+//     ForecastResults
+//
+// Expected columns:
+//     ForecastDate
+//     Company
+//     BusinessUnit
+//     Metric
+//     Actual
+//     Forecast
+//     LowerBound
+//     UpperBound
+//     Confidence
+//     ForecastError
+//     ForecastAccuracy
+//     ForecastRiskScore
+//     ForecastRiskLevel
+//     AlertFlag
+// ============================================================
+
+
+// ============================================================
+// 1. EXPENSE ACTUAL
+// ============================================================
+
+Expense Actual =
+CALCULATE(
+    SUM(ForecastResults[Actual]),
+    ForecastResults[Metric] IN {
+        "Expense",
+        "Expenses",
+        "Operating Expenses"
+    }
+)
+
+
+// ============================================================
+// 2. EXPENSE FORECAST
+// ============================================================
+
+Expense Forecast =
+CALCULATE(
+    SUM(ForecastResults[Forecast]),
+    ForecastResults[Metric] IN {
+        "Expense",
+        "Expenses",
+        "Operating Expenses"
+    }
+)
+
+
+// ============================================================
+// 3. EXPENSE FORECAST VARIANCE
+// ============================================================
+
+Expense Forecast Variance =
+[Expense Forecast]
+    - [Expense Actual]
+
+
+// ============================================================
+// 4. EXPENSE FORECAST VARIANCE %
+// ============================================================
+
+Expense Forecast Variance % =
+DIVIDE(
+    [Expense Forecast Variance],
+    ABS([Expense Actual])
+)
+
+
+// ============================================================
+// 5. EXPENSE FORECAST LOWER BOUND
+// ============================================================
+
+Expense Forecast Lower Bound =
+CALCULATE(
+    SUM(ForecastResults[LowerBound]),
+    ForecastResults[Metric] IN {
+        "Expense",
+        "Expenses",
+        "Operating Expenses"
+    }
+)
+
+
+// ============================================================
+// 6. EXPENSE FORECAST UPPER BOUND
+// ============================================================
+
+Expense Forecast Upper Bound =
+CALCULATE(
+    SUM(ForecastResults[UpperBound]),
+    ForecastResults[Metric] IN {
+        "Expense",
+        "Expenses",
+        "Operating Expenses"
+    }
+)
+
+
+// ============================================================
+// 7. EXPENSE FORECAST BAND WIDTH
+// ============================================================
+
+Expense Forecast Band Width =
+[Expense Forecast Upper Bound]
+    - [Expense Forecast Lower Bound]
+
+
+// ============================================================
+// 8. EXPENSE FORECAST BAND WIDTH %
+// ============================================================
+
+Expense Forecast Band Width % =
+DIVIDE(
+    [Expense Forecast Band Width],
+    ABS([Expense Forecast])
+)
+
+
+// ============================================================
+// 9. EXPENSE FORECAST CONFIDENCE
+// ============================================================
+
+Expense Forecast Confidence =
+CALCULATE(
+    AVERAGE(ForecastResults[Confidence]),
+    ForecastResults[Metric] IN {
+        "Expense",
+        "Expenses",
+        "Operating Expenses"
+    }
+)
+
+
+// ============================================================
+// 10. EXPENSE FORECAST ERROR
+// ============================================================
+
+Expense Forecast Error =
+CALCULATE(
+    SUM(ForecastResults[ForecastError]),
+    ForecastResults[Metric] IN {
+        "Expense",
+        "Expenses",
+        "Operating Expenses"
+    }
+)
+
+
+// ============================================================
+// 11. EXPENSE MAE
+// ============================================================
+
+Expense Forecast MAE =
+AVERAGEX(
+    FILTER(
+        ForecastResults,
+        ForecastResults[Metric] IN {
+            "Expense",
+            "Expenses",
+            "Operating Expenses"
+        }
+            &&
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    ABS(
+        ForecastResults[Actual]
+            - ForecastResults[Forecast]
+    )
+)
+
+
+// ============================================================
+// 12. EXPENSE MAPE
+// ============================================================
+
+Expense Forecast MAPE =
+AVERAGEX(
+    FILTER(
+        ForecastResults,
+        ForecastResults[Metric] IN {
+            "Expense",
+            "Expenses",
+            "Operating Expenses"
+        }
+            &&
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        ForecastResults[Actual] <> 0
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    DIVIDE(
+        ABS(
+            ForecastResults[Actual]
+                - ForecastResults[Forecast]
+        ),
+        ABS(ForecastResults[Actual])
+    )
+)
+
+
+// ============================================================
+// 13. EXPENSE FORECAST ACCURACY
+// ============================================================
+
+Expense Forecast Accuracy =
+VAR MAPEValue =
+    [Expense Forecast MAPE]
+
+RETURN
+    IF(
+        ISBLANK(MAPEValue),
+        BLANK(),
+        MAX(
+            0,
+            1 - MAPEValue
+        )
+    )
+
+
+// ============================================================
+// 14. EXPENSE FORECAST BIAS
+// ============================================================
+
+Expense Forecast Bias =
+VAR ActualValue =
+    [Expense Actual]
+
+VAR ForecastValue =
+    [Expense Forecast]
+
+RETURN
+    ForecastValue - ActualValue
+
+
+// ============================================================
+// 15. EXPENSE FORECAST BIAS %
+// ============================================================
+
+Expense Forecast Bias % =
+DIVIDE(
+    [Expense Forecast Bias],
+    ABS([Expense Actual])
+)
+
+
+// ============================================================
+// 16. EXPENSE OVERRUN
+// ============================================================
+//
+// Positive = forecast expense above actual.
+// Useful for identifying cost escalation.
+//
+
+Expense Overrun =
+MAX(
+    0,
+    [Expense Forecast] - [Expense Actual]
+)
+
+
+// ============================================================
+// 17. EXPENSE OVERRUN %
+// ============================================================
+
+Expense Overrun % =
+DIVIDE(
+    [Expense Overrun],
+    ABS([Expense Actual])
+)
+
+
+// ============================================================
+// 18. EXPENSE GROWTH
+// ============================================================
+
+Expense Forecast Growth =
+VAR CurrentForecast =
+    [Expense Forecast]
+
+VAR PreviousForecast =
+    CALCULATE(
+        [Expense Forecast],
+        DATEADD(
+            ForecastResults[ForecastDate],
+            -1,
+            MONTH
+        )
+    )
+
+RETURN
+    DIVIDE(
+        CurrentForecast - PreviousForecast,
+        ABS(PreviousForecast)
+    )
+
+
+// ============================================================
+// 19. EXPENSE TREND
+// ============================================================
+
+Expense Forecast Trend =
+VAR CurrentForecast =
+    [Expense Forecast]
+
+VAR PreviousForecast =
+    CALCULATE(
+        [Expense Forecast],
+        DATEADD(
+            ForecastResults[ForecastDate],
+            -1,
+            MONTH
+        )
+    )
+
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(CurrentForecast),
+            "No Forecast",
+
+        ISBLANK(PreviousForecast),
+            "No Prior Period",
+
+        CurrentForecast > PreviousForecast,
+            "Increasing",
+
+        CurrentForecast < PreviousForecast,
+            "Decreasing",
+
+        "Stable"
+    )
+
+
+// ============================================================
+// 20. EXPENSE FORECAST RISK SCORE
+// ============================================================
+
+Expense Forecast Risk Score =
+VAR Confidence =
+    [Expense Forecast Confidence]
+
+VAR BandWidth =
+    [Expense Forecast Band Width %]
+
+VAR ActualValue =
+    [Expense Actual]
+
+VAR ForecastValue =
+    [Expense Forecast]
+
+VAR ConfidenceRisk =
+    SWITCH(
+        TRUE(),
+        ISBLANK(Confidence), 40,
+        Confidence < 0.40, 40,
+        Confidence < 0.60, 30,
+        Confidence < 0.75, 20,
+        Confidence < 0.90, 10,
+        0
+    )
+
+VAR VolatilityRisk =
+    SWITCH(
+        TRUE(),
+        ISBLANK(BandWidth), 0,
+        BandWidth >= 0.50, 40,
+        BandWidth >= 0.30, 30,
+        BandWidth >= 0.15, 20,
+        BandWidth >= 0.05, 10,
+        0
+    )
+
+VAR ExpenseIncreaseRisk =
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(ForecastValue),
+            0,
+
+        ForecastValue < 0,
+            0,
+
+        NOT ISBLANK(ActualValue)
+            && ActualValue <> 0
+            && DIVIDE(
+                ForecastValue - ActualValue,
+                ABS(ActualValue)
+            ) >= 0.30,
+            40,
+
+        NOT ISBLANK(ActualValue)
+            && ActualValue <> 0
+            && DIVIDE(
+                ForecastValue - ActualValue,
+                ABS(ActualValue)
+            ) >= 0.20,
+            30,
+
+        NOT ISBLANK(ActualValue)
+            && ActualValue <> 0
+            && DIVIDE(
+                ForecastValue - ActualValue,
+                ABS(ActualValue)
+            ) >= 0.10,
+            20,
+
+        ForecastValue > ActualValue,
+            10,
+
+        0
+    )
+
+RETURN
+    MIN(
+        100,
+        ConfidenceRisk
+            + VolatilityRisk
+            + ExpenseIncreaseRisk
+    )
+
+
+// ============================================================
+// 21. EXPENSE FORECAST RISK LEVEL
+// ============================================================
+
+Expense Forecast Risk Level =
+VAR RiskScore =
+    [Expense Forecast Risk Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        RiskScore >= 75, "CRITICAL",
+        RiskScore >= 50, "HIGH",
+        RiskScore >= 25, "MEDIUM",
+        "LOW"
+    )
+
+
+// ============================================================
+// 22. EXPENSE HEALTH SCORE
+// ============================================================
+
+Expense Forecast Health Score =
+MAX(
+    0,
+    100 - [Expense Forecast Risk Score]
+)
+
+
+// ============================================================
+// 23. EXPENSE HEALTH STATUS
+// ============================================================
+
+Expense Forecast Health Status =
+VAR Score =
+    [Expense Forecast Health Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 80, "Excellent",
+        Score >= 65, "Healthy",
+        Score >= 50, "Watch",
+        Score >= 30, "Weak",
+        "Critical"
+    )
+
+
+// ============================================================
+// 24. EXPENSE FORECAST STATUS
+// ============================================================
+
+Expense Forecast Status =
+VAR ForecastValue =
+    [Expense Forecast]
+
+VAR RiskLevel =
+    [Expense Forecast Risk Level]
+
+VAR VariancePct =
+    [Expense Forecast Variance %]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(ForecastValue),
+            "No Forecast",
+
+        RiskLevel = "CRITICAL",
+            "Critical",
+
+        RiskLevel = "HIGH",
+            "High Risk",
+
+        NOT ISBLANK(VariancePct)
+            && VariancePct >= 0.20,
+            "Significant Overrun",
+
+        NOT ISBLANK(VariancePct)
+            && VariancePct >= 0.10,
+            "Expense Pressure",
+
+        "Within Expected Range"
+    )
+
+
+// ============================================================
+// 25. EXPENSE ALERT FLAG
+// ============================================================
+
+Expense Forecast Alert Flag =
+VAR RiskLevel =
+    [Expense Forecast Risk Level]
+
+VAR VariancePct =
+    [Expense Forecast Variance %]
+
+RETURN
+    IF(
+        RiskLevel IN {
+            "CRITICAL",
+            "HIGH"
+        }
+            ||
+        (
+            NOT ISBLANK(VariancePct)
+                && VariancePct >= 0.10
+        ),
+        "YES",
+        "NO"
+    )
+
+
+// ============================================================
+// 26. EXPENSE ALERT TYPE
+// ============================================================
+
+Expense Forecast Alert Type =
+VAR RiskLevel =
+    [Expense Forecast Risk Level]
+
+VAR VariancePct =
+    [Expense Forecast Variance %]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        RiskLevel = "CRITICAL",
+            "Critical Expense Risk",
+
+        RiskLevel = "HIGH",
+            "High Expense Risk",
+
+        NOT ISBLANK(VariancePct)
+            && VariancePct >= 0.20,
+            "Severe Expense Overrun",
+
+        NOT ISBLANK(VariancePct)
+            && VariancePct >= 0.10,
+            "Expense Overrun",
+
+        RiskLevel = "MEDIUM",
+            "Expense Monitoring",
+
+        BLANK()
+    )
+
+
+// ============================================================
+// 27. EXPENSE RECOMMENDED ACTION
+// ============================================================
+
+Expense Forecast Recommended Action =
+VAR RiskLevel =
+    [Expense Forecast Risk Level]
+
+VAR VariancePct =
+    [Expense Forecast Variance %]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        RiskLevel = "CRITICAL",
+            "Immediate cost-control review and expense reduction plan",
+
+        RiskLevel = "HIGH",
+            "Investigate expense drivers and execute mitigation plan",
+
+        NOT ISBLANK(VariancePct)
+            && VariancePct >= 0.20,
+            "Perform expense root-cause analysis and initiate cost controls",
+
+        NOT ISBLANK(VariancePct)
+            && VariancePct >= 0.10,
+            "Review major expense categories and budget assumptions",
+
+        RiskLevel = "MEDIUM",
+            "Monitor expense trend and validate forecast assumptions",
+
+        "Continue normal expense monitoring"
+    )
+
+
+// ============================================================
+// 28. FUTURE EXPENSE FORECAST
+// ============================================================
+
+Future Expense Forecast =
+CALCULATE(
+    [Expense Forecast],
+    FILTER(
+        ALL(ForecastResults[ForecastDate]),
+        ForecastResults[ForecastDate] > TODAY()
+    )
+)
+
+
+// ============================================================
+// 29. NEXT 30 DAYS EXPENSE
+// ============================================================
+
+Expense Forecast Next 30 Days =
+CALCULATE(
+    [Expense Forecast],
+    FILTER(
+        ALL(ForecastResults[ForecastDate]),
+        ForecastResults[ForecastDate] > TODAY()
+            &&
+        ForecastResults[ForecastDate]
+            <= TODAY() + 30
+    )
+)
+
+
+// ============================================================
+// 30. NEXT 90 DAYS EXPENSE
+// ============================================================
+
+Expense Forecast Next 90 Days =
+CALCULATE(
+    [Expense Forecast],
+    FILTER(
+        ALL(ForecastResults[ForecastDate]),
+        ForecastResults[ForecastDate] > TODAY()
+            &&
+        ForecastResults[ForecastDate]
+            <= TODAY() + 90
+    )
+)
+
+
+// ============================================================
+// 31. NEXT 12 MONTHS EXPENSE
+// ============================================================
+
+Expense Forecast Next 12 Months =
+CALCULATE(
+    [Expense Forecast],
+    FILTER(
+        ALL(ForecastResults[ForecastDate]),
+        ForecastResults[ForecastDate] > TODAY()
+            &&
+        ForecastResults[ForecastDate]
+            <= EDATE(TODAY(), 12)
+    )
+)
+
+
+// ============================================================
+// 32. HIGH-RISK EXPENSE FORECASTS
+// ============================================================
+
+High Risk Expense Forecasts =
+CALCULATE(
+    COUNTROWS(ForecastResults),
+    ForecastResults[Metric] IN {
+        "Expense",
+        "Expenses",
+        "Operating Expenses"
+    },
+    ForecastResults[ForecastRiskLevel] IN {
+        "HIGH",
+        "CRITICAL"
+    }
+)
+
+
+// ============================================================
+// 33. EXPENSE ALERT COUNT
+// ============================================================
+
+Expense Forecast Alert Count =
+CALCULATE(
+    COUNTROWS(ForecastResults),
+    ForecastResults[Metric] IN {
+        "Expense",
+        "Expenses",
+        "Operating Expenses"
+    },
+    ForecastResults[AlertFlag] = "YES"
+)
+
+
+// ============================================================
+// 34. EXPENSE FORECAST RECORDS
+// ============================================================
+
+Expense Forecast Records =
+CALCULATE(
+    COUNTROWS(ForecastResults),
+    ForecastResults[Metric] IN {
+        "Expense",
+        "Expenses",
+        "Operating Expenses"
+    }
+)
+
+
+// ============================================================
+// 35. EXPENSE FORECAST COVERAGE
+// ============================================================
+
+Expense Forecast Coverage % =
+VAR TotalRecords =
+    CALCULATE(
+        COUNTROWS(ForecastResults),
+        ForecastResults[Metric] IN {
+            "Expense",
+            "Expenses",
+            "Operating Expenses"
+        }
+    )
+
+VAR ForecastRecords =
+    CALCULATE(
+        COUNTROWS(ForecastResults),
+        ForecastResults[Metric] IN {
+            "Expense",
+            "Expenses",
+            "Operating Expenses"
+        },
+        NOT ISBLANK(ForecastResults[Forecast])
+    )
+
+RETURN
+    DIVIDE(
+        ForecastRecords,
+        TotalRecords
+    )
+
+
+// ============================================================
+// 36. EXPENSE FORECAST SCORECARD
+// ============================================================
+
+Expense Forecast Scorecard =
+VAR Health =
+    [Expense Forecast Health Score]
+
+VAR Accuracy =
+    [Expense Forecast Accuracy]
+
+VAR Confidence =
+    [Expense Forecast Confidence]
+
+RETURN
+    ROUND(
+        (
+            Health
+            +
+            COALESCE(Accuracy, 0) * 100
+            +
+            COALESCE(Confidence, 0) * 100
+        ) / 3,
+        1
+    )
+
+
+// ============================================================
+// 37. EXPENSE DECISION PRIORITY
+// ============================================================
+
+Expense Forecast Decision Priority =
+VAR RiskLevel =
+    [Expense Forecast Risk Level]
+
+RETURN
+    SWITCH(
+        RiskLevel,
+        "CRITICAL", 1,
+        "HIGH", 2,
+        "MEDIUM", 3,
+        4
+    )
+
+
+// ============================================================
+// 38. EXPENSE FORECAST EXECUTIVE STATUS
+// ============================================================
+
+Expense Forecast Executive Status =
+VAR RiskLevel =
+    [Expense Forecast Risk Level]
+
+VAR VariancePct =
+    [Expense Forecast Variance %]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        RiskLevel = "CRITICAL",
+            "CRITICAL — Severe expense forecast risk",
+
+        NOT ISBLANK(VariancePct)
+            && VariancePct >= 0.20,
+            "WARNING — Significant expense overrun",
+
+        RiskLevel = "HIGH",
+            "HIGH RISK — Expense requires management review",
+
+        NOT ISBLANK(VariancePct)
+            && VariancePct >= 0.10,
+            "WATCH — Expense pressure detected",
+
+        "HEALTHY — Expense forecast within expected range"
+    )
+
+
+// ============================================================
+// 39. EXPENSE FORECAST MIDPOINT
+// ============================================================
+
+Expense Forecast Midpoint =
+VAR LowerValue =
+    [Expense Forecast Lower Bound]
+
+VAR UpperValue =
+    [Expense Forecast Upper Bound]
+
+RETURN
+    IF(
+        ISBLANK(LowerValue)
+            && ISBLANK(UpperValue),
+        BLANK(),
+        DIVIDE(
+            COALESCE(LowerValue, 0)
+                + COALESCE(UpperValue, 0),
+            2
+        )
+    )
+
+
+// ============================================================
+// 40. EXPENSE FORECAST DISPLAY
+// ============================================================
+
+Expense Forecast Display =
+VAR ForecastValue =
+    [Expense Forecast]
+
+RETURN
+    IF(
+        ISBLANK(ForecastValue),
+        "N/A",
+        FORMAT(
+            ForecastValue,
+            "#,##0.00"
+        )
+    )

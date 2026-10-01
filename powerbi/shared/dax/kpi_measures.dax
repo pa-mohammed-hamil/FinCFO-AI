@@ -1,0 +1,1518 @@
+-- Add shared KPI measures here
+/*
+====================================================================
+ FinCo AI — KPI Measures
+ File: powerbi/shared/dax/kpi_measures.dax
+
+ Purpose:
+   Executive KPI and dashboard measure layer.
+
+ Covers:
+   - Revenue KPI
+   - Profitability KPI
+   - Cash Flow KPI
+   - Liquidity KPI
+   - Leverage KPI
+   - Risk KPI
+   - Growth KPI
+   - Budget KPI
+   - Forecast KPI
+   - Fraud KPI
+   - Alert KPI
+   - Enterprise Health KPI
+   - KPI status / trend / direction
+   - Executive dashboard cards
+   - Supervisor Agent signals
+
+ Expected dependencies:
+   DateTable
+   RiskTransformations
+   RiskFactors
+   RiskScores
+   financial_measures.dax
+   risk_kpis.dax
+   overall_risk_score.dax
+   credit_risk.dax
+   liquidity_risk.dax
+   market_risk.dax
+   operational_risk.dax
+
+ IMPORTANT:
+   DAX is the analytical / presentation layer.
+   Production risk and ML decisions remain authoritative in
+   backend services.
+====================================================================
+*/
+
+
+// ==================================================================
+// 1. CORE EXECUTIVE KPIs
+// ==================================================================
+
+KPI Revenue =
+[Total Revenue]
+
+
+KPI Gross Profit =
+[Total Gross Profit]
+
+
+KPI Net Profit =
+[Total Net Profit]
+
+
+KPI Operating Cash Flow =
+[Total Operating Cash Flow]
+
+
+KPI Cash =
+[Total Cash]
+
+
+KPI Current Assets =
+[Total Current Assets]
+
+
+KPI Current Liabilities =
+[Total Current Liabilities]
+
+
+KPI Total Debt =
+[Total Debt]
+
+
+KPI Total Assets =
+[Total Assets]
+
+
+KPI Total Equity =
+[Total Equity]
+
+
+// ==================================================================
+// 2. PROFITABILITY KPIs
+// ==================================================================
+
+KPI Gross Margin =
+[Gross Profit Margin]
+
+
+KPI Net Margin =
+[Net Profit Margin]
+
+
+KPI Operating Margin =
+[Operating Profit Margin]
+
+
+KPI ROA =
+[Return on Assets]
+
+
+KPI ROE =
+[Return on Equity]
+
+
+KPI Profitability Pressure =
+[Profitability Pressure Score]
+
+
+KPI Profitability Status =
+SWITCH (
+    TRUE (),
+    [Net Profit Margin] >= 0.15, "EXCELLENT",
+    [Net Profit Margin] >= 0.10, "STRONG",
+    [Net Profit Margin] >= 0.05, "HEALTHY",
+    [Net Profit Margin] >= 0, "WATCH",
+    "CRITICAL"
+)
+
+
+// ==================================================================
+// 3. GROWTH KPIs
+// ==================================================================
+
+KPI Revenue Growth =
+[Revenue Growth %]
+
+
+KPI Profit Growth =
+[Net Profit Growth %]
+
+
+KPI Gross Profit Growth =
+[Gross Profit Growth %]
+
+
+KPI Revenue Decline =
+[Revenue Decline %]
+
+
+KPI Profit Decline =
+[Net Profit Decline %]
+
+
+KPI Growth Status =
+SWITCH (
+    TRUE (),
+    [Revenue Growth %] >= 0.20, "STRONG_GROWTH",
+    [Revenue Growth %] >= 0.10, "HEALTHY_GROWTH",
+    [Revenue Growth %] >= 0, "STABLE",
+    [Revenue Growth %] >= -0.10, "MILD_DECLINE",
+    [Revenue Growth %] >= -0.20, "SIGNIFICANT_DECLINE",
+    "SEVERE_DECLINE"
+)
+
+
+// ==================================================================
+// 4. CASH FLOW KPIs
+// ==================================================================
+
+KPI Operating Cash Flow =
+[Total Operating Cash Flow]
+
+
+KPI Operating Cash Flow Margin =
+[Operating Cash Flow Margin]
+
+
+KPI Cash Flow Conversion =
+[Cash Flow Conversion]
+
+
+KPI Cash Flow to Revenue =
+[Cash Flow to Revenue]
+
+
+KPI Cash Flow Growth =
+[Operating Cash Flow Growth]
+
+
+KPI Cash Flow Status =
+SWITCH (
+    TRUE (),
+    [Operating Cash Flow Margin] >= 0.15, "STRONG",
+    [Operating Cash Flow Margin] >= 0.10, "HEALTHY",
+    [Operating Cash Flow Margin] >= 0, "WATCH",
+    "CRITICAL"
+)
+
+
+// ==================================================================
+// 5. LIQUIDITY KPIs
+// ==================================================================
+
+KPI Current Ratio =
+[Current Ratio]
+
+
+KPI Cash Ratio =
+[Cash Ratio]
+
+
+KPI Working Capital =
+[Working Capital]
+
+
+KPI Working Capital Ratio =
+[Working Capital Ratio]
+
+
+KPI Cash to Current Liabilities =
+[Cash to Current Liabilities]
+
+
+KPI Liquidity Risk =
+[Liquidity Risk Score]
+
+
+KPI Liquidity Health =
+[Liquidity Health Score]
+
+
+KPI Liquidity Status =
+[Liquidity Status]
+
+
+KPI Liquidity Band =
+[Liquidity Risk Band]
+
+
+// ==================================================================
+// 6. LEVERAGE KPIs
+// ==================================================================
+
+KPI Debt to Equity =
+[Debt to Equity]
+
+
+KPI Debt to Assets =
+[Debt to Assets]
+
+
+KPI Equity Ratio =
+[Equity Ratio]
+
+
+KPI Cash to Debt =
+[Cash to Debt]
+
+
+KPI Debt Coverage =
+[Debt Coverage Ratio]
+
+
+KPI Credit Risk =
+[Credit Risk Score]
+
+
+KPI Credit Health =
+[Credit Health Score]
+
+
+KPI Credit Status =
+[Credit Risk Band]
+
+
+// ==================================================================
+// 7. MARKET KPIs
+// ==================================================================
+
+KPI Market Risk =
+[Market Risk Score]
+
+
+KPI Market Health =
+[Market Health Score]
+
+
+KPI Market Status =
+[Market Risk Band]
+
+
+KPI Revenue Volatility =
+[Revenue Volatility %]
+
+
+KPI Market Exposure =
+[Market Exposure Score]
+
+
+KPI Market Exposure Band =
+[Market Exposure Band]
+
+
+// ==================================================================
+// 8. OPERATIONAL KPIs
+// ==================================================================
+
+KPI Operational Risk =
+[Operational Risk Score]
+
+
+KPI Operational Health =
+[Operational Health Score]
+
+
+KPI Operational Status =
+[Operational Risk Band]
+
+
+KPI Operational Cash Flow =
+[Operational Operating Cash Flow]
+
+
+KPI Operational Margin =
+[Operational Net Margin]
+
+
+KPI Operational Efficiency =
+[Efficiency Signal]
+
+
+// ==================================================================
+// 9. ENTERPRISE RISK KPIs
+// ==================================================================
+
+KPI Enterprise Risk =
+[Overall Risk Score]
+
+
+KPI Enterprise Health =
+[Overall Health Score]
+
+
+KPI Enterprise Risk Band =
+[Overall Risk Band]
+
+
+KPI Enterprise Health Band =
+[Overall Health Band]
+
+
+KPI Enterprise Status =
+[Overall Risk Status]
+
+
+KPI Primary Risk Dimension =
+[Primary Overall Risk Dimension]
+
+
+KPI Secondary Risk Dimension =
+[Secondary Overall Risk Dimension]
+
+
+KPI Highest Risk Dimension =
+[Highest Risk Dimension Score]
+
+
+KPI Risk Dimension Spread =
+[Overall Risk Dimension Spread]
+
+
+KPI Risk Concentration =
+[Risk Concentration Ratio]
+
+
+// ==================================================================
+// 10. ENTERPRISE RISK COUNTS
+// ==================================================================
+
+KPI Critical Risk Dimensions =
+[Critical Risk Dimension Count]
+
+
+KPI High Risk Dimensions =
+[High Risk Dimension Count]
+
+
+KPI At Risk Dimensions =
+[At Risk Dimension Count]
+
+
+KPI Total Risk Factors =
+[Overall Total Risk Factor Count]
+
+
+KPI Critical Risk Count =
+[Overall Critical Risk Count]
+
+
+KPI High Risk Count =
+[Overall High Risk Count]
+
+
+// ==================================================================
+// 11. RISK ALERT KPIs
+// ==================================================================
+
+KPI Enterprise Alert Level =
+[Overall Risk Alert Level]
+
+
+KPI Enterprise Decision =
+[Overall Risk Decision]
+
+
+KPI Critical Risk Flag =
+[Critical Overall Risk Flag]
+
+
+KPI High Risk Flag =
+[High Overall Risk Flag]
+
+
+KPI Human Review Required =
+[Human Review Required]
+
+
+KPI Supervisor Signal =
+[Supervisor Agent Signal]
+
+
+// ==================================================================
+// 12. FINANCIAL RISK KPIs
+// ==================================================================
+
+KPI Financial Risk =
+[Financial Risk Score]
+
+
+KPI Financial Health =
+[Financial Health Score]
+
+
+KPI Financial Risk Band =
+[Financial Risk Band]
+
+
+KPI Financial Status =
+[Financial Status]
+
+
+KPI Financial Risk Factor Count =
+[Financial Risk Factor Count]
+
+
+KPI Primary Financial Risk =
+[Primary Financial Risk Factor]
+
+
+KPI Financial Alert =
+[Financial Alert Level]
+
+
+KPI Financial Decision =
+[Financial Decision]
+
+
+// ==================================================================
+// 13. BUDGET KPIs
+// ==================================================================
+
+KPI Budget Revenue =
+[Budget Revenue]
+
+
+KPI Budget Profit =
+[Budget Profit]
+
+
+KPI Revenue Budget Variance =
+[Revenue Budget Variance]
+
+
+KPI Revenue Budget Variance % =
+[Revenue Budget Variance %]
+
+
+KPI Profit Budget Variance =
+[Profit Budget Variance]
+
+
+KPI Profit Budget Variance % =
+[Profit Budget Variance %]
+
+
+KPI Revenue Budget Achievement =
+[Revenue Budget Achievement %]
+
+
+KPI Profit Budget Achievement =
+[Profit Budget Achievement %]
+
+
+KPI Revenue Budget Status =
+[Revenue Budget Status]
+
+
+KPI Profit Budget Status =
+[Profit Budget Status]
+
+
+// ==================================================================
+// 14. PERFORMANCE SCORE
+// ==================================================================
+
+KPI Financial Performance =
+[Financial Performance Score]
+
+
+KPI Executive Financial Health =
+[Executive Financial Health Score]
+
+
+KPI Executive Financial Health Band =
+[Executive Financial Health Band]
+
+
+// ==================================================================
+// 15. PERIOD COMPARISON KPIs
+// ==================================================================
+
+KPI Revenue Change =
+[Revenue Period Change]
+
+
+KPI Revenue Change % =
+[Revenue Period Change %]
+
+
+KPI Profit Change =
+[Profit Period Change]
+
+
+KPI Profit Change % =
+[Profit Period Change %]
+
+
+KPI Margin Change =
+[Margin Period Change]
+
+
+KPI Cash Flow Change =
+[Cash Flow Period Change]
+
+
+KPI Cash Flow Change % =
+[Cash Flow Period Change %]
+
+
+// ==================================================================
+// 16. KPI TREND ENGINE
+// ==================================================================
+
+KPI Revenue Trend =
+SWITCH (
+    TRUE (),
+    [Revenue Growth %] >= 0.10, "UP",
+    [Revenue Growth %] <= -0.10, "DOWN",
+    "FLAT"
+)
+
+
+KPI Profit Trend =
+SWITCH (
+    TRUE (),
+    [Net Profit Growth %] >= 0.10, "UP",
+    [Net Profit Growth %] <= -0.10, "DOWN",
+    "FLAT"
+)
+
+
+KPI Cash Flow Trend =
+SWITCH (
+    TRUE (),
+    [Cash Flow Period Change %] >= 0.10, "UP",
+    [Cash Flow Period Change %] <= -0.10, "DOWN",
+    "FLAT"
+)
+
+
+KPI Risk Trend =
+[Overall Risk Trend]
+
+
+KPI Health Trend =
+SWITCH (
+    TRUE (),
+    [Overall Risk Change] <= -10, "IMPROVING",
+    [Overall Risk Change] >= 10, "DETERIORATING",
+    "STABLE"
+)
+
+
+// ==================================================================
+// 17. KPI DIRECTION SIGNAL
+// ==================================================================
+
+KPI Revenue Direction =
+IF (
+    [Revenue Growth %] > 0,
+    "POSITIVE",
+    IF (
+        [Revenue Growth %] < 0,
+        "NEGATIVE",
+        "NEUTRAL"
+    )
+)
+
+
+KPI Profit Direction =
+IF (
+    [Net Profit Growth %] > 0,
+    "POSITIVE",
+    IF (
+        [Net Profit Growth %] < 0,
+        "NEGATIVE",
+        "NEUTRAL"
+    )
+)
+
+
+KPI Cash Flow Direction =
+IF (
+    [Cash Flow Period Change %] > 0,
+    "POSITIVE",
+    IF (
+        [Cash Flow Period Change %] < 0,
+        "NEGATIVE",
+        "NEUTRAL"
+    )
+)
+
+
+KPI Risk Direction =
+IF (
+    [Overall Risk Change] > 0,
+    "WORSENING",
+    IF (
+        [Overall Risk Change] < 0,
+        "IMPROVING",
+        "STABLE"
+    )
+)
+
+
+// ==================================================================
+// 18. KPI STATUS ENGINE
+// ==================================================================
+
+KPI Revenue Status =
+SWITCH (
+    TRUE (),
+    [Revenue Growth %] >= 0.10, "GREEN",
+    [Revenue Growth %] >= 0, "STABLE",
+    [Revenue Growth %] >= -0.10, "WARNING",
+    "CRITICAL"
+)
+
+
+KPI Profit Status =
+SWITCH (
+    TRUE (),
+    [Net Profit Margin] >= 0.10, "GREEN",
+    [Net Profit Margin] >= 0.05, "HEALTHY",
+    [Net Profit Margin] >= 0, "WARNING",
+    "CRITICAL"
+)
+
+
+KPI Cash Flow Status =
+SWITCH (
+    TRUE (),
+    [Operating Cash Flow Margin] >= 0.10, "GREEN",
+    [Operating Cash Flow Margin] >= 0, "WARNING",
+    "CRITICAL"
+)
+
+
+KPI Liquidity Status =
+SWITCH (
+    TRUE (),
+    [Current Ratio] >= 1.5, "GREEN",
+    [Current Ratio] >= 1.25, "HEALTHY",
+    [Current Ratio] >= 1, "WARNING",
+    [Current Ratio] >= 0.75, "HIGH_RISK",
+    "CRITICAL"
+)
+
+
+KPI Leverage Status =
+SWITCH (
+    TRUE (),
+    [Debt to Equity] < 0.5, "GREEN",
+    [Debt to Equity] < 1, "HEALTHY",
+    [Debt to Equity] < 2, "WARNING",
+    [Debt to Equity] < 3, "HIGH_RISK",
+    "CRITICAL"
+)
+
+
+KPI Risk Status =
+SWITCH (
+    TRUE (),
+    [Overall Risk Score] >= 80, "CRITICAL",
+    [Overall Risk Score] >= 60, "HIGH",
+    [Overall Risk Score] >= 35, "MEDIUM",
+    [Overall Risk Score] >= 15, "LOW",
+    "INFO"
+)
+
+
+// ==================================================================
+// 19. KPI SCORECARD
+// ==================================================================
+
+KPI Scorecard Financial =
+[Overall Risk Scorecard — Financial]
+
+
+KPI Scorecard Liquidity =
+[Overall Risk Scorecard — Liquidity]
+
+
+KPI Scorecard Credit =
+[Overall Risk Scorecard — Credit]
+
+
+KPI Scorecard Market =
+[Overall Risk Scorecard — Market]
+
+
+KPI Scorecard Operational =
+[Overall Risk Scorecard — Operational]
+
+
+KPI Scorecard Maximum =
+[Overall Risk Scorecard Maximum]
+
+
+KPI Scorecard Minimum =
+[Overall Risk Scorecard Minimum]
+
+
+// ==================================================================
+// 20. KPI SCORECARD RANKING
+// ==================================================================
+
+KPI Primary Risk =
+[Primary Overall Risk Dimension]
+
+
+KPI Primary Risk Score =
+[Highest Risk Dimension Score]
+
+
+KPI Primary Risk Priority =
+SWITCH (
+    TRUE (),
+    [Highest Risk Dimension Score] >= 80, "P0",
+    [Highest Risk Dimension Score] >= 60, "P1",
+    [Highest Risk Dimension Score] >= 35, "P2",
+    [Highest Risk Dimension Score] >= 15, "P3",
+    "P4"
+)
+
+
+// ==================================================================
+// 21. KPI ALERT COUNTS
+// ==================================================================
+
+KPI Critical Alert Flag =
+IF (
+    [Overall Risk Score] >= 80,
+    1,
+    0
+)
+
+
+KPI High Alert Flag =
+IF (
+    [Overall Risk Score] >= 60
+        && [Overall Risk Score] < 80,
+    1,
+    0
+)
+
+
+KPI At Risk Alert Flag =
+IF (
+    [Overall Risk Score] >= 35
+        && [Overall Risk Score] < 60,
+    1,
+    0
+)
+
+
+KPI Total Alert Flag =
+IF (
+    [Overall Risk Score] >= 35,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 22. KPI EXECUTIVE DECISION
+// ==================================================================
+
+KPI Executive Decision =
+SWITCH (
+    TRUE (),
+
+    [Overall Risk Score] >= 80,
+        "EXECUTIVE_ESCALATION",
+
+    [Overall Risk Score] >= 60,
+        "MANAGEMENT_REVIEW",
+
+    [Overall Risk Score] >= 35,
+        "CLOSE_MONITORING",
+
+    [Overall Risk Score] >= 15,
+        "ROUTINE_MONITORING",
+
+    "NORMAL_OPERATIONS"
+)
+
+
+// ==================================================================
+// 23. KPI ACTION PRIORITY
+// ==================================================================
+
+KPI Action Priority =
+SWITCH (
+    TRUE (),
+
+    [Overall Risk Score] >= 80,
+        "P0 — IMMEDIATE",
+
+    [Overall Risk Score] >= 60,
+        "P1 — HIGH",
+
+    [Overall Risk Score] >= 35,
+        "P2 — MEDIUM",
+
+    [Overall Risk Score] >= 15,
+        "P3 — LOW",
+
+    "P4 — NORMAL"
+)
+
+
+// ==================================================================
+// 24. KPI EXECUTIVE RECOMMENDATION
+// ==================================================================
+
+KPI Executive Recommendation =
+SWITCH (
+    TRUE (),
+
+    [Overall Risk Score] >= 80,
+        "Immediate executive intervention required. Prioritize liquidity, cash flow, leverage and loss-risk stabilization.",
+
+    [Overall Risk Score] >= 60,
+        "Management review required. Investigate the primary risk dimension and execute corrective actions.",
+
+    [Overall Risk Score] >= 35,
+        "Increase monitoring and address emerging financial or operational weaknesses.",
+
+    [Revenue Growth %] >= 0.10
+        && [Net Profit Margin] >= 0.10
+        && [Overall Risk Score] < 15,
+        "Business performance is healthy. Maintain disciplined growth and risk controls.",
+
+    "Continue normal monitoring."
+)
+
+
+// ==================================================================
+// 25. KPI SUPERVISOR AGENT
+// ==================================================================
+
+KPI Supervisor Agent Signal =
+SWITCH (
+    TRUE (),
+
+    [Overall Risk Score] >= 80,
+        "SUPERVISOR_ESCALATE",
+
+    [Overall Risk Score] >= 60,
+        "SUPERVISOR_REVIEW",
+
+    [Overall Risk Score] >= 35,
+        "SUPERVISOR_MONITOR",
+
+    "SUPERVISOR_NORMAL"
+)
+
+
+KPI Agent Priority =
+SWITCH (
+    TRUE (),
+    [Overall Risk Score] >= 80, "CRITICAL",
+    [Overall Risk Score] >= 60, "HIGH",
+    [Overall Risk Score] >= 35, "MEDIUM",
+    "NORMAL"
+)
+
+
+KPI Human Review =
+IF (
+    [Overall Risk Score] >= 60
+        || [Loss Flag] = 1
+        || [Critical Liquidity Flag] = 1
+        || [Critical Leverage Flag] = 1,
+    "YES",
+    "NO"
+)
+
+
+// ==================================================================
+// 26. KPI DATA QUALITY
+// ==================================================================
+
+KPI Data Quality =
+VAR FinancialQuality =
+    [Financial Data Quality]
+
+VAR RiskQuality =
+    [Overall Risk Data Quality]
+
+RETURN
+SWITCH (
+    TRUE (),
+    FinancialQuality = "VALID"
+        && RiskQuality = "VALID",
+        "VALID",
+
+    FinancialQuality = "VALID"
+        || RiskQuality = "VALID",
+        "PARTIAL",
+
+    "CHECK"
+)
+
+
+// ==================================================================
+// 27. KPI COMPLETENESS
+// ==================================================================
+
+KPI Data Completeness =
+[Financial Data Completeness Score]
+
+
+KPI Data Quality Status =
+SWITCH (
+    TRUE (),
+    [KPI Data Completeness] >= 95, "EXCELLENT",
+    [KPI Data Completeness] >= 80, "GOOD",
+    [KPI Data Completeness] >= 60, "PARTIAL",
+    "POOR"
+)
+
+
+// ==================================================================
+// 28. EXECUTIVE KPI CARDS
+// ==================================================================
+
+Executive KPI Revenue =
+FORMAT (
+    [KPI Revenue],
+    "₹#,##0.00,,.0M"
+)
+
+
+Executive KPI Revenue Growth =
+FORMAT (
+    [KPI Revenue Growth],
+    "0.0%"
+)
+
+
+Executive KPI Net Profit =
+FORMAT (
+    [KPI Net Profit],
+    "₹#,##0.00,,.0M"
+)
+
+
+Executive KPI Net Margin =
+FORMAT (
+    [KPI Net Margin],
+    "0.0%"
+)
+
+
+Executive KPI Operating Cash Flow =
+FORMAT (
+    [KPI Operating Cash Flow],
+    "₹#,##0.00,,.0M"
+)
+
+
+Executive KPI Current Ratio =
+FORMAT (
+    [KPI Current Ratio],
+    "0.00"
+)
+
+
+Executive KPI Debt to Equity =
+FORMAT (
+    [KPI Debt to Equity],
+    "0.00"
+)
+
+
+Executive KPI Enterprise Risk =
+FORMAT (
+    [KPI Enterprise Risk],
+    "0.0"
+)
+    & " / 100"
+
+
+Executive KPI Enterprise Health =
+FORMAT (
+    [KPI Enterprise Health],
+    "0.0"
+)
+    & " / 100"
+
+
+Executive KPI Risk Band Display =
+[KPI Enterprise Risk Band]
+
+
+Executive KPI Alert Display =
+[KPI Enterprise Alert Level]
+
+
+// ==================================================================
+// 29. KPI CHANGE DISPLAY
+// ==================================================================
+
+Executive KPI Revenue Change Display =
+FORMAT (
+    [KPI Revenue Change %],
+    "0.0%"
+)
+
+
+Executive KPI Profit Change Display =
+FORMAT (
+    [KPI Profit Change %],
+    "0.0%"
+)
+
+
+Executive KPI Cash Flow Change Display =
+FORMAT (
+    [KPI Cash Flow Change %],
+    "0.0%"
+)
+
+
+Executive KPI Risk Change Display =
+VAR ChangeValue =
+    [Overall Risk Change]
+
+RETURN
+IF (
+    ISBLANK ( ChangeValue ),
+    "N/A",
+    FORMAT (
+        ChangeValue,
+        "+0.0;-0.0;0.0"
+    )
+)
+
+
+// ==================================================================
+// 30. KPI DASHBOARD HEADERS
+// ==================================================================
+
+KPI Dashboard Title =
+"FINCO AI — EXECUTIVE KPI DASHBOARD"
+
+
+KPI Dashboard Subtitle =
+"Financial performance, enterprise risk, liquidity, credit, market and operational intelligence"
+
+
+KPI Financial Header =
+"FINANCIAL PERFORMANCE"
+
+
+KPI Profitability Header =
+"PROFITABILITY"
+
+
+KPI Cash Flow Header =
+"CASH FLOW"
+
+
+KPI Liquidity Header =
+"LIQUIDITY"
+
+
+KPI Credit Header =
+"CREDIT RISK"
+
+
+KPI Market Header =
+"MARKET RISK"
+
+
+KPI Operational Header =
+"OPERATIONAL RISK"
+
+
+KPI Enterprise Risk Header =
+"ENTERPRISE RISK"
+
+
+KPI Alerts Header =
+"ALERTS & DECISIONS"
+
+
+// ==================================================================
+// 31. KPI PERIOD DISPLAY
+// ==================================================================
+
+KPI Selected Date =
+MAX (
+    'DateTable'[Date]
+)
+
+
+KPI Selected Period =
+FORMAT (
+    [KPI Selected Date],
+    "dd MMM yyyy"
+)
+
+
+KPI Selected Year =
+SELECTEDVALUE (
+    'DateTable'[Year]
+)
+
+
+KPI Selected Fiscal Year =
+SELECTEDVALUE (
+    'DateTable'[FiscalYearLabel]
+)
+
+
+KPI Selected Quarter =
+SELECTEDVALUE (
+    'DateTable'[QuarterLabel]
+)
+
+
+KPI Selected Fiscal Quarter =
+SELECTEDVALUE (
+    'DateTable'[FiscalQuarterLabel]
+)
+
+
+// ==================================================================
+// 32. KPI PERIOD STATUS
+// ==================================================================
+
+KPI Period Status =
+VAR SelectedDate =
+    [KPI Selected Date]
+
+RETURN
+SWITCH (
+    TRUE (),
+    ISBLANK ( SelectedDate ), "NO_PERIOD",
+    SelectedDate > TODAY (), "FORECAST",
+    SelectedDate = TODAY (), "CURRENT",
+    "HISTORICAL"
+)
+
+
+// ==================================================================
+// 33. KPI YTD
+// ==================================================================
+
+KPI YTD Revenue =
+[YTD Revenue]
+
+
+KPI YTD Gross Profit =
+[YTD Gross Profit]
+
+
+KPI YTD Net Profit =
+[YTD Net Profit]
+
+
+KPI YTD Operating Cash Flow =
+[YTD Operating Cash Flow]
+
+
+KPI YTD Revenue Growth =
+[YTD Revenue Growth %]
+
+
+// ==================================================================
+// 34. KPI FISCAL YTD
+// ==================================================================
+
+KPI Fiscal YTD Revenue =
+[Fiscal YTD Revenue]
+
+
+KPI Fiscal YTD Net Profit =
+[Fiscal YTD Net Profit]
+
+
+KPI Fiscal YTD Operating Cash Flow =
+[Fiscal YTD Operating Cash Flow]
+
+
+// ==================================================================
+// 35. KPI COMPANY COUNTS
+// ==================================================================
+
+KPI Company Count =
+DISTINCTCOUNT (
+    RiskTransformations[CompanyId]
+)
+
+
+KPI Period Count =
+DISTINCTCOUNT (
+    RiskTransformations[Period]
+)
+
+
+KPI Financial Records =
+COUNTROWS (
+    RiskTransformations
+)
+
+
+// ==================================================================
+// 36. KPI RISK BALANCE
+// ==================================================================
+
+KPI Risk Balance Status =
+[Risk Balance Status]
+
+
+KPI Risk Concentration Ratio =
+[Risk Concentration Ratio]
+
+
+KPI Risk Dimension Spread =
+[Overall Risk Dimension Spread]
+
+
+KPI Average Risk Dimension =
+[Average Risk Dimension Score]
+
+
+// ==================================================================
+// 37. KPI FINANCIAL STRESS
+// ==================================================================
+
+KPI Financial Stress =
+[Financial Stress Signal]
+
+
+KPI Loss Flag =
+[Loss Flag]
+
+
+KPI Negative Cash Flow =
+[Negative Cash Flow Flag]
+
+
+KPI Revenue Decline Flag =
+[Revenue Decline Flag]
+
+
+KPI Profit Decline Flag =
+[Profit Decline Flag]
+
+
+KPI Liquidity Pressure =
+[Liquidity Pressure Flag]
+
+
+KPI High Leverage =
+[High Leverage Flag]
+
+
+// ==================================================================
+// 38. KPI OVERALL STATUS
+// ==================================================================
+
+KPI Overall Status =
+SWITCH (
+    TRUE (),
+
+    [Overall Risk Score] >= 80,
+        "CRITICAL",
+
+    [Overall Risk Score] >= 60,
+        "HIGH",
+
+    [Overall Risk Score] >= 35,
+        "MEDIUM",
+
+    [Overall Risk Score] >= 15,
+        "LOW",
+
+    "INFO"
+)
+
+
+// ==================================================================
+// 39. KPI EXECUTIVE SUMMARY
+// ==================================================================
+
+KPI Executive Summary =
+VAR RiskScore =
+    [Overall Risk Score]
+
+VAR HealthScore =
+    [Overall Health Score]
+
+VAR PrimaryRisk =
+    [Primary Overall Risk Dimension]
+
+VAR RevenueGrowth =
+    [Revenue Growth %]
+
+VAR NetMargin =
+    [Net Profit Margin]
+
+VAR Liquidity =
+    [Current Ratio]
+
+RETURN
+"Enterprise Risk "
+    & FORMAT ( RiskScore, "0.0" )
+    & " | Health "
+    & FORMAT ( HealthScore, "0.0" )
+    & " | Primary Risk: "
+    & PrimaryRisk
+    & " | Revenue Growth "
+    & FORMAT ( RevenueGrowth, "0.0%" )
+    & " | Net Margin "
+    & FORMAT ( NetMargin, "0.0%" )
+    & " | Current Ratio "
+    & FORMAT ( Liquidity, "0.00" )
+
+
+// ==================================================================
+// 40. KPI MANAGEMENT ACTION
+// ==================================================================
+
+KPI Management Action =
+SWITCH (
+    TRUE (),
+
+    [Overall Risk Score] >= 80,
+        "Immediate executive intervention and risk mitigation.",
+
+    [Overall Risk Score] >= 60,
+        "Management action required on primary risk dimension.",
+
+    [Overall Risk Score] >= 35,
+        "Close monitoring and corrective action recommended.",
+
+    [Overall Risk Score] >= 15,
+        "Routine monitoring with preventive controls.",
+
+    "Maintain current strategy and controls."
+)
+
+
+// ==================================================================
+// 41. KPI DECISION SIGNAL
+// ==================================================================
+
+KPI Decision Signal =
+SWITCH (
+    TRUE (),
+
+    [Overall Risk Score] >= 80
+        && [Overall Risk Deterioration Flag] = 1,
+        "CRITICAL_ESCALATION",
+
+    [Overall Risk Score] >= 80,
+        "CRITICAL_REVIEW",
+
+    [Overall Risk Score] >= 60
+        && [Overall Risk Deterioration Flag] = 1,
+        "HIGH_PRIORITY_ACTION",
+
+    [Overall Risk Score] >= 60,
+        "MANAGEMENT_REVIEW",
+
+    [Overall Risk Score] >= 35,
+        "MONITOR",
+
+    [Overall Risk Improvement Flag] = 1,
+        "IMPROVING",
+
+    "NORMAL"
+)
+
+
+// ==================================================================
+// 42. KPI DASHBOARD STATUS
+// ==================================================================
+
+KPI Dashboard Status =
+SWITCH (
+    TRUE (),
+
+    [Overall Risk Score] >= 80,
+        "RED — EXECUTIVE ATTENTION",
+
+    [Overall Risk Score] >= 60,
+        "ORANGE — MANAGEMENT ATTENTION",
+
+    [Overall Risk Score] >= 35,
+        "YELLOW — MONITOR",
+
+    [Overall Risk Score] >= 15,
+        "LIGHT — WATCH",
+
+    "GREEN — STABLE"
+)
+
+
+// ==================================================================
+// 43. FINAL KPI CARD PACKAGE
+// ==================================================================
+
+KPI Card 01 =
+FORMAT (
+    [Total Revenue],
+    "₹#,##0.00,,.0M"
+)
+
+
+KPI Card 02 =
+FORMAT (
+    [Total Net Profit],
+    "₹#,##0.00,,.0M"
+)
+
+
+KPI Card 03 =
+FORMAT (
+    [Net Profit Margin],
+    "0.0%"
+)
+
+
+KPI Card 04 =
+FORMAT (
+    [Total Operating Cash Flow],
+    "₹#,##0.00,,.0M"
+)
+
+
+KPI Card 05 =
+FORMAT (
+    [Current Ratio],
+    "0.00"
+)
+
+
+KPI Card 06 =
+FORMAT (
+    [Debt to Equity],
+    "0.00"
+)
+
+
+KPI Card 07 =
+FORMAT (
+    [Overall Risk Score],
+    "0.0"
+)
+
+
+KPI Card 08 =
+FORMAT (
+    [Overall Health Score],
+    "0.0"
+)
+
+
+// ==================================================================
+// END OF FILE
+// ==================================================================

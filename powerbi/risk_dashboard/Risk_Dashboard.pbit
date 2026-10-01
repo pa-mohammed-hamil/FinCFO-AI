@@ -1,0 +1,36 @@
+let
+    // ============================================================
+    // FinCo AI - Shared Connection Parameters
+    // ============================================================
+
+    // Create these parameters in Power BI:
+    // pDatabaseHost
+    // pDatabasePort
+    // pDatabaseName
+    // pDatabaseSchema
+
+    DatabaseHost =
+        try pDatabaseHost
+        otherwise "localhost",
+
+    DatabasePort =
+        try pDatabasePort
+        otherwise "5432",
+
+    DatabaseName =
+        try pDatabaseName
+        otherwise "finco",
+
+    DatabaseSchema =
+        try pDatabaseSchema
+        otherwise "public",
+
+    ConnectionInformation =
+        [
+            Host = DatabaseHost,
+            Port = DatabasePort,
+            Database = DatabaseName,
+            Schema = DatabaseSchema
+        ]
+in
+    ConnectionInformation

@@ -1,0 +1,1065 @@
+// ============================================================
+// FinCo AI — Cash Flow Measures
+// File: cash_flow_measures.dax
+// Purpose: Cash flow analytics, liquidity, FCF, risk, alerts,
+//          trend analysis, executive scorecards and display KPIs
+// ============================================================
+
+
+// ============================================================
+// 1. CORE CASH FLOW MEASURES
+// ============================================================
+
+Total Operating Cash Flow =
+SUM ( CashFlow[OperatingCashFlow] )
+
+
+Total Capital Expenditure =
+SUM ( CashFlow[CapitalExpenditure] )
+
+
+Total Free Cash Flow =
+SUM ( CashFlow[FreeCashFlow] )
+
+
+Total Revenue =
+SUM ( CashFlow[Revenue] )
+
+
+Total Cash & Equivalents =
+SUM ( CashFlow[CashAndEquivalents] )
+
+
+Total Current Liabilities =
+SUM ( CashFlow[CurrentLiabilities] )
+
+
+Total Assets =
+SUM ( CashFlow[TotalAssets] )
+
+
+Total Debt =
+SUM ( CashFlow[Debt] )
+
+
+// ============================================================
+// 2. CASH FLOW MARGINS
+// ============================================================
+
+Operating Cash Flow Margin =
+DIVIDE (
+    [Total Operating Cash Flow],
+    [Total Revenue]
+)
+
+
+Free Cash Flow Margin =
+DIVIDE (
+    [Total Free Cash Flow],
+    [Total Revenue]
+)
+
+
+Capital Expenditure % Revenue =
+DIVIDE (
+    ABS ( [Total Capital Expenditure] ),
+    [Total Revenue]
+)
+
+
+Operating Cash Flow Conversion =
+DIVIDE (
+    [Total Operating Cash Flow],
+    [Total Revenue]
+)
+
+
+Free Cash Flow Conversion =
+DIVIDE (
+    [Total Free Cash Flow],
+    [Total Operating Cash Flow]
+)
+
+
+// ============================================================
+// 3. LIQUIDITY MEASURES
+// ============================================================
+
+Cash to Current Liabilities =
+DIVIDE (
+    [Total Cash & Equivalents],
+    [Total Current Liabilities]
+)
+
+
+Operating Cash Flow to Current Liabilities =
+DIVIDE (
+    [Total Operating Cash Flow],
+    [Total Current Liabilities]
+)
+
+
+Cash Coverage Ratio =
+DIVIDE (
+    [Total Cash & Equivalents] + [Total Operating Cash Flow],
+    [Total Current Liabilities]
+)
+
+
+Liquidity Headroom =
+[Total Cash & Equivalents]
+    + [Total Operating Cash Flow]
+    - [Total Current Liabilities]
+
+
+Liquidity Headroom % =
+DIVIDE (
+    [Liquidity Headroom],
+    [Total Current Liabilities]
+)
+
+
+// ============================================================
+// 4. CASH FLOW QUALITY
+// ============================================================
+
+Operating Cash Flow Quality =
+VAR OCF = [Total Operating Cash Flow]
+VAR Revenue = [Total Revenue]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( OCF ), "No Data",
+        OCF < 0, "Negative",
+        Revenue <= 0, "Unreliable",
+        DIVIDE ( OCF, Revenue ) < 0.05, "Weak",
+        DIVIDE ( OCF, Revenue ) < 0.15, "Moderate",
+        "Strong"
+    )
+
+
+Free Cash Flow Quality =
+VAR FCF = [Total Free Cash Flow]
+VAR Revenue = [Total Revenue]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( FCF ), "No Data",
+        FCF < 0, "Negative",
+        Revenue <= 0, "Unreliable",
+        DIVIDE ( FCF, Revenue ) < 0.03, "Weak",
+        DIVIDE ( FCF, Revenue ) < 0.10, "Moderate",
+        "Strong"
+    )
+
+
+Cash Flow Quality Score =
+VAR OCFMargin = [Operating Cash Flow Margin]
+VAR FCFMargin = [Free Cash Flow Margin]
+VAR CashCoverage = [Cash Coverage Ratio]
+
+VAR OCFScore =
+    SWITCH (
+        TRUE (),
+        ISBLANK ( OCFMargin ), 0,
+        OCFMargin >= 0.15, 100,
+        OCFMargin >= 0.10, 80,
+        OCFMargin >= 0.05, 60,
+        OCFMargin >= 0, 40,
+        10
+    )
+
+VAR FCFScore =
+    SWITCH (
+        TRUE (),
+        ISBLANK ( FCFMargin ), 0,
+        FCFMargin >= 0.10, 100,
+        FCFMargin >= 0.05, 80,
+        FCFMargin >= 0, 60,
+        20
+    )
+
+VAR LiquidityScore =
+    SWITCH (
+        TRUE (),
+        ISBLANK ( CashCoverage ), 0,
+        CashCoverage >= 2, 100,
+        CashCoverage >= 1.5, 85,
+        CashCoverage >= 1, 70,
+        CashCoverage >= 0.75, 50,
+        25
+    )
+
+RETURN
+    ROUND (
+        DIVIDE (
+            OCFScore + FCFScore + LiquidityScore,
+            3
+        ),
+        1
+    )
+
+
+// ============================================================
+// 5. CASH FLOW STATUS
+// ============================================================
+
+Operating Cash Flow Status =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Total Operating Cash Flow] ), "No Data",
+    [Total Operating Cash Flow] < 0, "Critical",
+    [Operating Cash Flow Margin] < 0.05, "Weak",
+    [Operating Cash Flow Margin] < 0.10, "Watch",
+    "Healthy"
+)
+
+
+Free Cash Flow Status =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Total Free Cash Flow] ), "No Data",
+    [Total Free Cash Flow] < 0, "Critical",
+    [Free Cash Flow Margin] < 0.03, "Weak",
+    [Free Cash Flow Margin] < 0.10, "Watch",
+    "Healthy"
+)
+
+
+Liquidity Status =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Cash Coverage Ratio] ), "No Data",
+    [Cash Coverage Ratio] < 0.75, "Critical",
+    [Cash Coverage Ratio] < 1, "Weak",
+    [Cash Coverage Ratio] < 1.5, "Watch",
+    "Healthy"
+)
+
+
+Cash Flow Overall Status =
+VAR OCFStatus = [Operating Cash Flow Status]
+VAR FCFStatus = [Free Cash Flow Status]
+VAR Liquidity = [Liquidity Status]
+RETURN
+    SWITCH (
+        TRUE (),
+        OCFStatus = "Critical"
+            || FCFStatus = "Critical"
+            || Liquidity = "Critical", "Critical",
+
+        OCFStatus = "Weak"
+            || FCFStatus = "Weak"
+            || Liquidity = "Weak", "Weak",
+
+        OCFStatus = "Watch"
+            || FCFStatus = "Watch"
+            || Liquidity = "Watch", "Watch",
+
+        OCFStatus = "No Data"
+            || FCFStatus = "No Data"
+            || Liquidity = "No Data", "No Data",
+
+        "Healthy"
+    )
+
+
+// ============================================================
+// 6. CASH FLOW RISK COMPONENTS
+// ============================================================
+
+Operating Cash Flow Risk =
+VAR Margin = [Operating Cash Flow Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), 25,
+        Margin < 0, 40,
+        Margin < 0.05, 30,
+        Margin < 0.10, 20,
+        Margin < 0.15, 10,
+        0
+    )
+
+
+Free Cash Flow Risk =
+VAR Margin = [Free Cash Flow Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), 25,
+        Margin < 0, 40,
+        Margin < 0.03, 30,
+        Margin < 0.05, 20,
+        Margin < 0.10, 10,
+        0
+    )
+
+
+Liquidity Risk =
+VAR Coverage = [Cash Coverage Ratio]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Coverage ), 25,
+        Coverage < 0.50, 40,
+        Coverage < 0.75, 30,
+        Coverage < 1.00, 20,
+        Coverage < 1.50, 10,
+        0
+    )
+
+
+Capital Expenditure Risk =
+VAR CapexPct = [Capital Expenditure % Revenue]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( CapexPct ), 15,
+        CapexPct >= 0.40, 40,
+        CapexPct >= 0.30, 30,
+        CapexPct >= 0.20, 20,
+        CapexPct >= 0.10, 10,
+        0
+    )
+
+
+// ============================================================
+// 7. OVERALL CASH FLOW RISK
+// ============================================================
+
+Cash Flow Risk Score =
+MIN (
+    100,
+    [Operating Cash Flow Risk]
+        + [Free Cash Flow Risk]
+        + [Liquidity Risk]
+        + [Capital Expenditure Risk]
+)
+
+
+Cash Flow Risk Level =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Cash Flow Risk Score] ), "No Data",
+    [Cash Flow Risk Score] >= 75, "CRITICAL",
+    [Cash Flow Risk Score] >= 50, "HIGH",
+    [Cash Flow Risk Score] >= 25, "MEDIUM",
+    "LOW"
+)
+
+
+Cash Flow Health Score =
+MAX (
+    0,
+    100 - [Cash Flow Risk Score]
+)
+
+
+Cash Flow Health Status =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Cash Flow Health Score] ), "No Data",
+    [Cash Flow Health Score] >= 80, "Excellent",
+    [Cash Flow Health Score] >= 65, "Healthy",
+    [Cash Flow Health Score] >= 50, "Watch",
+    [Cash Flow Health Score] >= 30, "Weak",
+    "Critical"
+)
+
+
+// ============================================================
+// 8. CASH FLOW FLAGS
+// ============================================================
+
+Negative Operating Cash Flow Flag =
+IF (
+    [Total Operating Cash Flow] < 0,
+    1,
+    0
+)
+
+
+Negative Free Cash Flow Flag =
+IF (
+    [Total Free Cash Flow] < 0,
+    1,
+    0
+)
+
+
+High Capex Flag =
+IF (
+    [Capital Expenditure % Revenue] >= 0.30,
+    1,
+    0
+)
+
+
+Liquidity Stress Flag =
+IF (
+    [Cash Coverage Ratio] < 1,
+    1,
+    0
+)
+
+
+Cash Flow Alert Flag =
+IF (
+    [Cash Flow Risk Score] >= 50
+        || [Negative Operating Cash Flow Flag] = 1
+        || [Negative Free Cash Flow Flag] = 1,
+    1,
+    0
+)
+
+
+// ============================================================
+// 9. CASH FLOW ALERTS
+// ============================================================
+
+Cash Flow Alert Count =
+SUMX (
+    CashFlow,
+    IF (
+        CashFlow[AlertFlag] = "Yes"
+            || CashFlow[AlertFlag] = "TRUE"
+            || CashFlow[AlertFlag] = "1",
+        1,
+        0
+    )
+)
+
+
+Cash Flow Alert Type =
+VAR OCF = [Total Operating Cash Flow]
+VAR FCF = [Total Free Cash Flow]
+VAR Liquidity = [Cash Coverage Ratio]
+VAR CapexPct = [Capital Expenditure % Revenue]
+RETURN
+    SWITCH (
+        TRUE (),
+        OCF < 0 && FCF < 0, "Operating & Free Cash Flow Crisis",
+        OCF < 0, "Negative Operating Cash Flow",
+        FCF < 0, "Negative Free Cash Flow",
+        Liquidity < 0.75, "Severe Liquidity Risk",
+        Liquidity < 1, "Liquidity Stress",
+        CapexPct >= 0.40, "Excessive Capital Expenditure",
+        CapexPct >= 0.30, "High Capital Expenditure",
+        [Cash Flow Risk Score] >= 75, "Critical Cash Flow Risk",
+        [Cash Flow Risk Score] >= 50, "High Cash Flow Risk",
+        [Cash Flow Risk Score] >= 25, "Medium Cash Flow Risk",
+        "No Major Alert"
+    )
+
+
+Cash Flow Recommended Action =
+VAR OCF = [Total Operating Cash Flow]
+VAR FCF = [Total Free Cash Flow]
+VAR Liquidity = [Cash Coverage Ratio]
+VAR CapexPct = [Capital Expenditure % Revenue]
+RETURN
+    SWITCH (
+        TRUE (),
+        OCF < 0 && FCF < 0,
+            "Immediate cash preservation and liquidity recovery plan required",
+
+        OCF < 0,
+            "Investigate operating cash leakage and accelerate receivable collection",
+
+        FCF < 0,
+            "Review capital expenditure and improve operating cash generation",
+
+        Liquidity < 0.75,
+            "Strengthen liquidity reserves and reduce near-term cash obligations",
+
+        Liquidity < 1,
+            "Monitor short-term liquidity and improve working capital",
+
+        CapexPct >= 0.40,
+            "Review capital investment pipeline and defer non-essential spending",
+
+        CapexPct >= 0.30,
+            "Validate capital expenditure efficiency and expected returns",
+
+        [Cash Flow Risk Score] >= 50,
+            "Initiate management review of cash flow risk drivers",
+
+        "Maintain current cash flow discipline"
+    )
+
+
+// ============================================================
+// 10. CASH FLOW RECORD COUNTS
+// ============================================================
+
+Cash Flow Records =
+COUNTROWS ( CashFlow )
+
+
+Cash Flow Companies =
+DISTINCTCOUNT ( CashFlow[Company] )
+
+
+Cash Flow Business Units =
+DISTINCTCOUNT ( CashFlow[BusinessUnit] )
+
+
+Cash Flow Alert Records =
+CALCULATE (
+    COUNTROWS ( CashFlow ),
+    FILTER (
+        CashFlow,
+        CashFlow[AlertFlag] = "Yes"
+            || CashFlow[AlertFlag] = "TRUE"
+            || CashFlow[AlertFlag] = "1"
+    )
+)
+
+
+Critical Cash Flow Records =
+CALCULATE (
+    COUNTROWS ( CashFlow ),
+    CashFlow[CashFlowRiskLevel] = "CRITICAL"
+)
+
+
+High Risk Cash Flow Records =
+CALCULATE (
+    COUNTROWS ( CashFlow ),
+    CashFlow[CashFlowRiskLevel] = "HIGH"
+)
+
+
+Medium Risk Cash Flow Records =
+CALCULATE (
+    COUNTROWS ( CashFlow ),
+    CashFlow[CashFlowRiskLevel] = "MEDIUM"
+)
+
+
+Low Risk Cash Flow Records =
+CALCULATE (
+    COUNTROWS ( CashFlow ),
+    CashFlow[CashFlowRiskLevel] = "LOW"
+)
+
+
+// ============================================================
+// 11. RISK RATES
+// ============================================================
+
+Critical Cash Flow Rate =
+DIVIDE (
+    [Critical Cash Flow Records],
+    [Cash Flow Records]
+)
+
+
+High Risk Cash Flow Rate =
+DIVIDE (
+    [High Risk Cash Flow Records],
+    [Cash Flow Records]
+)
+
+
+Cash Flow Alert Rate =
+DIVIDE (
+    [Cash Flow Alert Records],
+    [Cash Flow Records]
+)
+
+
+// ============================================================
+// 12. AVERAGE CASH FLOW KPIs
+// ============================================================
+
+Average Cash Flow Risk Score =
+AVERAGE ( CashFlow[CashFlowRiskScore] )
+
+
+Average Cash Flow Health Score =
+AVERAGE ( CashFlow[CashFlowHealthScore] )
+
+
+Average Operating Cash Flow =
+AVERAGE ( CashFlow[OperatingCashFlow] )
+
+
+Average Free Cash Flow =
+AVERAGE ( CashFlow[FreeCashFlow] )
+
+
+Average Cash Coverage =
+AVERAGE ( CashFlow[CashCoverageRatio] )
+
+
+Average Operating Cash Flow Margin =
+AVERAGE ( CashFlow[OperatingCashFlowMargin] )
+
+
+Average Free Cash Flow Margin =
+AVERAGE ( CashFlow[FreeCashFlowMargin] )
+
+
+Average Capital Expenditure % =
+AVERAGE ( CashFlow[CapitalExpenditurePctRevenue] )
+
+
+// ============================================================
+// 13. PERIOD COMPARISON — OPERATING CASH FLOW
+// ============================================================
+
+Operating Cash Flow Previous Period =
+CALCULATE (
+    [Total Operating Cash Flow],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Operating Cash Flow Growth =
+[Total Operating Cash Flow]
+    - [Operating Cash Flow Previous Period]
+
+
+Operating Cash Flow Growth % =
+DIVIDE (
+    [Operating Cash Flow Growth],
+    ABS ( [Operating Cash Flow Previous Period] )
+)
+
+
+// ============================================================
+// 14. PERIOD COMPARISON — FREE CASH FLOW
+// ============================================================
+
+Free Cash Flow Previous Period =
+CALCULATE (
+    [Total Free Cash Flow],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Free Cash Flow Growth =
+[Total Free Cash Flow]
+    - [Free Cash Flow Previous Period]
+
+
+Free Cash Flow Growth % =
+DIVIDE (
+    [Free Cash Flow Growth],
+    ABS ( [Free Cash Flow Previous Period] )
+)
+
+
+// ============================================================
+// 15. PERIOD COMPARISON — REVENUE
+// ============================================================
+
+Cash Flow Revenue Previous Period =
+CALCULATE (
+    [Total Revenue],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Cash Flow Revenue Growth =
+[Total Revenue]
+    - [Cash Flow Revenue Previous Period]
+
+
+Cash Flow Revenue Growth % =
+DIVIDE (
+    [Cash Flow Revenue Growth],
+    ABS ( [Cash Flow Revenue Previous Period] )
+)
+
+
+// ============================================================
+// 16. PERIOD COMPARISON — CASH
+// ============================================================
+
+Cash Previous Period =
+CALCULATE (
+    [Total Cash & Equivalents],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Cash Growth =
+[Total Cash & Equivalents]
+    - [Cash Previous Period]
+
+
+Cash Growth % =
+DIVIDE (
+    [Cash Growth],
+    ABS ( [Cash Previous Period] )
+)
+
+
+// ============================================================
+// 17. PERIOD COMPARISON — DEBT
+// ============================================================
+
+Cash Flow Debt Previous Period =
+CALCULATE (
+    [Total Debt],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Cash Flow Debt Growth =
+[Total Debt]
+    - [Cash Flow Debt Previous Period]
+
+
+Cash Flow Debt Growth % =
+DIVIDE (
+    [Cash Flow Debt Growth],
+    ABS ( [Cash Flow Debt Previous Period] )
+)
+
+
+// ============================================================
+// 18. PERIOD COMPARISON — CAPITAL EXPENDITURE
+// ============================================================
+
+Capital Expenditure Previous Period =
+CALCULATE (
+    [Total Capital Expenditure],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Capital Expenditure Growth =
+[Total Capital Expenditure]
+    - [Capital Expenditure Previous Period]
+
+
+Capital Expenditure Growth % =
+DIVIDE (
+    [Capital Expenditure Growth],
+    ABS ( [Capital Expenditure Previous Period] )
+)
+
+
+// ============================================================
+// 19. TREND INDICATORS
+// ============================================================
+
+Operating Cash Flow Trend =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Operating Cash Flow Growth %] ), "No Data",
+    [Operating Cash Flow Growth %] >= 0.10, "Strong Improvement",
+    [Operating Cash Flow Growth %] >= 0.05, "Improving",
+    [Operating Cash Flow Growth %] > -0.05, "Stable",
+    [Operating Cash Flow Growth %] > -0.10, "Declining",
+    "Sharp Decline"
+)
+
+
+Free Cash Flow Trend =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Free Cash Flow Growth %] ), "No Data",
+    [Free Cash Flow Growth %] >= 0.10, "Strong Improvement",
+    [Free Cash Flow Growth %] >= 0.05, "Improving",
+    [Free Cash Flow Growth %] > -0.05, "Stable",
+    [Free Cash Flow Growth %] > -0.10, "Declining",
+    "Sharp Decline"
+)
+
+
+Cash Position Trend =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Cash Growth %] ), "No Data",
+    [Cash Growth %] >= 0.10, "Strong Increase",
+    [Cash Growth %] >= 0.05, "Increase",
+    [Cash Growth %] > -0.05, "Stable",
+    [Cash Growth %] > -0.10, "Decrease",
+    "Sharp Decrease"
+)
+
+
+// ============================================================
+// 20. CASH FLOW SCORECARD
+// ============================================================
+
+Operating Cash Flow Score =
+VAR Margin = [Operating Cash Flow Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), 0,
+        Margin >= 0.15, 100,
+        Margin >= 0.10, 85,
+        Margin >= 0.05, 70,
+        Margin >= 0, 45,
+        15
+    )
+
+
+Free Cash Flow Score =
+VAR Margin = [Free Cash Flow Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), 0,
+        Margin >= 0.10, 100,
+        Margin >= 0.05, 85,
+        Margin >= 0.03, 70,
+        Margin >= 0, 45,
+        15
+    )
+
+
+Liquidity Score =
+VAR Coverage = [Cash Coverage Ratio]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Coverage ), 0,
+        Coverage >= 2, 100,
+        Coverage >= 1.5, 85,
+        Coverage >= 1, 70,
+        Coverage >= 0.75, 50,
+        20
+    )
+
+
+Capital Efficiency Score =
+VAR CapexPct = [Capital Expenditure % Revenue]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( CapexPct ), 0,
+        CapexPct <= 0.10, 100,
+        CapexPct <= 0.20, 85,
+        CapexPct <= 0.30, 70,
+        CapexPct <= 0.40, 50,
+        20
+    )
+
+
+Cash Flow Executive Score =
+ROUND (
+    DIVIDE (
+        [Operating Cash Flow Score]
+            + [Free Cash Flow Score]
+            + [Liquidity Score]
+            + [Capital Efficiency Score],
+        4
+    ),
+    1
+)
+
+
+Cash Flow Executive Status =
+SWITCH (
+    TRUE (),
+    [Cash Flow Executive Score] >= 80, "Excellent",
+    [Cash Flow Executive Score] >= 65, "Healthy",
+    [Cash Flow Executive Score] >= 50, "Watch",
+    [Cash Flow Executive Score] >= 30, "Weak",
+    "Critical"
+)
+
+
+// ============================================================
+// 21. DECISION PRIORITY
+// ============================================================
+
+Cash Flow Decision Priority =
+SWITCH (
+    TRUE (),
+    [Cash Flow Risk Score] >= 75, "P0 - Immediate",
+    [Cash Flow Risk Score] >= 50, "P1 - High",
+    [Cash Flow Risk Score] >= 25, "P2 - Monitor",
+    "P3 - Normal"
+)
+
+
+// ============================================================
+// 22. MANAGEMENT STATUS
+// ============================================================
+
+Cash Flow Management Status =
+SWITCH (
+    TRUE (),
+    [Cash Flow Risk Score] >= 75, "Executive Intervention Required",
+    [Cash Flow Risk Score] >= 50, "Management Action Required",
+    [Cash Flow Risk Score] >= 25, "Management Monitoring",
+    "Business as Usual"
+)
+
+
+// ============================================================
+// 23. EXECUTIVE NARRATIVE
+// ============================================================
+
+Cash Flow Executive Narrative =
+VAR OCF = [Total Operating Cash Flow]
+VAR FCF = [Total Free Cash Flow]
+VAR Coverage = [Cash Coverage Ratio]
+VAR Risk = [Cash Flow Risk Level]
+VAR Trend = [Operating Cash Flow Trend]
+RETURN
+    "Operating cash flow is "
+        & FORMAT ( OCF, "#,##0.00" )
+        & ", free cash flow is "
+        & FORMAT ( FCF, "#,##0.00" )
+        & ", cash coverage is "
+        & FORMAT ( Coverage, "0.00x" )
+        & ". Overall cash flow risk is "
+        & Risk
+        & " with an operating cash flow trend of "
+        & Trend
+        & "."
+
+
+// ============================================================
+// 24. CASH FLOW SCORECARD
+// ============================================================
+
+Cash Flow Scorecard =
+"Operating Cash Flow Score: "
+    & FORMAT ( [Operating Cash Flow Score], "0" )
+    & " | Free Cash Flow Score: "
+    & FORMAT ( [Free Cash Flow Score], "0" )
+    & " | Liquidity Score: "
+    & FORMAT ( [Liquidity Score], "0" )
+    & " | Capital Efficiency Score: "
+    & FORMAT ( [Capital Efficiency Score], "0" )
+    & " | Executive Score: "
+    & FORMAT ( [Cash Flow Executive Score], "0.0" )
+
+
+// ============================================================
+// 25. DISPLAY MEASURES
+// ============================================================
+
+Operating Cash Flow Display =
+FORMAT (
+    [Total Operating Cash Flow],
+    "#,##0.00;(#,##0.00);-"
+)
+
+
+Capital Expenditure Display =
+FORMAT (
+    [Total Capital Expenditure],
+    "#,##0.00;(#,##0.00);-"
+)
+
+
+Free Cash Flow Display =
+FORMAT (
+    [Total Free Cash Flow],
+    "#,##0.00;(#,##0.00);-"
+)
+
+
+Cash Display =
+FORMAT (
+    [Total Cash & Equivalents],
+    "#,##0.00;(#,##0.00);-"
+)
+
+
+Current Liabilities Display =
+FORMAT (
+    [Total Current Liabilities],
+    "#,##0.00;(#,##0.00);-"
+)
+
+
+Debt Display =
+FORMAT (
+    [Total Debt],
+    "#,##0.00;(#,##0.00);-"
+)
+
+
+Operating Cash Flow Margin Display =
+FORMAT (
+    [Operating Cash Flow Margin],
+    "0.0%"
+)
+
+
+Free Cash Flow Margin Display =
+FORMAT (
+    [Free Cash Flow Margin],
+    "0.0%"
+)
+
+
+Cash Coverage Display =
+FORMAT (
+    [Cash Coverage Ratio],
+    "0.00x"
+)
+
+
+Cash Flow Risk Display =
+FORMAT (
+    [Cash Flow Risk Score],
+    "0"
+)
+
+
+Cash Flow Health Display =
+FORMAT (
+    [Cash Flow Health Score],
+    "0"
+)
+
+
+Cash Flow Executive Score Display =
+FORMAT (
+    [Cash Flow Executive Score],
+    "0.0"
+)
+
+
+// ============================================================
+// 26. KPI STATUS
+// ============================================================
+
+Cash Flow KPI Status =
+VAR Risk = [Cash Flow Risk Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        Risk >= 75, "CRITICAL",
+        Risk >= 50, "HIGH",
+        Risk >= 25, "MEDIUM",
+        "LOW"
+    )

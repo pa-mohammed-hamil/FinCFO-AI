@@ -1,0 +1,1173 @@
+/*
+====================================================================
+ FinCo AI — Risk KPI Measures
+ File:
+   powerbi/risk_dashboard/risk_kpis.dax
+
+ Purpose:
+   Executive-level risk KPIs combining:
+     - Overall financial risk
+     - Liquidity risk
+     - Credit risk
+     - Market risk
+     - Operational risk
+     - Risk factors
+     - Risk trend
+     - Alerts
+     - Management decision signals
+
+ Dependencies:
+   risk_transformations.pq
+   risk_factors_query.pq
+   risk_scores_query.pq
+   credit_risk.dax
+   liquidity_risk.dax
+   market_risk.dax
+   operational_risk.dax
+====================================================================
+*/
+
+
+// ==================================================================
+// 1. ENTERPRISE RISK SCORE
+//
+// Uses the canonical risk score produced by RiskScores when
+// available. Falls back to the average of the four major DAX
+// risk dimensions.
+//
+// Weighting:
+//   Financial Risk   = 35%
+//   Liquidity Risk   = 25%
+//   Credit Risk      = 15%
+//   Market Risk      = 10%
+//   Operational Risk = 15%
+// ==================================================================
+
+Enterprise Risk Score =
+VAR FinancialScore =
+    CALCULATE (
+        AVERAGE ( RiskScores[OverallRiskScore] )
+    )
+
+VAR LiquidityScore =
+    [Liquidity Risk Score]
+
+VAR CreditScore =
+    [Credit Risk Score]
+
+VAR MarketScore =
+    [Market Risk Score]
+
+VAR OperationalScore =
+    [Operational Risk Score]
+
+VAR FinancialWeight =
+    IF ( NOT ISBLANK ( FinancialScore ), 0.35, 0 )
+
+VAR LiquidityWeight =
+    IF ( NOT ISBLANK ( LiquidityScore ), 0.25, 0 )
+
+VAR CreditWeight =
+    IF ( NOT ISBLANK ( CreditScore ), 0.15, 0 )
+
+VAR MarketWeight =
+    IF ( NOT ISBLANK ( MarketScore ), 0.10, 0 )
+
+VAR OperationalWeight =
+    IF ( NOT ISBLANK ( OperationalScore ), 0.15, 0 )
+
+VAR AvailableWeight =
+      FinancialWeight
+    + LiquidityWeight
+    + CreditWeight
+    + MarketWeight
+    + OperationalWeight
+
+VAR WeightedScore =
+      COALESCE ( FinancialScore, 0 ) * 0.35
+    + COALESCE ( LiquidityScore, 0 ) * 0.25
+    + COALESCE ( CreditScore, 0 ) * 0.15
+    + COALESCE ( MarketScore, 0 ) * 0.10
+    + COALESCE ( OperationalScore, 0 ) * 0.15
+
+RETURN
+    IF (
+        AvailableWeight = 0,
+        BLANK (),
+        ROUND (
+            DIVIDE (
+                WeightedScore,
+                AvailableWeight
+            ),
+            2
+        )
+    )
+
+
+// ==================================================================
+// 2. ENTERPRISE HEALTH SCORE
+// ==================================================================
+
+Enterprise Health Score =
+VAR RiskScore =
+    [Enterprise Risk Score]
+
+RETURN
+    IF (
+        ISBLANK ( RiskScore ),
+        BLANK (),
+        ROUND (
+            100 - RiskScore,
+            2
+        )
+    )
+
+
+// ==================================================================
+// 3. ENTERPRISE RISK BAND
+// ==================================================================
+
+Enterprise Risk Band =
+VAR Score =
+    [Enterprise Risk Score]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "UNKNOWN",
+        Score >= 80, "CRITICAL",
+        Score >= 60, "HIGH",
+        Score >= 35, "MEDIUM",
+        Score >= 15, "LOW",
+        "INFO"
+    )
+
+
+// ==================================================================
+// 4. ENTERPRISE HEALTH BAND
+// ==================================================================
+
+Enterprise Health Band =
+VAR Health =
+    [Enterprise Health Score]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Health ), "UNKNOWN",
+        Health >= 80, "STRONG",
+        Health >= 60, "HEALTHY",
+        Health >= 40, "WATCH",
+        Health >= 20, "WEAK",
+        "CRITICAL"
+    )
+
+
+// ==================================================================
+// 5. RISK DIMENSION AVERAGE
+// ==================================================================
+
+Average Risk Dimension Score =
+VAR Liquidity =
+    [Liquidity Risk Score]
+
+VAR Credit =
+    [Credit Risk Score]
+
+VAR Market =
+    [Market Risk Score]
+
+VAR Operational =
+    [Operational Risk Score]
+
+RETURN
+    ROUND (
+        AVERAGEX (
+            {
+                Liquidity,
+                Credit,
+                Market,
+                Operational
+            },
+            [Value]
+        ),
+        2
+    )
+
+
+// ==================================================================
+// 6. HIGHEST RISK DIMENSION SCORE
+// ==================================================================
+
+Highest Risk Dimension Score =
+MAX (
+    [Liquidity Risk Score],
+    MAX (
+        [Credit Risk Score],
+        MAX (
+            [Market Risk Score],
+            [Operational Risk Score]
+        )
+    )
+)
+
+
+// ==================================================================
+// 7. PRIMARY ENTERPRISE RISK
+// ==================================================================
+
+Primary Enterprise Risk =
+VAR Liquidity =
+    [Liquidity Risk Score]
+
+VAR Credit =
+    [Credit Risk Score]
+
+VAR Market =
+    [Market Risk Score]
+
+VAR Operational =
+    [Operational Risk Score]
+
+VAR MaxRisk =
+    [Highest Risk Dimension Score]
+
+RETURN
+    SWITCH (
+        TRUE (),
+
+        ISBLANK ( MaxRisk ),
+            "INSUFFICIENT_DATA",
+
+        MaxRisk = Liquidity,
+            "LIQUIDITY",
+
+        MaxRisk = Credit,
+            "CREDIT",
+
+        MaxRisk = Market,
+            "MARKET",
+
+        MaxRisk = Operational,
+            "OPERATIONAL",
+
+        "FINANCIAL"
+    )
+
+
+// ==================================================================
+// 8. SECONDARY RISK DIMENSION
+// ==================================================================
+
+Secondary Risk Dimension =
+VAR Liquidity =
+    [Liquidity Risk Score]
+
+VAR Credit =
+    [Credit Risk Score]
+
+VAR Market =
+    [Market Risk Score]
+
+VAR Operational =
+    [Operational Risk Score]
+
+VAR Primary =
+    [Primary Enterprise Risk]
+
+VAR PrimaryScore =
+    [Highest Risk Dimension Score]
+
+VAR SecondaryScore =
+    MAXX (
+        FILTER (
+            {
+                "LIQUIDITY",
+                "CREDIT",
+                "MARKET",
+                "OPERATIONAL"
+            },
+            SWITCH (
+                [Value],
+                "LIQUIDITY", Liquidity,
+                "CREDIT", Credit,
+                "MARKET", Market,
+                "OPERATIONAL", Operational
+            ) < PrimaryScore
+        ),
+        SWITCH (
+            [Value],
+            "LIQUIDITY", Liquidity,
+            "CREDIT", Credit,
+            "MARKET", Market,
+            "OPERATIONAL", Operational
+        )
+    )
+
+RETURN
+    SWITCH (
+        TRUE (),
+
+        SecondaryScore = Liquidity,
+            "LIQUIDITY",
+
+        SecondaryScore = Credit,
+            "CREDIT",
+
+        SecondaryScore = Market,
+            "MARKET",
+
+        SecondaryScore = Operational,
+            "OPERATIONAL",
+
+        "NONE"
+    )
+
+
+// ==================================================================
+// 9. RISK SPREAD
+//
+// Difference between highest and lowest risk dimension.
+// ==================================================================
+
+Risk Dimension Spread =
+VAR Highest =
+    MAX (
+        [Liquidity Risk Score],
+        MAX (
+            [Credit Risk Score],
+            MAX (
+                [Market Risk Score],
+                [Operational Risk Score]
+            )
+        )
+    )
+
+VAR Lowest =
+    MIN (
+        [Liquidity Risk Score],
+        MIN (
+            [Credit Risk Score],
+            MIN (
+                [Market Risk Score],
+                [Operational Risk Score]
+            )
+        )
+    )
+
+RETURN
+    IF (
+        ISBLANK ( Highest )
+            || ISBLANK ( Lowest ),
+        BLANK (),
+        ROUND (
+            Highest - Lowest,
+            2
+        )
+    )
+
+
+// ==================================================================
+// 10. CRITICAL RISK DIMENSION COUNT
+// ==================================================================
+
+Critical Risk Dimension Count =
+VAR LiquidityCritical =
+    IF ( [Liquidity Risk Score] >= 80, 1, 0 )
+
+VAR CreditCritical =
+    IF ( [Credit Risk Score] >= 80, 1, 0 )
+
+VAR MarketCritical =
+    IF ( [Market Risk Score] >= 80, 1, 0 )
+
+VAR OperationalCritical =
+    IF ( [Operational Risk Score] >= 80, 1, 0 )
+
+RETURN
+    LiquidityCritical
+    + CreditCritical
+    + MarketCritical
+    + OperationalCritical
+
+
+// ==================================================================
+// 11. HIGH RISK DIMENSION COUNT
+// ==================================================================
+
+High Risk Dimension Count =
+VAR LiquidityHigh =
+    IF ( [Liquidity Risk Score] >= 60, 1, 0 )
+
+VAR CreditHigh =
+    IF ( [Credit Risk Score] >= 60, 1, 0 )
+
+VAR MarketHigh =
+    IF ( [Market Risk Score] >= 60, 1, 0 )
+
+VAR OperationalHigh =
+    IF ( [Operational Risk Score] >= 60, 1, 0 )
+
+RETURN
+    LiquidityHigh
+    + CreditHigh
+    + MarketHigh
+    + OperationalHigh
+
+
+// ==================================================================
+// 12. MEDIUM-OR-HIGH RISK DIMENSION COUNT
+// ==================================================================
+
+At Risk Dimension Count =
+VAR LiquidityRisk =
+    IF ( [Liquidity Risk Score] >= 35, 1, 0 )
+
+VAR CreditRisk =
+    IF ( [Credit Risk Score] >= 35, 1, 0 )
+
+VAR MarketRisk =
+    IF ( [Market Risk Score] >= 35, 1, 0 )
+
+VAR OperationalRisk =
+    IF ( [Operational Risk Score] >= 35, 1, 0 )
+
+RETURN
+    LiquidityRisk
+    + CreditRisk
+    + MarketRisk
+    + OperationalRisk
+
+
+// ==================================================================
+// 13. TOTAL RISK FACTOR COUNT
+// ==================================================================
+
+Total Risk Factor Count =
+VAR RiskFactors =
+    SUM ( RiskFactors[HighRiskFactorCount] )
+
+VAR CreditFactors =
+    [Credit Risk Factor Count]
+
+VAR LiquidityFactors =
+    [Liquidity Risk Factor Count]
+
+VAR MarketFactors =
+    [Market Risk Factor Count]
+
+VAR OperationalFactors =
+    [Operational Risk Factor Count]
+
+RETURN
+    COALESCE ( RiskFactors, 0 )
+    + COALESCE ( CreditFactors, 0 )
+    + COALESCE ( LiquidityFactors, 0 )
+    + COALESCE ( MarketFactors, 0 )
+    + COALESCE ( OperationalFactors, 0 )
+
+
+// ==================================================================
+// 14. CRITICAL ALERT FLAG
+// ==================================================================
+
+Critical Risk Alert Flag =
+IF (
+    [Enterprise Risk Score] >= 80
+        || [Critical Risk Dimension Count] > 0,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 15. HIGH RISK ALERT FLAG
+// ==================================================================
+
+High Risk Alert Flag =
+IF (
+    [Enterprise Risk Score] >= 60
+        || [High Risk Dimension Count] > 0,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 16. ENTERPRISE ALERT LEVEL
+// ==================================================================
+
+Enterprise Alert Level =
+VAR Score =
+    [Enterprise Risk Score]
+
+VAR CriticalCount =
+    [Critical Risk Dimension Count]
+
+VAR HighCount =
+    [High Risk Dimension Count]
+
+RETURN
+    SWITCH (
+        TRUE (),
+
+        CriticalCount > 0
+            || Score >= 80,
+            "CRITICAL",
+
+        HighCount > 0
+            || Score >= 60,
+            "HIGH",
+
+        Score >= 35,
+            "MEDIUM",
+
+        Score >= 15,
+            "LOW",
+
+        "NONE"
+    )
+
+
+// ==================================================================
+// 17. ENTERPRISE DECISION
+// ==================================================================
+
+Enterprise Decision =
+VAR Score =
+    [Enterprise Risk Score]
+
+VAR CriticalCount =
+    [Critical Risk Dimension Count]
+
+RETURN
+    SWITCH (
+        TRUE (),
+
+        ISBLANK ( Score ),
+            "INSUFFICIENT_DATA",
+
+        CriticalCount > 0
+            || Score >= 80,
+            "EXECUTIVE_ESCALATION",
+
+        Score >= 60,
+            "MANAGEMENT_REVIEW",
+
+        Score >= 35,
+            "ENHANCED_MONITORING",
+
+        Score >= 15,
+            "ROUTINE_MONITORING",
+
+        "NORMAL"
+    )
+
+
+// ==================================================================
+// 18. ENTERPRISE RISK TREND
+// ==================================================================
+
+Previous Enterprise Risk Score =
+CALCULATE (
+    [Enterprise Risk Score],
+    DATEADD (
+        RiskTransformations[Period],
+        -1,
+        MONTH
+    )
+)
+
+
+Enterprise Risk Change =
+VAR CurrentScore =
+    [Enterprise Risk Score]
+
+VAR PreviousScore =
+    [Previous Enterprise Risk Score]
+
+RETURN
+    IF (
+        ISBLANK ( PreviousScore ),
+        BLANK (),
+        ROUND (
+            CurrentScore - PreviousScore,
+            2
+        )
+    )
+
+
+Enterprise Risk Trend =
+VAR Change =
+    [Enterprise Risk Change]
+
+RETURN
+    SWITCH (
+        TRUE (),
+
+        ISBLANK ( Change ),
+            "NO_HISTORY",
+
+        Change >= 15,
+            "STRONGLY_DETERIORATING",
+
+        Change >= 5,
+            "DETERIORATING",
+
+        Change <= -15,
+            "STRONGLY_IMPROVING",
+
+        Change <= -5,
+            "IMPROVING",
+
+        "STABLE"
+    )
+
+
+// ==================================================================
+// 19. ENTERPRISE DETERIORATION FLAG
+// ==================================================================
+
+Enterprise Deterioration Flag =
+IF (
+    [Enterprise Risk Change] >= 5,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 20. ENTERPRISE IMPROVEMENT FLAG
+// ==================================================================
+
+Enterprise Improvement Flag =
+IF (
+    [Enterprise Risk Change] <= -5,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 21. RISK CONCENTRATION
+//
+// Measures how strongly the overall risk is dominated by the
+// highest risk dimension.
+// ==================================================================
+
+Risk Concentration Ratio =
+DIVIDE (
+    [Highest Risk Dimension Score],
+    [Average Risk Dimension Score],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 22. RISK BALANCE STATUS
+// ==================================================================
+
+Risk Balance Status =
+VAR Spread =
+    [Risk Dimension Spread]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Spread ), "UNKNOWN",
+        Spread >= 50, "HIGHLY_CONCENTRATED",
+        Spread >= 30, "CONCENTRATED",
+        Spread >= 15, "MODERATELY_BALANCED",
+        "BALANCED"
+    )
+
+
+// ==================================================================
+// 23. LIQUIDITY KPI STATUS
+// ==================================================================
+
+Liquidity KPI Status =
+VAR Score =
+    [Liquidity Risk Score]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "N/A",
+        Score >= 80, "CRITICAL",
+        Score >= 60, "HIGH",
+        Score >= 35, "WATCH",
+        "HEALTHY"
+    )
+
+
+// ==================================================================
+// 24. CREDIT KPI STATUS
+// ==================================================================
+
+Credit KPI Status =
+VAR Score =
+    [Credit Risk Score]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "N/A",
+        Score >= 80, "CRITICAL",
+        Score >= 60, "HIGH",
+        Score >= 35, "WATCH",
+        "HEALTHY"
+    )
+
+
+// ==================================================================
+// 25. MARKET KPI STATUS
+// ==================================================================
+
+Market KPI Status =
+VAR Score =
+    [Market Risk Score]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "N/A",
+        Score >= 80, "CRITICAL",
+        Score >= 60, "HIGH",
+        Score >= 35, "WATCH",
+        "HEALTHY"
+    )
+
+
+// ==================================================================
+// 26. OPERATIONAL KPI STATUS
+// ==================================================================
+
+Operational KPI Status =
+VAR Score =
+    [Operational Risk Score]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "N/A",
+        Score >= 80, "CRITICAL",
+        Score >= 60, "HIGH",
+        Score >= 35, "WATCH",
+        "HEALTHY"
+    )
+
+
+// ==================================================================
+// 27. OVERALL RISK STATUS
+// ==================================================================
+
+Overall Risk Status =
+VAR Score =
+    [Enterprise Risk Score]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "N/A",
+        Score >= 80, "CRITICAL",
+        Score >= 60, "HIGH",
+        Score >= 35, "MEDIUM",
+        Score >= 15, "LOW",
+        "INFO"
+    )
+
+
+// ==================================================================
+// 28. EXECUTIVE RECOMMENDATION
+// ==================================================================
+
+Executive Risk Recommendation =
+VAR Score =
+    [Enterprise Risk Score]
+
+VAR Primary =
+    [Primary Enterprise Risk]
+
+RETURN
+    SWITCH (
+        TRUE (),
+
+        ISBLANK ( Score ),
+            "Insufficient data for executive risk assessment.",
+
+        Score >= 80
+            && Primary = "LIQUIDITY",
+            "Immediate liquidity intervention required. Review cash buffers, working capital, short-term obligations and funding options.",
+
+        Score >= 80
+            && Primary = "CREDIT",
+            "Immediate credit-risk review required. Assess leverage, debt-service capacity, refinancing requirements and lender exposure.",
+
+        Score >= 80
+            && Primary = "MARKET",
+            "Immediate market-risk review required. Assess demand deterioration, revenue concentration, volatility and downside scenarios.",
+
+        Score >= 80
+            && Primary = "OPERATIONAL",
+            "Immediate operational review required. Investigate revenue, profitability, cost structure and operating cash-flow deterioration.",
+
+        Score >= 60,
+            "Management-level risk review is required across the highest-risk dimensions.",
+
+        Score >= 35,
+            "Increase monitoring frequency and investigate emerging risk indicators.",
+
+        Score >= 15,
+            "Maintain routine monitoring and track early-warning indicators.",
+
+        "No immediate enterprise risk intervention required."
+    )
+
+
+// ==================================================================
+// 29. EXECUTIVE RISK SUMMARY
+// ==================================================================
+
+Executive Risk Summary =
+VAR Score =
+    [Enterprise Risk Score]
+
+VAR Band =
+    [Enterprise Risk Band]
+
+VAR Primary =
+    [Primary Enterprise Risk]
+
+VAR Trend =
+    [Enterprise Risk Trend]
+
+VAR Critical =
+    [Critical Risk Dimension Count]
+
+VAR High =
+    [High Risk Dimension Count]
+
+RETURN
+    IF (
+        ISBLANK ( Score ),
+        "Enterprise risk assessment is unavailable because sufficient risk data is not available.",
+
+        "Enterprise risk score is "
+            & FORMAT ( Score, "0.0" )
+            & " ("
+            & Band
+            & "). Primary risk dimension: "
+            & Primary
+            & ". Trend: "
+            & Trend
+            & ". Critical dimensions: "
+            & FORMAT ( Critical, "0" )
+            & ". High-risk dimensions: "
+            & FORMAT ( High, "0" )
+            & "."
+    )
+
+
+// ==================================================================
+// 30. RISK SCORECARD TABLE SUPPORT
+// ==================================================================
+
+Risk Scorecard — Liquidity =
+[Liquidity Risk Score]
+
+
+Risk Scorecard — Credit =
+[Credit Risk Score]
+
+
+Risk Scorecard — Market =
+[Market Risk Score]
+
+
+Risk Scorecard — Operational =
+[Operational Risk Score]
+
+
+Risk Scorecard — Enterprise =
+[Enterprise Risk Score]
+
+
+// ==================================================================
+// 31. RISK SCORECARD MAX
+// ==================================================================
+
+Risk Scorecard Maximum =
+MAX (
+    [Liquidity Risk Score],
+    MAX (
+        [Credit Risk Score],
+        MAX (
+            [Market Risk Score],
+            [Operational Risk Score]
+        )
+    )
+)
+
+
+// ==================================================================
+// 32. RISK SCORECARD MIN
+// ==================================================================
+
+Risk Scorecard Minimum =
+MIN (
+    [Liquidity Risk Score],
+    MIN (
+        [Credit Risk Score],
+        MIN (
+            [Market Risk Score],
+            [Operational Risk Score]
+        )
+    )
+)
+
+
+// ==================================================================
+// 33. EXECUTIVE KPI COUNT
+// ==================================================================
+
+Risk KPI At-Risk Count =
+[At Risk Dimension Count]
+
+
+// ==================================================================
+// 34. EXECUTIVE KPI CRITICAL COUNT
+// ==================================================================
+
+Risk KPI Critical Count =
+[Critical Risk Dimension Count]
+
+
+// ==================================================================
+// 35. EXECUTIVE KPI HIGH COUNT
+// ==================================================================
+
+Risk KPI High Count =
+[High Risk Dimension Count]
+
+
+// ==================================================================
+// 36. EXECUTIVE RISK SCORE DISPLAY
+// ==================================================================
+
+Enterprise Risk Score Display =
+IF (
+    ISBLANK ( [Enterprise Risk Score] ),
+    "N/A",
+    FORMAT (
+        [Enterprise Risk Score],
+        "0.0"
+    )
+)
+
+
+// ==================================================================
+// 37. ENTERPRISE HEALTH DISPLAY
+// ==================================================================
+
+Enterprise Health Score Display =
+IF (
+    ISBLANK ( [Enterprise Health Score] ),
+    "N/A",
+    FORMAT (
+        [Enterprise Health Score],
+        "0.0"
+    )
+)
+
+
+// ==================================================================
+// 38. RISK CHANGE DISPLAY
+// ==================================================================
+
+Enterprise Risk Change Display =
+IF (
+    ISBLANK ( [Enterprise Risk Change] ),
+    "N/A",
+    FORMAT (
+        [Enterprise Risk Change],
+        "+0.0;-0.0;0.0"
+    )
+)
+
+
+// ==================================================================
+// 39. RISK FACTOR DISPLAY
+// ==================================================================
+
+Risk Factor Count Display =
+FORMAT (
+    [Total Risk Factor Count],
+    "0"
+)
+
+
+// ==================================================================
+// 40. DASHBOARD TITLE
+// ==================================================================
+
+Risk Dashboard Title =
+"FinCo AI — Enterprise Risk Dashboard"
+
+
+// ==================================================================
+// 41. DASHBOARD SUBTITLE
+// ==================================================================
+
+Risk Dashboard Subtitle =
+VAR CompanyName =
+    SELECTEDVALUE (
+        RiskTransformations[CompanyName],
+        "All Companies"
+    )
+
+VAR Period =
+    MAX (
+        RiskTransformations[Period]
+    )
+
+RETURN
+    CompanyName
+        & " | Risk Assessment: "
+        & IF (
+            ISBLANK ( Period ),
+            "N/A",
+            FORMAT ( Period, "MMM YYYY" )
+        )
+
+
+// ==================================================================
+// 42. MANAGEMENT ACTION PRIORITY
+// ==================================================================
+
+Management Action Priority =
+VAR Score =
+    [Enterprise Risk Score]
+
+VAR Critical =
+    [Critical Risk Dimension Count]
+
+VAR High =
+    [High Risk Dimension Count]
+
+RETURN
+    SWITCH (
+        TRUE (),
+
+        Critical > 0 || Score >= 80,
+            "P1 — IMMEDIATE",
+
+        High > 0 || Score >= 60,
+            "P2 — HIGH",
+
+        Score >= 35,
+            "P3 — MONITOR",
+
+        Score >= 15,
+            "P4 — WATCH",
+
+        "P5 — NORMAL"
+    )
+
+
+// ==================================================================
+// 43. SUPERVISOR AGENT SIGNAL
+//
+// This is intended as a Power BI signal for the FinCo AI
+// Supervisor Agent / downstream API integration.
+// ==================================================================
+
+Supervisor Agent Signal =
+VAR Score =
+    [Enterprise Risk Score]
+
+VAR Primary =
+    [Primary Enterprise Risk]
+
+VAR Alert =
+    [Enterprise Alert Level]
+
+RETURN
+    SWITCH (
+        TRUE (),
+
+        ISBLANK ( Score ),
+            "NO_ACTION",
+
+        Alert = "CRITICAL",
+            "TRIGGER_SUPERVISOR_AGENT",
+
+        Alert = "HIGH",
+            "TRIGGER_RISK_REVIEW",
+
+        Alert = "MEDIUM",
+            "MONITOR_AND_ANALYZE",
+
+        Primary = "LIQUIDITY"
+            && [Liquidity Deterioration Flag] = 1,
+            "TRIGGER_LIQUIDITY_ANALYSIS",
+
+        Primary = "CREDIT"
+            && [Credit Deterioration Flag] = 1,
+            "TRIGGER_CREDIT_ANALYSIS",
+
+        Primary = "MARKET"
+            && [Market Deterioration Flag] = 1,
+            "TRIGGER_MARKET_ANALYSIS",
+
+        Primary = "OPERATIONAL"
+            && [Operational Deterioration Flag] = 1,
+            "TRIGGER_OPERATIONAL_ANALYSIS",
+
+        "NO_ACTION"
+    )
+
+
+// ==================================================================
+// 44. HUMAN REVIEW REQUIRED
+// ==================================================================
+
+Human Review Required =
+IF (
+    [Enterprise Risk Score] >= 60
+        || [Critical Risk Dimension Count] > 0,
+    "YES",
+    "NO"
+)
+
+
+// ==================================================================
+// 45. RISK DATA QUALITY
+// ==================================================================
+
+Risk KPI Data Quality =
+VAR LiquidityQuality =
+    [Liquidity Risk Data Quality]
+
+VAR CreditAvailable =
+    NOT ISBLANK ( [Credit Risk Score] )
+
+VAR MarketQuality =
+    [Market Risk Data Quality]
+
+VAR OperationalQuality =
+    [Operational Risk Data Quality]
+
+VAR CompleteCount =
+    IF ( LiquidityQuality = "COMPLETE", 1, 0 )
+    + IF ( CreditAvailable, 1, 0 )
+    + IF ( MarketQuality = "COMPLETE", 1, 0 )
+    + IF ( OperationalQuality = "COMPLETE", 1, 0 )
+
+RETURN
+    SWITCH (
+        TRUE (),
+        CompleteCount >= 4, "COMPLETE",
+        CompleteCount >= 2, "PARTIAL",
+        "INSUFFICIENT"
+    )

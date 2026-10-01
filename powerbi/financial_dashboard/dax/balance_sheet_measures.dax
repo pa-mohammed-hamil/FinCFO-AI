@@ -1,0 +1,1291 @@
+// ============================================================
+// FINCO AI — BALANCE SHEET MEASURES
+// File: balance_sheet_measures.dax
+//
+// PURPOSE
+//   Executive and analytical measures for Balance Sheet
+//   monitoring, liquidity, leverage, working capital,
+//   financial risk, alerts and management decisions.
+//
+// PRIMARY TABLE
+//   BalanceSheet
+//
+// RECOMMENDED DIMENSIONS
+//   DimDate
+//   DimCompany
+//   DimBusinessUnit
+//
+// ============================================================
+
+
+// ============================================================
+// 1. CORE BALANCE SHEET MEASURES
+// ============================================================
+
+Total Assets =
+SUM(BalanceSheet[TotalAssets])
+
+
+Current Assets =
+SUM(BalanceSheet[CurrentAssets])
+
+
+Current Liabilities =
+SUM(BalanceSheet[CurrentLiabilities])
+
+
+Total Liabilities =
+SUM(BalanceSheet[TotalLiabilities])
+
+
+Total Equity =
+SUM(BalanceSheet[TotalEquity])
+
+
+Cash & Equivalents =
+SUM(BalanceSheet[CashAndEquivalents])
+
+
+Accounts Receivable =
+SUM(BalanceSheet[AccountsReceivable])
+
+
+Inventory =
+SUM(BalanceSheet[Inventory])
+
+
+Accounts Payable =
+SUM(BalanceSheet[AccountsPayable])
+
+
+Debt =
+SUM(BalanceSheet[Debt])
+
+
+// ============================================================
+// 2. WORKING CAPITAL
+// ============================================================
+
+Working Capital =
+[Current Assets] - [Current Liabilities]
+
+
+Working Capital % of Assets =
+DIVIDE(
+    [Working Capital],
+    [Total Assets]
+)
+
+
+Net Working Capital =
+[Working Capital]
+
+
+Working Capital Status =
+VAR WC = [Working Capital]
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(WC), "Unknown",
+        WC < 0, "Negative",
+        WC = 0, "Neutral",
+        "Positive"
+    )
+
+
+// ============================================================
+// 3. LIQUIDITY RATIOS
+// ============================================================
+
+Current Ratio =
+DIVIDE(
+    [Current Assets],
+    [Current Liabilities]
+)
+
+
+Quick Ratio =
+DIVIDE(
+    [Current Assets] - [Inventory],
+    [Current Liabilities]
+)
+
+
+Cash Ratio =
+DIVIDE(
+    [Cash & Equivalents],
+    [Current Liabilities]
+)
+
+
+Cash Coverage Ratio =
+DIVIDE(
+    [Cash & Equivalents],
+    [Current Liabilities]
+)
+
+
+Liquidity Headroom =
+[Current Assets] - [Current Liabilities]
+
+
+Liquidity Headroom % =
+DIVIDE(
+    [Liquidity Headroom],
+    [Current Liabilities]
+)
+
+
+// ============================================================
+// 4. LEVERAGE RATIOS
+// ============================================================
+
+Debt to Assets =
+DIVIDE(
+    [Debt],
+    [Total Assets]
+)
+
+
+Debt to Equity =
+DIVIDE(
+    [Debt],
+    [Total Equity]
+)
+
+
+Liabilities to Assets =
+DIVIDE(
+    [Total Liabilities],
+    [Total Assets]
+)
+
+
+Equity to Assets =
+DIVIDE(
+    [Total Equity],
+    [Total Assets]
+)
+
+
+Debt to Capital =
+DIVIDE(
+    [Debt],
+    [Debt] + [Total Equity]
+)
+
+
+Liabilities to Equity =
+DIVIDE(
+    [Total Liabilities],
+    [Total Equity]
+)
+
+
+// ============================================================
+// 5. ASSET COMPOSITION
+// ============================================================
+
+Cash to Assets =
+DIVIDE(
+    [Cash & Equivalents],
+    [Total Assets]
+)
+
+
+Receivables to Assets =
+DIVIDE(
+    [Accounts Receivable],
+    [Total Assets]
+)
+
+
+Inventory to Assets =
+DIVIDE(
+    [Inventory],
+    [Total Assets]
+)
+
+
+Current Assets to Total Assets =
+DIVIDE(
+    [Current Assets],
+    [Total Assets]
+)
+
+
+Non Current Assets =
+[Total Assets] - [Current Assets]
+
+
+Non Current Assets to Total Assets =
+DIVIDE(
+    [Non Current Assets],
+    [Total Assets]
+)
+
+
+// ============================================================
+// 6. BALANCE SHEET INTEGRITY
+// ============================================================
+
+Balance Sheet Difference =
+[Total Assets]
+    - (
+        [Total Liabilities]
+        + [Total Equity]
+    )
+
+
+Balance Sheet Difference % =
+DIVIDE(
+    [Balance Sheet Difference],
+    [Total Assets]
+)
+
+
+Balance Sheet Balanced Flag =
+VAR Difference = [Balance Sheet Difference]
+RETURN
+    IF(
+        ISBLANK(Difference),
+        BLANK(),
+        IF(
+            ABS(Difference) <= 0.01,
+            1,
+            0
+        )
+    )
+
+
+Balance Sheet Check =
+VAR Difference = [Balance Sheet Difference]
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(Difference), "Unavailable",
+        ABS(Difference) <= 0.01, "Balanced",
+        "Out of Balance"
+    )
+
+
+Balance Sheet Integrity % =
+VAR Difference = [Balance Sheet Difference]
+RETURN
+    IF(
+        ISBLANK(Difference),
+        BLANK(),
+        IF(
+            ABS(Difference) <= 0.01,
+            1,
+            0
+        )
+    )
+
+
+// ============================================================
+// 7. LIQUIDITY STATUS
+// ============================================================
+
+Liquidity Status =
+VAR Ratio = [Current Ratio]
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(Ratio), "Unknown",
+        Ratio < 1, "Critical",
+        Ratio < 1.5, "Watch",
+        Ratio < 2, "Healthy",
+        "Strong"
+    )
+
+
+Quick Liquidity Status =
+VAR Ratio = [Quick Ratio]
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(Ratio), "Unknown",
+        Ratio < 0.75, "Critical",
+        Ratio < 1, "Watch",
+        Ratio < 1.5, "Healthy",
+        "Strong"
+    )
+
+
+Cash Liquidity Status =
+VAR Ratio = [Cash Ratio]
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(Ratio), "Unknown",
+        Ratio < 0.10, "Critical",
+        Ratio < 0.25, "Watch",
+        Ratio < 0.50, "Healthy",
+        "Strong"
+    )
+
+
+// ============================================================
+// 8. LEVERAGE STATUS
+// ============================================================
+
+Leverage Status =
+VAR Ratio = [Debt to Equity]
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(Ratio), "Unknown",
+        Ratio >= 2, "Critical",
+        Ratio >= 1, "Watch",
+        Ratio >= 0.5, "Moderate",
+        "Healthy"
+    )
+
+
+Debt Burden Status =
+VAR Ratio = [Debt to Assets]
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(Ratio), "Unknown",
+        Ratio >= 0.75, "Critical",
+        Ratio >= 0.50, "High",
+        Ratio >= 0.30, "Moderate",
+        "Healthy"
+    )
+
+
+// ============================================================
+// 9. WORKING CAPITAL STATUS
+// ============================================================
+
+Working Capital Health =
+VAR WC = [Working Capital]
+VAR Ratio = [Current Ratio]
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(WC), "Unknown",
+        WC < 0, "Critical",
+        Ratio < 1, "High Risk",
+        Ratio < 1.5, "Watch",
+        "Healthy"
+    )
+
+
+// ============================================================
+// 10. BALANCE SHEET RISK COMPONENTS
+// ============================================================
+
+Liquidity Risk =
+VAR Ratio = [Current Ratio]
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(Ratio), 20,
+        Ratio < 1, 40,
+        Ratio < 1.5, 20,
+        0
+    )
+
+
+Leverage Risk =
+VAR Ratio = [Debt to Equity]
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(Ratio), 10,
+        Ratio >= 2, 40,
+        Ratio >= 1, 20,
+        0
+    )
+
+
+Working Capital Risk =
+VAR WC = [Working Capital]
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(WC), 15,
+        WC < 0, 30,
+        0
+    )
+
+
+Balance Sheet Integrity Risk =
+VAR Check = [Balance Sheet Check]
+RETURN
+    SWITCH(
+        TRUE(),
+        Check = "Out of Balance", 30,
+        Check = "Unavailable", 10,
+        0
+    )
+
+
+// ============================================================
+// 11. BALANCE SHEET RISK SCORE
+// ============================================================
+
+Balance Sheet Risk Score =
+VAR Score =
+    [Liquidity Risk]
+    + [Leverage Risk]
+    + [Working Capital Risk]
+    + [Balance Sheet Integrity Risk]
+RETURN
+    MIN(
+        100,
+        Score
+    )
+
+
+Balance Sheet Risk Level =
+VAR Score = [Balance Sheet Risk Score]
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(Score), "Unknown",
+        Score >= 75, "CRITICAL",
+        Score >= 50, "HIGH",
+        Score >= 25, "MEDIUM",
+        "LOW"
+    )
+
+
+Balance Sheet Health Score =
+VAR Risk = [Balance Sheet Risk Score]
+RETURN
+    IF(
+        ISBLANK(Risk),
+        BLANK(),
+        MAX(
+            0,
+            100 - Risk
+        )
+    )
+
+
+Balance Sheet Health Status =
+VAR Score = [Balance Sheet Health Score]
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(Score), "Unknown",
+        Score >= 80, "Excellent",
+        Score >= 65, "Healthy",
+        Score >= 50, "Watch",
+        Score >= 30, "Weak",
+        "Critical"
+    )
+
+
+// ============================================================
+// 12. BALANCE SHEET RISK PERCENTAGE
+// ============================================================
+
+Balance Sheet Risk % =
+DIVIDE(
+    [Balance Sheet Risk Score],
+    100
+)
+
+
+Balance Sheet Health % =
+DIVIDE(
+    [Balance Sheet Health Score],
+    100
+)
+
+
+// ============================================================
+// 13. ALERT ENGINE
+// ============================================================
+
+Balance Sheet Alert Flag =
+VAR RiskLevel = [Balance Sheet Risk Level]
+VAR Check = [Balance Sheet Check]
+RETURN
+    IF(
+        RiskLevel IN {
+            "CRITICAL",
+            "HIGH"
+        }
+        || Check = "Out of Balance",
+        1,
+        0
+    )
+
+
+Balance Sheet Alert Count =
+SUMX(
+    VALUES(BalanceSheet[FinancialRecordID]),
+    [Balance Sheet Alert Flag]
+)
+
+
+Balance Sheet Alert Type =
+VAR RiskLevel = [Balance Sheet Risk Level]
+VAR Check = [Balance Sheet Check]
+VAR Liquidity = [Liquidity Status]
+VAR Leverage = [Leverage Status]
+VAR WC = [Working Capital]
+RETURN
+    SWITCH(
+        TRUE(),
+        Check = "Out of Balance",
+            "Balance Sheet Integrity Failure",
+        RiskLevel = "CRITICAL",
+            "Critical Balance Sheet Risk",
+        RiskLevel = "HIGH",
+            "High Balance Sheet Risk",
+        Liquidity = "Critical",
+            "Liquidity Risk",
+        Leverage = "Critical",
+            "Leverage Risk",
+        WC < 0,
+            "Negative Working Capital",
+        BLANK()
+    )
+
+
+Balance Sheet Recommended Action =
+VAR RiskLevel = [Balance Sheet Risk Level]
+VAR Check = [Balance Sheet Check]
+VAR Liquidity = [Liquidity Status]
+VAR Leverage = [Leverage Status]
+VAR WC = [Working Capital]
+RETURN
+    SWITCH(
+        TRUE(),
+        Check = "Out of Balance",
+            "Investigate balance-sheet reconciliation and source-data integrity",
+        RiskLevel = "CRITICAL",
+            "Immediate management review and financial risk mitigation",
+        RiskLevel = "HIGH",
+            "Investigate balance-sheet risk drivers and execute mitigation plan",
+        Liquidity = "Critical",
+            "Improve liquidity and review short-term funding requirements",
+        Leverage = "Critical",
+            "Review debt structure, refinancing and capital allocation",
+        WC < 0,
+            "Improve working capital and review receivables, inventory and payables",
+        "Continue normal balance-sheet monitoring"
+    )
+
+
+// ============================================================
+// 14. RECORD COUNTS
+// ============================================================
+
+Balance Sheet Records =
+COUNTROWS(
+    BalanceSheet
+)
+
+
+Balance Sheet Companies =
+DISTINCTCOUNT(
+    BalanceSheet[Company]
+)
+
+
+Balance Sheet Business Units =
+DISTINCTCOUNT(
+    BalanceSheet[BusinessUnit]
+)
+
+
+Balance Sheet Alert Records =
+CALCULATE(
+    COUNTROWS(BalanceSheet),
+    FILTER(
+        BalanceSheet,
+        BalanceSheet[AlertFlag] = TRUE()
+    )
+)
+
+
+// ============================================================
+// 15. RISK RECORD COUNTS
+// ============================================================
+
+Critical Balance Sheet Records =
+CALCULATE(
+    COUNTROWS(BalanceSheet),
+    BalanceSheet[FinancialRiskLevel] = "CRITICAL"
+)
+
+
+High Risk Balance Sheet Records =
+CALCULATE(
+    COUNTROWS(BalanceSheet),
+    BalanceSheet[FinancialRiskLevel] = "HIGH"
+)
+
+
+Medium Risk Balance Sheet Records =
+CALCULATE(
+    COUNTROWS(BalanceSheet),
+    BalanceSheet[FinancialRiskLevel] = "MEDIUM"
+)
+
+
+Low Risk Balance Sheet Records =
+CALCULATE(
+    COUNTROWS(BalanceSheet),
+    BalanceSheet[FinancialRiskLevel] = "LOW"
+)
+
+
+// ============================================================
+// 16. RISK RATES
+// ============================================================
+
+Critical Balance Sheet Rate =
+DIVIDE(
+    [Critical Balance Sheet Records],
+    [Balance Sheet Records]
+)
+
+
+High Risk Balance Sheet Rate =
+DIVIDE(
+    [High Risk Balance Sheet Records],
+    [Balance Sheet Records]
+)
+
+
+Balance Sheet Alert Rate =
+DIVIDE(
+    [Balance Sheet Alert Records],
+    [Balance Sheet Records]
+)
+
+
+// ============================================================
+// 17. AVERAGE RISK / HEALTH
+// ============================================================
+
+Average Balance Sheet Risk Score =
+AVERAGEX(
+    BalanceSheet,
+    BalanceSheet[BalanceSheetRiskScore]
+)
+
+
+Average Balance Sheet Health Score =
+AVERAGEX(
+    BalanceSheet,
+    BalanceSheet[BalanceSheetHealthScore]
+)
+
+
+// ============================================================
+// 18. AVERAGE RATIOS
+// ============================================================
+
+Average Current Ratio =
+AVERAGEX(
+    BalanceSheet,
+    BalanceSheet[CurrentRatio]
+)
+
+
+Average Quick Ratio =
+AVERAGEX(
+    BalanceSheet,
+    BalanceSheet[QuickRatio]
+)
+
+
+Average Cash Ratio =
+AVERAGEX(
+    BalanceSheet,
+    BalanceSheet[CashRatio]
+)
+
+
+Average Debt to Equity =
+AVERAGEX(
+    BalanceSheet,
+    BalanceSheet[DebtToEquity]
+)
+
+
+Average Debt to Asset =
+AVERAGEX(
+    BalanceSheet,
+    BalanceSheet[DebtToAssetRatio]
+)
+
+
+// ============================================================
+// 19. BALANCE SHEET GROWTH
+// ============================================================
+
+Total Assets Previous Period =
+CALCULATE(
+    [Total Assets],
+    DATEADD(
+        'DimDate'[Date],
+        -1,
+        YEAR
+    )
+)
+
+
+Total Assets Growth =
+[Total Assets]
+    - [Total Assets Previous Period]
+
+
+Total Assets Growth % =
+DIVIDE(
+    [Total Assets Growth],
+    ABS([Total Assets Previous Period])
+)
+
+
+Total Liabilities Previous Period =
+CALCULATE(
+    [Total Liabilities],
+    DATEADD(
+        'DimDate'[Date],
+        -1,
+        YEAR
+    )
+)
+
+
+Total Liabilities Growth =
+[Total Liabilities]
+    - [Total Liabilities Previous Period]
+
+
+Total Liabilities Growth % =
+DIVIDE(
+    [Total Liabilities Growth],
+    ABS([Total Liabilities Previous Period])
+)
+
+
+Total Equity Previous Period =
+CALCULATE(
+    [Total Equity],
+    DATEADD(
+        'DimDate'[Date],
+        -1,
+        YEAR
+    )
+)
+
+
+Total Equity Growth =
+[Total Equity]
+    - [Total Equity Previous Period]
+
+
+Total Equity Growth % =
+DIVIDE(
+    [Total Equity Growth],
+    ABS([Total Equity Previous Period])
+)
+
+
+// ============================================================
+// 20. CASH TREND
+// ============================================================
+
+Cash Previous Period =
+CALCULATE(
+    [Cash & Equivalents],
+    DATEADD(
+        'DimDate'[Date],
+        -1,
+        YEAR
+    )
+)
+
+
+Cash Growth =
+[Cash & Equivalents]
+    - [Cash Previous Period]
+
+
+Cash Growth % =
+DIVIDE(
+    [Cash Growth],
+    ABS([Cash Previous Period])
+)
+
+
+// ============================================================
+// 21. DEBT TREND
+// ============================================================
+
+Debt Previous Period =
+CALCULATE(
+    [Debt],
+    DATEADD(
+        'DimDate'[Date],
+        -1,
+        YEAR
+    )
+)
+
+
+Debt Growth =
+[Debt]
+    - [Debt Previous Period]
+
+
+Debt Growth % =
+DIVIDE(
+    [Debt Growth],
+    ABS([Debt Previous Period])
+)
+
+
+// ============================================================
+// 22. RECEIVABLES TREND
+// ============================================================
+
+Receivables Previous Period =
+CALCULATE(
+    [Accounts Receivable],
+    DATEADD(
+        'DimDate'[Date],
+        -1,
+        YEAR
+    )
+)
+
+
+Receivables Growth =
+[Accounts Receivable]
+    - [Receivables Previous Period]
+
+
+Receivables Growth % =
+DIVIDE(
+    [Receivables Growth],
+    ABS([Receivables Previous Period])
+)
+
+
+// ============================================================
+// 23. INVENTORY TREND
+// ============================================================
+
+Inventory Previous Period =
+CALCULATE(
+    [Inventory],
+    DATEADD(
+        'DimDate'[Date],
+        -1,
+        YEAR
+    )
+)
+
+
+Inventory Growth =
+[Inventory]
+    - [Inventory Previous Period]
+
+
+Inventory Growth % =
+DIVIDE(
+    [Inventory Growth],
+    ABS([Inventory Previous Period])
+)
+
+
+// ============================================================
+// 24. PAYABLES TREND
+// ============================================================
+
+Accounts Payable Previous Period =
+CALCULATE(
+    [Accounts Payable],
+    DATEADD(
+        'DimDate'[Date],
+        -1,
+        YEAR
+    )
+)
+
+
+Accounts Payable Growth =
+[Accounts Payable]
+    - [Accounts Payable Previous Period]
+
+
+Accounts Payable Growth % =
+DIVIDE(
+    [Accounts Payable Growth],
+    ABS([Accounts Payable Previous Period])
+)
+
+
+// ============================================================
+// 25. LIQUIDITY RISK SCORECARD
+// ============================================================
+
+Liquidity Score =
+VAR CurrentRatioScore =
+    SWITCH(
+        TRUE(),
+        [Current Ratio] >= 2, 100,
+        [Current Ratio] >= 1.5, 80,
+        [Current Ratio] >= 1, 60,
+        [Current Ratio] >= 0.75, 40,
+        20
+    )
+
+VAR QuickRatioScore =
+    SWITCH(
+        TRUE(),
+        [Quick Ratio] >= 1.5, 100,
+        [Quick Ratio] >= 1, 80,
+        [Quick Ratio] >= 0.75, 60,
+        [Quick Ratio] >= 0.5, 40,
+        20
+    )
+
+VAR CashRatioScore =
+    SWITCH(
+        TRUE(),
+        [Cash Ratio] >= 0.5, 100,
+        [Cash Ratio] >= 0.25, 80,
+        [Cash Ratio] >= 0.1, 60,
+        [Cash Ratio] >= 0.05, 40,
+        20
+    )
+
+RETURN
+    DIVIDE(
+        CurrentRatioScore
+            + QuickRatioScore
+            + CashRatioScore,
+        3
+    )
+
+
+// ============================================================
+// 26. LEVERAGE SCORE
+// ============================================================
+
+Leverage Score =
+VAR DebtEquityScore =
+    SWITCH(
+        TRUE(),
+        ISBLANK([Debt to Equity]), 50,
+        [Debt to Equity] < 0.5, 100,
+        [Debt to Equity] < 1, 80,
+        [Debt to Equity] < 2, 60,
+        [Debt to Equity] < 3, 40,
+        20
+    )
+
+VAR DebtAssetScore =
+    SWITCH(
+        TRUE(),
+        ISBLANK([Debt to Assets]), 50,
+        [Debt to Assets] < 0.3, 100,
+        [Debt to Assets] < 0.5, 80,
+        [Debt to Assets] < 0.75, 60,
+        [Debt to Assets] < 0.9, 40,
+        20
+    )
+
+RETURN
+    DIVIDE(
+        DebtEquityScore
+            + DebtAssetScore,
+        2
+    )
+
+
+// ============================================================
+// 27. WORKING CAPITAL SCORE
+// ============================================================
+
+Working Capital Score =
+VAR WC = [Working Capital]
+VAR CurrentRatioValue = [Current Ratio]
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(WC), 50,
+        WC < 0, 20,
+        CurrentRatioValue < 1, 40,
+        CurrentRatioValue < 1.5, 60,
+        CurrentRatioValue < 2, 80,
+        100
+    )
+
+
+// ============================================================
+// 28. INTEGRITY SCORE
+// ============================================================
+
+Balance Sheet Integrity Score =
+SWITCH(
+    [Balance Sheet Check],
+    "Balanced", 100,
+    "Out of Balance", 0,
+    50
+)
+
+
+// ============================================================
+// 29. EXECUTIVE BALANCE SHEET SCORE
+// ============================================================
+
+Balance Sheet Executive Score =
+VAR Liquidity = [Liquidity Score]
+VAR Leverage = [Leverage Score]
+VAR WorkingCapital = [Working Capital Score]
+VAR Integrity = [Balance Sheet Integrity Score]
+
+RETURN
+    ROUND(
+        Liquidity * 0.30
+            + Leverage * 0.25
+            + WorkingCapital * 0.25
+            + Integrity * 0.20,
+        1
+    )
+
+
+Balance Sheet Executive Status =
+VAR Score = [Balance Sheet Executive Score]
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 85, "EXCELLENT",
+        Score >= 70, "HEALTHY",
+        Score >= 55, "WATCH",
+        Score >= 40, "WEAK",
+        "CRITICAL"
+    )
+
+
+// ============================================================
+// 30. DECISION PRIORITY
+// ============================================================
+
+Balance Sheet Decision Priority =
+VAR Risk = [Balance Sheet Risk Level]
+VAR Integrity = [Balance Sheet Check]
+RETURN
+    SWITCH(
+        TRUE(),
+        Integrity = "Out of Balance"
+            || Risk = "CRITICAL",
+            "P0",
+        Risk = "HIGH",
+            "P1",
+        Risk = "MEDIUM",
+            "P2",
+        "P3"
+    )
+
+
+// ============================================================
+// 31. MANAGEMENT STATUS
+// ============================================================
+
+Balance Sheet Management Status =
+VAR Priority = [Balance Sheet Decision Priority]
+RETURN
+    SWITCH(
+        Priority,
+        "P0", "Immediate Action",
+        "P1", "Management Review",
+        "P2", "Monitor",
+        "Normal"
+    )
+
+
+// ============================================================
+// 32. EXECUTIVE NARRATIVE STATUS
+// ============================================================
+
+Balance Sheet Executive Narrative =
+VAR Risk = [Balance Sheet Risk Level]
+VAR CurrentRatioValue = [Current Ratio]
+VAR DebtEquityValue = [Debt to Equity]
+VAR WC = [Working Capital]
+VAR Integrity = [Balance Sheet Check]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        Integrity = "Out of Balance",
+            "CRITICAL — Balance sheet does not reconcile",
+
+        Risk = "CRITICAL",
+            "CRITICAL — Immediate balance-sheet risk requires executive review",
+
+        Risk = "HIGH",
+            "HIGH RISK — Balance sheet requires management attention",
+
+        CurrentRatioValue < 1,
+            "WARNING — Current liabilities exceed current assets",
+
+        DebtEquityValue >= 2,
+            "WARNING — High leverage detected",
+
+        WC < 0,
+            "WATCH — Negative working capital detected",
+
+        "HEALTHY — Balance sheet within acceptable operating range"
+    )
+
+
+// ============================================================
+// 33. SCORECARD
+// ============================================================
+
+Balance Sheet Scorecard =
+VAR Health =
+    [Balance Sheet Health Score]
+
+VAR Liquidity =
+    [Liquidity Score]
+
+VAR Leverage =
+    [Leverage Score]
+
+VAR WorkingCapital =
+    [Working Capital Score]
+
+VAR Integrity =
+    [Balance Sheet Integrity Score]
+
+RETURN
+    ROUND(
+        Health * 0.30
+            + Liquidity * 0.25
+            + Leverage * 0.20
+            + WorkingCapital * 0.15
+            + Integrity * 0.10,
+        1
+    )
+
+
+// ============================================================
+// 34. DISPLAY MEASURES
+// ============================================================
+
+Total Assets Display =
+FORMAT(
+    [Total Assets],
+    "#,##0.00"
+)
+
+
+Current Assets Display =
+FORMAT(
+    [Current Assets],
+    "#,##0.00"
+)
+
+
+Current Liabilities Display =
+FORMAT(
+    [Current Liabilities],
+    "#,##0.00"
+)
+
+
+Total Liabilities Display =
+FORMAT(
+    [Total Liabilities],
+    "#,##0.00"
+)
+
+
+Total Equity Display =
+FORMAT(
+    [Total Equity],
+    "#,##0.00"
+)
+
+
+Cash Display =
+FORMAT(
+    [Cash & Equivalents],
+    "#,##0.00"
+)
+
+
+Debt Display =
+FORMAT(
+    [Debt],
+    "#,##0.00"
+)
+
+
+Working Capital Display =
+FORMAT(
+    [Working Capital],
+    "#,##0.00"
+)
+
+
+Current Ratio Display =
+FORMAT(
+    [Current Ratio],
+    "0.00x"
+)
+
+
+Quick Ratio Display =
+FORMAT(
+    [Quick Ratio],
+    "0.00x"
+)
+
+
+Debt to Equity Display =
+FORMAT(
+    [Debt to Equity],
+    "0.00x"
+)
+
+
+Balance Sheet Risk Display =
+FORMAT(
+    [Balance Sheet Risk Score],
+    "0"
+)
+
+
+Balance Sheet Health Display =
+FORMAT(
+    [Balance Sheet Health Score],
+    "0"
+)
+
+
+// ============================================================
+// 35. KPI STATUS
+// ============================================================
+
+Balance Sheet KPI Status =
+VAR Risk = [Balance Sheet Risk Level]
+VAR Health = [Balance Sheet Health Score]
+RETURN
+    SWITCH(
+        TRUE(),
+        Risk = "CRITICAL", "CRITICAL",
+        Risk = "HIGH", "HIGH RISK",
+        Risk = "MEDIUM", "WATCH",
+        Health >= 80, "HEALTHY",
+        "NORMAL"
+    )

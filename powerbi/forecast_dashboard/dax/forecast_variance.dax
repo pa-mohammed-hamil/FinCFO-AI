@@ -1,0 +1,1198 @@
+// ============================================================
+// FinCo AI — Forecast Variance Measures
+// File: forecast_variance.dax
+//
+// Primary table:
+//     ForecastResults
+//
+// Purpose:
+//     Actual vs Forecast variance analysis,
+//     budget variance, percentage variance,
+//     trend, risk, alerts and management actions.
+//
+// Expected columns:
+//     ForecastDate
+//     Company
+//     BusinessUnit
+//     Metric
+//     Actual
+//     Forecast
+//     LowerBound
+//     UpperBound
+//     Confidence
+//     ForecastError
+//     ForecastAccuracy
+//     ForecastRiskScore
+//     ForecastRiskLevel
+//     AlertFlag
+// ============================================================
+
+
+// ============================================================
+// 1. ACTUAL VALUE
+// ============================================================
+
+Forecast Variance Actual =
+SUMX(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+    ),
+    ForecastResults[Actual]
+)
+
+
+// ============================================================
+// 2. FORECAST VALUE
+// ============================================================
+
+Forecast Variance Forecast =
+SUMX(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    ForecastResults[Forecast]
+)
+
+
+// ============================================================
+// 3. ABSOLUTE VARIANCE
+// ============================================================
+
+Forecast Variance =
+[Forecast Variance Forecast]
+    - [Forecast Variance Actual]
+
+
+// ============================================================
+// 4. ABSOLUTE VARIANCE VALUE
+// ============================================================
+
+Forecast Absolute Variance =
+ABS(
+    [Forecast Variance]
+)
+
+
+// ============================================================
+// 5. VARIANCE %
+// ============================================================
+
+Forecast Variance % =
+DIVIDE(
+    [Forecast Variance],
+    ABS([Forecast Variance Actual])
+)
+
+
+// ============================================================
+// 6. ABSOLUTE VARIANCE %
+// ============================================================
+
+Forecast Absolute Variance % =
+ABS(
+    [Forecast Variance %]
+)
+
+
+// ============================================================
+// 7. FORECAST ERROR
+// ============================================================
+
+Forecast Variance Error =
+SUMX(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    ForecastResults[Forecast]
+        - ForecastResults[Actual]
+)
+
+
+// ============================================================
+// 8. FORECAST ERROR %
+// ============================================================
+
+Forecast Variance Error % =
+DIVIDE(
+    [Forecast Variance Error],
+    ABS([Forecast Variance Actual])
+)
+
+
+// ============================================================
+// 9. POSITIVE VARIANCE
+// ============================================================
+
+Positive Forecast Variance =
+MAX(
+    0,
+    [Forecast Variance]
+)
+
+
+// ============================================================
+// 10. NEGATIVE VARIANCE
+// ============================================================
+
+Negative Forecast Variance =
+MIN(
+    0,
+    [Forecast Variance]
+)
+
+
+// ============================================================
+// 11. FAVORABLE VARIANCE
+// ============================================================
+//
+// Generic financial interpretation:
+// Positive variance is favorable for revenue/profit/cash,
+// but unfavorable for expenses.
+//
+// This measure is therefore metric-aware.
+//
+
+Favorable Forecast Variance =
+SUMX(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    VAR VarianceValue =
+        ForecastResults[Forecast]
+            - ForecastResults[Actual]
+
+    VAR MetricName =
+        LOWER(
+            ForecastResults[Metric]
+        )
+
+    VAR IsExpense =
+        CONTAINSSTRING(
+            MetricName,
+            "expense"
+        )
+
+    RETURN
+        IF(
+            IsExpense,
+            -VarianceValue,
+            VarianceValue
+        )
+)
+
+
+// ============================================================
+// 12. UNFAVORABLE VARIANCE
+// ============================================================
+
+Unfavorable Forecast Variance =
+MIN(
+    0,
+    [Favorable Forecast Variance]
+)
+
+
+// ============================================================
+// 13. FAVORABLE VARIANCE %
+// ============================================================
+
+Favorable Forecast Variance % =
+DIVIDE(
+    [Favorable Forecast Variance],
+    ABS([Forecast Variance Actual])
+)
+
+
+// ============================================================
+// 14. VARIANCE STATUS
+// ============================================================
+
+Forecast Variance Status =
+VAR VariancePct =
+    [Forecast Variance %]
+
+VAR MetricName =
+    LOWER(
+        SELECTEDVALUE(
+            ForecastResults[Metric],
+            ""
+        )
+    )
+
+VAR IsExpense =
+    CONTAINSSTRING(
+        MetricName,
+        "expense"
+    )
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(VariancePct),
+            "No Data",
+
+        IsExpense && VariancePct >= 0.20,
+            "Severe Overrun",
+
+        IsExpense && VariancePct >= 0.10,
+            "Overrun",
+
+        IsExpense && VariancePct > 0,
+            "Above Forecast",
+
+        IsExpense && VariancePct < -0.10,
+            "Below Forecast",
+
+        NOT IsExpense && VariancePct <= -0.20,
+            "Severe Shortfall",
+
+        NOT IsExpense && VariancePct <= -0.10,
+            "Shortfall",
+
+        NOT IsExpense && VariancePct < 0,
+            "Below Forecast",
+
+        ABS(VariancePct) <= 0.05,
+            "On Target",
+
+        VariancePct > 0,
+            "Above Forecast",
+
+        "Below Forecast"
+    )
+
+
+// ============================================================
+// 15. VARIANCE DIRECTION
+// ============================================================
+
+Forecast Variance Direction =
+VAR VarianceValue =
+    [Forecast Variance]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(VarianceValue),
+            "No Data",
+
+        VarianceValue > 0,
+            "Positive",
+
+        VarianceValue < 0,
+            "Negative",
+
+        "Neutral"
+    )
+
+
+// ============================================================
+// 16. VARIANCE MAGNITUDE
+// ============================================================
+
+Forecast Variance Magnitude =
+VAR VariancePct =
+    ABS(
+        [Forecast Variance %]
+    )
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(VariancePct),
+            "No Data",
+
+        VariancePct >= 0.30,
+            "Severe",
+
+        VariancePct >= 0.20,
+            "High",
+
+        VariancePct >= 0.10,
+            "Moderate",
+
+        VariancePct >= 0.05,
+            "Low",
+
+        "Minimal"
+    )
+
+
+// ============================================================
+// 17. VARIANCE RISK SCORE
+// ============================================================
+
+Forecast Variance Risk Score =
+VAR VariancePct =
+    ABS(
+        [Forecast Variance %]
+    )
+
+VAR MagnitudeRisk =
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(VariancePct),
+            30,
+
+        VariancePct >= 0.30,
+            50,
+
+        VariancePct >= 0.20,
+            40,
+
+        VariancePct >= 0.10,
+            30,
+
+        VariancePct >= 0.05,
+            15,
+
+        0
+    )
+
+VAR ConfidenceRisk =
+    SWITCH(
+        TRUE(),
+
+        ISBLANK([Average Forecast Confidence]),
+            20,
+
+        [Average Forecast Confidence] < 0.40,
+            30,
+
+        [Average Forecast Confidence] < 0.60,
+            20,
+
+        [Average Forecast Confidence] < 0.75,
+            10,
+
+        [Average Forecast Confidence] < 0.90,
+            5,
+
+        0
+    )
+
+VAR AccuracyRisk =
+    SWITCH(
+        TRUE(),
+
+        ISBLANK([Forecast Accuracy]),
+            20,
+
+        [Forecast Accuracy] < 0.60,
+            20,
+
+        [Forecast Accuracy] < 0.70,
+            15,
+
+        [Forecast Accuracy] < 0.80,
+            10,
+
+        [Forecast Accuracy] < 0.90,
+            5,
+
+        0
+    )
+
+RETURN
+    MIN(
+        100,
+        MagnitudeRisk
+            + ConfidenceRisk
+            + AccuracyRisk
+    )
+
+
+// ============================================================
+// 18. VARIANCE RISK LEVEL
+// ============================================================
+
+Forecast Variance Risk Level =
+VAR RiskScore =
+    [Forecast Variance Risk Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        RiskScore >= 75,
+            "CRITICAL",
+
+        RiskScore >= 50,
+            "HIGH",
+
+        RiskScore >= 25,
+            "MEDIUM",
+
+        "LOW"
+    )
+
+
+// ============================================================
+// 19. VARIANCE HEALTH SCORE
+// ============================================================
+
+Forecast Variance Health Score =
+MAX(
+    0,
+    100 - [Forecast Variance Risk Score]
+)
+
+
+// ============================================================
+// 20. VARIANCE HEALTH STATUS
+// ============================================================
+
+Forecast Variance Health Status =
+VAR HealthScore =
+    [Forecast Variance Health Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        HealthScore >= 80,
+            "Excellent",
+
+        HealthScore >= 65,
+            "Healthy",
+
+        HealthScore >= 50,
+            "Watch",
+
+        HealthScore >= 30,
+            "Weak",
+
+        "Critical"
+    )
+
+
+// ============================================================
+// 21. VARIANCE ALERT FLAG
+// ============================================================
+
+Forecast Variance Alert Flag =
+VAR VariancePct =
+    ABS(
+        [Forecast Variance %]
+    )
+
+VAR RiskLevel =
+    [Forecast Variance Risk Level]
+
+RETURN
+    IF(
+        RiskLevel IN {
+            "CRITICAL",
+            "HIGH"
+        }
+            ||
+        VariancePct >= 0.10,
+        "YES",
+        "NO"
+    )
+
+
+// ============================================================
+// 22. VARIANCE ALERT TYPE
+// ============================================================
+
+Forecast Variance Alert Type =
+VAR VariancePct =
+    ABS(
+        [Forecast Variance %]
+    )
+
+VAR RiskLevel =
+    [Forecast Variance Risk Level]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        RiskLevel = "CRITICAL",
+            "Critical Forecast Variance",
+
+        RiskLevel = "HIGH",
+            "High Forecast Variance",
+
+        VariancePct >= 0.30,
+            "Severe Forecast Variance",
+
+        VariancePct >= 0.20,
+            "Major Forecast Variance",
+
+        VariancePct >= 0.10,
+            "Forecast Variance",
+
+        RiskLevel = "MEDIUM",
+            "Forecast Variance Monitoring",
+
+        BLANK()
+    )
+
+
+// ============================================================
+// 23. RECOMMENDED ACTION
+// ============================================================
+
+Forecast Variance Recommended Action =
+VAR VariancePct =
+    [Forecast Variance %]
+
+VAR RiskLevel =
+    [Forecast Variance Risk Level]
+
+VAR MetricName =
+    LOWER(
+        SELECTEDVALUE(
+            ForecastResults[Metric],
+            ""
+        )
+    )
+
+VAR IsExpense =
+    CONTAINSSTRING(
+        MetricName,
+        "expense"
+    )
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        RiskLevel = "CRITICAL",
+            "Immediate management review, root-cause analysis and corrective action",
+
+        RiskLevel = "HIGH",
+            "Investigate variance drivers and execute mitigation plan",
+
+        IsExpense && VariancePct >= 0.20,
+            "Perform expense root-cause analysis and implement cost controls",
+
+        IsExpense && VariancePct >= 0.10,
+            "Review expense categories, assumptions and budget controls",
+
+        NOT IsExpense && VariancePct <= -0.20,
+            "Investigate revenue/profit shortfall and execute recovery plan",
+
+        NOT IsExpense && VariancePct <= -0.10,
+            "Review business drivers and update forecast assumptions",
+
+        ABS(VariancePct) <= 0.05,
+            "Continue normal monitoring",
+
+        "Review forecast drivers and monitor variance"
+    )
+
+
+// ============================================================
+// 24. LOWER CONFIDENCE BOUND
+// ============================================================
+
+Forecast Variance Lower Bound =
+SUM(
+    ForecastResults[LowerBound]
+)
+
+
+// ============================================================
+// 25. UPPER CONFIDENCE BOUND
+// ============================================================
+
+Forecast Variance Upper Bound =
+SUM(
+    ForecastResults[UpperBound]
+)
+
+
+// ============================================================
+// 26. FORECAST RANGE
+// ============================================================
+
+Forecast Variance Range =
+[Forecast Variance Upper Bound]
+    - [Forecast Variance Lower Bound]
+
+
+// ============================================================
+// 27. FORECAST RANGE %
+// ============================================================
+
+Forecast Variance Range % =
+DIVIDE(
+    [Forecast Variance Range],
+    ABS([Forecast Variance Forecast])
+)
+
+
+// ============================================================
+// 28. VARIANCE VS LOWER BOUND
+// ============================================================
+
+Variance Vs Lower Bound =
+[Forecast Variance Forecast]
+    - [Forecast Variance Lower Bound]
+
+
+// ============================================================
+// 29. VARIANCE VS UPPER BOUND
+// ============================================================
+
+Variance Vs Upper Bound =
+[Forecast Variance Forecast]
+    - [Forecast Variance Upper Bound]
+
+
+// ============================================================
+// 30. AVERAGE VARIANCE PER RECORD
+// ============================================================
+
+Average Forecast Variance =
+AVERAGEX(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    ForecastResults[Forecast]
+        - ForecastResults[Actual]
+)
+
+
+// ============================================================
+// 31. AVERAGE VARIANCE %
+// ============================================================
+
+Average Forecast Variance % =
+AVERAGEX(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        ForecastResults[Actual] <> 0
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    DIVIDE(
+        ForecastResults[Forecast]
+            - ForecastResults[Actual],
+        ABS(ForecastResults[Actual])
+    )
+)
+
+
+// ============================================================
+// 32. VARIANCE RECORD COUNT
+// ============================================================
+
+Forecast Variance Records =
+COUNTROWS(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+    )
+)
+
+
+// ============================================================
+// 33. POSITIVE VARIANCE RECORDS
+// ============================================================
+
+Positive Forecast Variance Records =
+COUNTROWS(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+            &&
+        ForecastResults[Forecast]
+            > ForecastResults[Actual]
+    )
+)
+
+
+// ============================================================
+// 34. NEGATIVE VARIANCE RECORDS
+// ============================================================
+
+Negative Forecast Variance Records =
+COUNTROWS(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+            &&
+        ForecastResults[Forecast]
+            < ForecastResults[Actual]
+    )
+)
+
+
+// ============================================================
+// 35. ON-TARGET VARIANCE RECORDS
+// ============================================================
+
+On Target Forecast Variance Records =
+COUNTROWS(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+            &&
+        ABS(
+            DIVIDE(
+                ForecastResults[Forecast]
+                    - ForecastResults[Actual],
+                ABS(ForecastResults[Actual])
+            )
+        ) <= 0.05
+    )
+)
+
+
+// ============================================================
+// 36. SIGNIFICANT VARIANCE RECORDS
+// ============================================================
+
+Significant Forecast Variance Records =
+COUNTROWS(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+            &&
+        ABS(
+            DIVIDE(
+                ForecastResults[Forecast]
+                    - ForecastResults[Actual],
+                ABS(ForecastResults[Actual])
+            )
+        ) >= 0.10
+    )
+)
+
+
+// ============================================================
+// 37. VARIANCE RECORD RATE
+// ============================================================
+
+Significant Forecast Variance Rate % =
+DIVIDE(
+    [Significant Forecast Variance Records],
+    [Forecast Variance Records]
+)
+
+
+// ============================================================
+// 38. VARIANCE TREND
+// ============================================================
+
+Forecast Variance Trend =
+VAR CurrentVariance =
+    [Forecast Variance %]
+
+VAR PreviousVariance =
+    CALCULATE(
+        [Forecast Variance %],
+        DATEADD(
+            ForecastResults[ForecastDate],
+            -1,
+            MONTH
+        )
+    )
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(CurrentVariance),
+            "No Data",
+
+        ISBLANK(PreviousVariance),
+            "No Prior Period",
+
+        CurrentVariance > PreviousVariance + 0.02,
+            "Increasing",
+
+        CurrentVariance < PreviousVariance - 0.02,
+            "Decreasing",
+
+        "Stable"
+    )
+
+
+// ============================================================
+// 39. VARIANCE MOMENTUM
+// ============================================================
+
+Forecast Variance Momentum =
+VAR CurrentVariance =
+    [Forecast Variance %]
+
+VAR PreviousVariance =
+    CALCULATE(
+        [Forecast Variance %],
+        DATEADD(
+            ForecastResults[ForecastDate],
+            -1,
+            MONTH
+        )
+    )
+
+RETURN
+    CurrentVariance
+        - PreviousVariance
+
+
+// ============================================================
+// 40. FORECAST VARIANCE SCORE
+// ============================================================
+
+Forecast Variance Score =
+VAR HealthScore =
+    [Forecast Variance Health Score]
+
+VAR AccuracyScore =
+    COALESCE(
+        [Forecast Accuracy],
+        0
+    ) * 100
+
+VAR ConfidenceScore =
+    COALESCE(
+        [Average Forecast Confidence],
+        0
+    ) * 100
+
+RETURN
+    ROUND(
+        HealthScore * 0.40
+            + AccuracyScore * 0.35
+            + ConfidenceScore * 0.25,
+        1
+    )
+
+
+// ============================================================
+// 41. FORECAST VARIANCE QUALITY
+// ============================================================
+
+Forecast Variance Quality =
+VAR Score =
+    [Forecast Variance Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        Score >= 90,
+            "Excellent",
+
+        Score >= 80,
+            "Good",
+
+        Score >= 70,
+            "Acceptable",
+
+        Score >= 50,
+            "Needs Review",
+
+        "Poor"
+    )
+
+
+// ============================================================
+// 42. FUTURE FORECAST VARIANCE
+// ============================================================
+
+Future Forecast Variance =
+CALCULATE(
+    [Forecast Variance],
+    FILTER(
+        ForecastResults,
+        ForecastResults[ForecastDate] > TODAY()
+    )
+)
+
+
+// ============================================================
+// 43. NEXT 30 DAYS VARIANCE
+// ============================================================
+
+Forecast Variance Next 30 Days =
+CALCULATE(
+    [Forecast Variance],
+    FILTER(
+        ForecastResults,
+        ForecastResults[ForecastDate] >= TODAY()
+            &&
+        ForecastResults[ForecastDate]
+            <= TODAY() + 30
+    )
+)
+
+
+// ============================================================
+// 44. NEXT 90 DAYS VARIANCE
+// ============================================================
+
+Forecast Variance Next 90 Days =
+CALCULATE(
+    [Forecast Variance],
+    FILTER(
+        ForecastResults,
+        ForecastResults[ForecastDate] >= TODAY()
+            &&
+        ForecastResults[ForecastDate]
+            <= TODAY() + 90
+    )
+)
+
+
+// ============================================================
+// 45. NEXT 12 MONTHS VARIANCE
+// ============================================================
+
+Forecast Variance Next 12 Months =
+CALCULATE(
+    [Forecast Variance],
+    FILTER(
+        ForecastResults,
+        ForecastResults[ForecastDate] >= TODAY()
+            &&
+        ForecastResults[ForecastDate]
+            <= EDATE(
+                TODAY(),
+                12
+            )
+    )
+)
+
+
+// ============================================================
+// 46. HIGH VARIANCE FORECASTS
+// ============================================================
+
+High Variance Forecasts =
+CALCULATE(
+    COUNTROWS(ForecastResults),
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+            &&
+        ABS(
+            DIVIDE(
+                ForecastResults[Forecast]
+                    - ForecastResults[Actual],
+                ABS(ForecastResults[Actual])
+            )
+        ) >= 0.20
+    )
+)
+
+
+// ============================================================
+// 47. CRITICAL VARIANCE FORECASTS
+// ============================================================
+
+Critical Variance Forecasts =
+CALCULATE(
+    COUNTROWS(ForecastResults),
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+            &&
+        ABS(
+            DIVIDE(
+                ForecastResults[Forecast]
+                    - ForecastResults[Actual],
+                ABS(ForecastResults[Actual])
+            )
+        ) >= 0.30
+    )
+)
+
+
+// ============================================================
+// 48. VARIANCE ALERT COUNT
+// ============================================================
+
+Forecast Variance Alert Count =
+COUNTROWS(
+    FILTER(
+        ForecastResults,
+        ForecastResults[AlertFlag] = TRUE()
+    )
+)
+
+
+// ============================================================
+// 49. EXECUTIVE VARIANCE STATUS
+// ============================================================
+
+Executive Forecast Variance Status =
+VAR VariancePct =
+    [Forecast Variance %]
+
+VAR RiskLevel =
+    [Forecast Variance Risk Level]
+
+VAR MetricName =
+    LOWER(
+        SELECTEDVALUE(
+            ForecastResults[Metric],
+            ""
+        )
+    )
+
+VAR IsExpense =
+    CONTAINSSTRING(
+        MetricName,
+        "expense"
+    )
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        RiskLevel = "CRITICAL",
+            "CRITICAL — Severe forecast variance requires immediate action",
+
+        RiskLevel = "HIGH",
+            "HIGH RISK — Significant forecast variance detected",
+
+        IsExpense && VariancePct >= 0.20,
+            "WARNING — Significant expense overrun",
+
+        NOT IsExpense && VariancePct <= -0.20,
+            "WARNING — Significant forecast shortfall",
+
+        ABS(VariancePct) <= 0.05,
+            "HEALTHY — Forecast is within target range",
+
+        VariancePct > 0,
+            "WATCH — Forecast is above actual",
+
+        "WATCH — Forecast is below actual"
+    )
+
+
+// ============================================================
+// 50. VARIANCE SCORECARD
+// ============================================================
+
+Forecast Variance Scorecard =
+VAR VarianceHealth =
+    [Forecast Variance Health Score] * 0.40
+
+VAR Accuracy =
+    COALESCE(
+        [Forecast Accuracy],
+        0
+    ) * 100 * 0.30
+
+VAR Confidence =
+    COALESCE(
+        [Average Forecast Confidence],
+        0
+    ) * 100 * 0.20
+
+VAR Coverage =
+    COALESCE(
+        [Forecast Coverage %],
+        0
+    ) * 100 * 0.10
+
+RETURN
+    ROUND(
+        VarianceHealth
+            + Accuracy
+            + Confidence
+            + Coverage,
+        1
+    )
+
+
+// ============================================================
+// 51. VARIANCE DISPLAY
+// ============================================================
+
+Forecast Variance Display =
+VAR VarianceValue =
+    [Forecast Variance]
+
+RETURN
+    IF(
+        ISBLANK(VarianceValue),
+        "N/A",
+        FORMAT(
+            VarianceValue,
+            "#,##0.00;(#,##0.00);-"
+        )
+    )
+
+
+// ============================================================
+// 52. VARIANCE % DISPLAY
+// ============================================================
+
+Forecast Variance % Display =
+VAR VariancePct =
+    [Forecast Variance %]
+
+RETURN
+    IF(
+        ISBLANK(VariancePct),
+        "N/A",
+        FORMAT(
+            VariancePct,
+            "0.0%;(0.0%);-"
+        )
+    )
+
+
+// ============================================================
+// 53. RISK DISPLAY
+// ============================================================
+
+Forecast Variance Risk Display =
+VAR RiskScore =
+    [Forecast Variance Risk Score]
+
+VAR RiskLevel =
+    [Forecast Variance Risk Level]
+
+RETURN
+    IF(
+        ISBLANK(RiskScore),
+        "N/A",
+        FORMAT(
+            RiskScore,
+            "0"
+        )
+            & " — "
+            & RiskLevel
+    )

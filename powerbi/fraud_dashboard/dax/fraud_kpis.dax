@@ -1,0 +1,1411 @@
+// ============================================================================
+// FinCo AI — Fraud KPI Measures
+// File: fraud_kpis.dax
+// ============================================================================
+//
+// PURPOSE
+// -------
+// Executive fraud analytics KPI layer for Power BI.
+//
+// ARCHITECTURE
+// ------------
+//
+// Transactions
+//      ↓
+// common_transformations.pq
+//      ↓
+// transaction_query.pq
+//      ↓
+// fraud_transformations.pq
+//      ↓
+// anomaly_query.pq
+//      ↓
+// fraud_prediction_query.pq
+//      ↓
+// anomaly_score.dax
+//      ↓
+// fraud_kpis.dax
+//      ↓
+// Fraud Dashboard
+//
+// PRODUCTION AUTHORITY
+// --------------------
+// Production fraud scoring remains in:
+//
+// backend/app/fraud/preprocessing.py
+// backend/app/fraud/feature_engineering.py
+// backend/app/fraud/anomaly_model.py
+// backend/app/fraud/supervised_model.py
+// backend/app/fraud/scoring.py
+// backend/app/fraud/explainability.py
+//
+// ============================================================================
+
+
+// ============================================================================
+// 1. CORE TRANSACTION KPIs
+// ============================================================================
+
+[Fraud KPI — Transaction Count] :=
+COUNTROWS(Anomaly)
+
+
+[Fraud KPI — Unique Transactions] :=
+DISTINCTCOUNT(
+    Anomaly[TransactionId]
+)
+
+
+[Fraud KPI — Total Transaction Amount] :=
+SUM(
+    Anomaly[Amount]
+)
+
+
+[Fraud KPI — Total Absolute Amount] :=
+SUM(
+    Anomaly[AnomalyAbsoluteAmount]
+)
+
+
+[Fraud KPI — Average Transaction Amount] :=
+AVERAGE(
+    Anomaly[AnomalyAbsoluteAmount]
+)
+
+
+[Fraud KPI — Maximum Transaction Amount] :=
+MAX(
+    Anomaly[AnomalyAbsoluteAmount]
+)
+
+
+// ============================================================================
+// 2. ANOMALY KPIs
+// ============================================================================
+
+[Fraud KPI — Anomaly Score] :=
+[Anomaly — Score]
+
+
+[Fraud KPI — Anomaly Health] :=
+[Anomaly — Health Score]
+
+
+[Fraud KPI — Anomaly Risk Band] :=
+[Anomaly — Risk Band]
+
+
+[Fraud KPI — Anomaly Status] :=
+[Anomaly — Status]
+
+
+[Fraud KPI — Anomaly Rule Score] :=
+[Anomaly — Rule Score]
+
+
+[Fraud KPI — Anomaly Signal Count] :=
+[Anomaly — Signal Count]
+
+
+[Fraud KPI — Average Anomaly Signals] :=
+[Anomaly — Average Signal Count]
+
+
+// ============================================================================
+// 3. FRAUD RISK DISTRIBUTION
+// ============================================================================
+
+[Fraud KPI — Critical Transactions] :=
+[Anomaly — Critical Count]
+
+
+[Fraud KPI — High Risk Transactions] :=
+[Anomaly — High Count]
+
+
+[Fraud KPI — Medium Risk Transactions] :=
+[Anomaly — Medium Count]
+
+
+[Fraud KPI — Low Risk Transactions] :=
+[Anomaly — Low Count]
+
+
+[Fraud KPI — Informational Transactions] :=
+[Anomaly — Info Count]
+
+
+[Fraud KPI — Critical Fraud Rate] :=
+DIVIDE(
+    [Fraud KPI — Critical Transactions],
+    [Fraud KPI — Transaction Count],
+    0
+)
+
+
+[Fraud KPI — High Fraud Rate] :=
+DIVIDE(
+    [Fraud KPI — High Risk Transactions],
+    [Fraud KPI — Transaction Count],
+    0
+)
+
+
+[Fraud KPI — Medium Or Higher Fraud Rate] :=
+DIVIDE(
+    [Fraud KPI — Medium Risk Transactions]
+        +
+    [Fraud KPI — High Risk Transactions]
+        +
+    [Fraud KPI — Critical Transactions],
+    [Fraud KPI — Transaction Count],
+    0
+)
+
+
+[Fraud KPI — High Or Critical Rate] :=
+DIVIDE(
+    [Fraud KPI — High Risk Transactions]
+        +
+    [Fraud KPI — Critical Transactions],
+    [Fraud KPI — Transaction Count],
+    0
+)
+
+
+// ============================================================================
+// 4. FRAUD EXPOSURE
+// ============================================================================
+
+[Fraud KPI — Critical Amount] :=
+CALCULATE(
+    [Fraud KPI — Total Absolute Amount],
+    Anomaly[AnomalyRuleScore] >= 80
+)
+
+
+[Fraud KPI — High Risk Amount] :=
+CALCULATE(
+    [Fraud KPI — Total Absolute Amount],
+    Anomaly[AnomalyRuleScore] >= 60,
+    Anomaly[AnomalyRuleScore] < 80
+)
+
+
+[Fraud KPI — Medium Risk Amount] :=
+CALCULATE(
+    [Fraud KPI — Total Absolute Amount],
+    Anomaly[AnomalyRuleScore] >= 35,
+    Anomaly[AnomalyRuleScore] < 60
+)
+
+
+[Fraud KPI — At Risk Amount] :=
+[Fraud KPI — Critical Amount]
++
+[Fraud KPI — High Risk Amount]
+
+
+[Fraud KPI — At Risk Amount Rate] :=
+DIVIDE(
+    [Fraud KPI — At Risk Amount],
+    [Fraud KPI — Total Absolute Amount],
+    0
+)
+
+
+// ============================================================================
+// 5. DUPLICATE TRANSACTIONS
+// ============================================================================
+
+[Fraud KPI — Duplicate Transactions] :=
+[Anomaly — Duplicate Transaction Count]
+
+
+[Fraud KPI — Duplicate Rate] :=
+[Anomaly — Duplicate Rate]
+
+
+[Fraud KPI — Duplicate Amount] :=
+[Anomaly — Duplicate Amount]
+
+
+[Fraud KPI — Duplicate Exposure Rate] :=
+DIVIDE(
+    [Fraud KPI — Duplicate Amount],
+    [Fraud KPI — Total Absolute Amount],
+    0
+)
+
+
+// ============================================================================
+// 6. HIGH-VALUE TRANSACTIONS
+// ============================================================================
+
+[Fraud KPI — High Value Transactions] :=
+[Anomaly — High Value Count]
+
+
+[Fraud KPI — Very High Value Transactions] :=
+[Anomaly — Very High Value Count]
+
+
+[Fraud KPI — High Value Amount] :=
+[Anomaly — High Value Amount]
+
+
+[Fraud KPI — High Value Rate] :=
+[Anomaly — High Value Rate]
+
+
+[Fraud KPI — High Value Exposure Rate] :=
+DIVIDE(
+    [Fraud KPI — High Value Amount],
+    [Fraud KPI — Total Absolute Amount],
+    0
+)
+
+
+// ============================================================================
+// 7. TEMPORAL FRAUD SIGNALS
+// ============================================================================
+
+[Fraud KPI — Weekend Transactions] :=
+[Anomaly — Weekend Transaction Count]
+
+
+[Fraud KPI — Weekend Rate] :=
+[Anomaly — Weekend Rate]
+
+
+[Fraud KPI — Month End Transactions] :=
+[Anomaly — Month End Transaction Count]
+
+
+[Fraud KPI — Month End Rate] :=
+[Anomaly — Month End Rate]
+
+
+[Fraud KPI — Weekend Amount] :=
+CALCULATE(
+    [Fraud KPI — Total Absolute Amount],
+    Anomaly[AnomalyWeekendFlag] = 1
+)
+
+
+[Fraud KPI — Month End Amount] :=
+CALCULATE(
+    [Fraud KPI — Total Absolute Amount],
+    Anomaly[AnomalyMonthEndFlag] = 1
+)
+
+
+// ============================================================================
+// 8. PAYMENT METHOD RISK
+// ============================================================================
+
+[Fraud KPI — Payment Method Risk Transactions] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyPaymentMethodFlag] = 1
+)
+
+
+[Fraud KPI — Payment Method Risk Rate] :=
+DIVIDE(
+    [Fraud KPI — Payment Method Risk Transactions],
+    [Fraud KPI — Transaction Count],
+    0
+)
+
+
+[Fraud KPI — Manual Transactions] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyPaymentMethodFlag] = 1
+)
+
+
+[Fraud KPI — Manual Transaction Rate] :=
+DIVIDE(
+    [Fraud KPI — Manual Transactions],
+    [Fraud KPI — Transaction Count],
+    0
+)
+
+
+// ============================================================================
+// 9. COUNTERPARTY RISK
+// ============================================================================
+
+[Fraud KPI — Missing Party Transactions] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyMissingPartyFlag] = 1
+)
+
+
+[Fraud KPI — Missing Party Rate] :=
+DIVIDE(
+    [Fraud KPI — Missing Party Transactions],
+    [Fraud KPI — Transaction Count],
+    0
+)
+
+
+[Fraud KPI — Customer Concentration] :=
+[Anomaly — Customer Concentration]
+
+
+[Fraud KPI — Supplier Concentration] :=
+[Anomaly — Supplier Concentration]
+
+
+[Fraud KPI — Maximum Counterparty Concentration] :=
+[Anomaly — Maximum Concentration]
+
+
+[Fraud KPI — Concentration Band] :=
+[Anomaly — Concentration Band]
+
+
+[Fraud KPI — Concentration Flag] :=
+[Anomaly — Concentration Flag]
+
+
+// ============================================================================
+// 10. MULTI-FACTOR FRAUD
+// ============================================================================
+
+[Fraud KPI — Multi Factor Transactions] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalySignalCount] >= 3
+)
+
+
+[Fraud KPI — Multi Factor Rate] :=
+DIVIDE(
+    [Fraud KPI — Multi Factor Transactions],
+    [Fraud KPI — Transaction Count],
+    0
+)
+
+
+[Fraud KPI — High Signal Transactions] :=
+[Anomaly — High Signal Transaction Count]
+
+
+[Fraud KPI — Critical Signal Transactions] :=
+[Anomaly — Critical Signal Transaction Count]
+
+
+// ============================================================================
+// 11. INVESTIGATION KPIs
+// ============================================================================
+
+[Fraud KPI — Investigation Required] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyRuleScore] >= 60
+)
+
+
+[Fraud KPI — Investigation Rate] :=
+DIVIDE(
+    [Fraud KPI — Investigation Required],
+    [Fraud KPI — Transaction Count],
+    0
+)
+
+
+[Fraud KPI — Critical Investigations] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyRuleScore] >= 80
+)
+
+
+[Fraud KPI — High Priority Investigations] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyRuleScore] >= 60,
+    Anomaly[AnomalyRuleScore] < 80
+)
+
+
+// ============================================================================
+// 12. HUMAN REVIEW
+// ============================================================================
+
+[Fraud KPI — Human Review Required] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyRuleScore] >= 60
+)
+
+
+[Fraud KPI — Human Review Rate] :=
+DIVIDE(
+    [Fraud KPI — Human Review Required],
+    [Fraud KPI — Transaction Count],
+    0
+)
+
+
+[Fraud KPI — Urgent Human Review] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyRuleScore] >= 80
+)
+
+
+// ============================================================================
+// 13. SUPERVISOR AGENT
+// ============================================================================
+
+[Fraud KPI — Supervisor Escalations] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyRuleScore] >= 80
+)
+
+
+[Fraud KPI — Supervisor Review] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyRuleScore] >= 60
+)
+
+
+[Fraud KPI — Agent Review Rate] :=
+DIVIDE(
+    [Fraud KPI — Supervisor Review],
+    [Fraud KPI — Transaction Count],
+    0
+)
+
+
+[Fraud KPI — Supervisor Signal] :=
+[Anomaly — Supervisor Agent Signal]
+
+
+[Fraud KPI — Agent Priority] :=
+[Anomaly — Agent Priority Label]
+
+
+// ============================================================================
+// 14. AI ROUTING
+// ============================================================================
+
+[Fraud KPI — RAG Evidence Required] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyRuleScore] >= 35
+)
+
+
+[Fraud KPI — Forecast Required] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyRuleScore] >= 60
+)
+
+
+[Fraud KPI — What If Required] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyRuleScore] >= 80
+)
+
+
+[Fraud KPI — Recommendation Required] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyRuleScore] >= 35
+)
+
+
+// ============================================================================
+// 15. FRAUD DECISION
+// ============================================================================
+
+[Fraud KPI — Decision] :=
+[Anomaly — Decision]
+
+
+[Fraud KPI — AI Decision Signal] :=
+[Anomaly — AI Decision Signal]
+
+
+[Fraud KPI — Fraud Investigation Signal] :=
+[Anomaly — Fraud Investigation Signal]
+
+
+[Fraud KPI — Root Cause Signal] :=
+[Anomaly — Root Cause Signal]
+
+
+// ============================================================================
+// 16. PRIMARY RISK FACTOR
+// ============================================================================
+
+[Fraud KPI — Primary Factor] :=
+[Anomaly — Primary Factor]
+
+
+[Fraud KPI — Risk Factor Count] :=
+[Anomaly — Risk Factor Count]
+
+
+[Fraud KPI — Multi Factor Flag] :=
+[Anomaly — Multi Factor Flag]
+
+
+[Fraud KPI — Multi Factor Status] :=
+[Anomaly — Multi Factor Status]
+
+
+// ============================================================================
+// 17. ANOMALY TREND
+// ============================================================================
+
+[Fraud KPI — Previous Anomaly Score] :=
+[Anomaly — Previous Score]
+
+
+[Fraud KPI — Anomaly Score Change] :=
+[Anomaly — Score Change]
+
+
+[Fraud KPI — Anomaly Score Change %] :=
+[Anomaly — Score Change %]
+
+
+[Fraud KPI — Anomaly Trend] :=
+[Anomaly — Trend]
+
+
+[Fraud KPI — Anomaly Deterioration Flag] :=
+[Anomaly — Deterioration Flag]
+
+
+[Fraud KPI — Anomaly Improvement Flag] :=
+[Anomaly — Improvement Flag]
+
+
+// ============================================================================
+// 18. FRAUD MOMENTUM
+// ============================================================================
+
+[Fraud KPI — Risk Momentum] :=
+VAR CurrentScore =
+    [Fraud KPI — Anomaly Score]
+
+VAR PreviousScore =
+    [Fraud KPI — Previous Anomaly Score]
+
+RETURN
+    CurrentScore - PreviousScore
+
+
+[Fraud KPI — Risk Momentum Status] :=
+VAR Momentum =
+    [Fraud KPI — Risk Momentum]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        Momentum >= 10, "RAPIDLY_DETERIORATING",
+        Momentum > 0, "DETERIORATING",
+        Momentum <= -10, "RAPIDLY_IMPROVING",
+        Momentum < 0, "IMPROVING",
+        "STABLE"
+    )
+
+
+// ============================================================================
+// 19. FRAUD EXPOSURE SCORE
+// ============================================================================
+
+[Fraud KPI — Exposure Score] :=
+VAR AmountRisk =
+    [Fraud KPI — At Risk Amount Rate] * 100
+
+VAR TransactionRisk =
+    [Fraud KPI — High Or Critical Rate] * 100
+
+VAR ConcentrationRisk =
+    [Fraud KPI — Maximum Counterparty Concentration] * 100
+
+RETURN
+    MIN(
+        100,
+        MAX(
+            0,
+            AmountRisk * 0.40
+                +
+            TransactionRisk * 0.35
+                +
+            ConcentrationRisk * 0.25
+        )
+    )
+
+
+[Fraud KPI — Exposure Band] :=
+VAR Score =
+    [Fraud KPI — Exposure Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 80, "CRITICAL",
+        Score >= 60, "HIGH",
+        Score >= 35, "MEDIUM",
+        Score >= 15, "LOW",
+        "INFO"
+    )
+
+
+// ============================================================================
+// 20. FRAUD HEALTH
+// ============================================================================
+
+[Fraud KPI — Fraud Health Score] :=
+100 - [Fraud KPI — Anomaly Score]
+
+
+[Fraud KPI — Fraud Health Band] :=
+VAR Health =
+    [Fraud KPI — Fraud Health Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        Health >= 80, "STRONG",
+        Health >= 60, "HEALTHY",
+        Health >= 40, "WATCH",
+        Health >= 20, "WEAK",
+        "CRITICAL"
+    )
+
+
+// ============================================================================
+// 21. FRAUD STATUS
+// ============================================================================
+
+[Fraud KPI — Overall Status] :=
+VAR Score =
+    [Fraud KPI — Anomaly Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 80, "CRITICAL_FRAUD_RISK",
+        Score >= 60, "HIGH_FRAUD_RISK",
+        Score >= 35, "FRAUD_WATCH",
+        Score >= 15, "MONITOR",
+        "STABLE"
+    )
+
+
+// ============================================================================
+// 22. ALERT LEVEL
+// ============================================================================
+
+[Fraud KPI — Alert Level] :=
+VAR Score =
+    [Fraud KPI — Anomaly Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 80, "CRITICAL",
+        Score >= 60, "HIGH",
+        Score >= 35, "MEDIUM",
+        Score >= 15, "LOW",
+        "NONE"
+    )
+
+
+[Fraud KPI — Alert Required] :=
+IF(
+    [Fraud KPI — Anomaly Score] >= 60,
+    "YES",
+    "NO"
+)
+
+
+// ============================================================================
+// 23. ALERT FLAGS
+// ============================================================================
+
+[Fraud KPI — Critical Alert Flag] :=
+IF(
+    [Fraud KPI — Anomaly Score] >= 80,
+    1,
+    0
+)
+
+
+[Fraud KPI — High Alert Flag] :=
+IF(
+    [Fraud KPI — Anomaly Score] >= 60,
+    1,
+    0
+)
+
+
+[Fraud KPI — Medium Alert Flag] :=
+IF(
+    [Fraud KPI — Anomaly Score] >= 35,
+    1,
+    0
+)
+
+
+[Fraud KPI — Any Alert Flag] :=
+IF(
+    [Fraud KPI — Anomaly Score] >= 35,
+    1,
+    0
+)
+
+
+// ============================================================================
+// 24. RISK CONCENTRATION
+// ============================================================================
+
+[Fraud KPI — Risk Concentration Ratio] :=
+VAR CriticalAmount =
+    [Fraud KPI — Critical Amount]
+
+VAR TotalRiskAmount =
+    [Fraud KPI — At Risk Amount]
+
+RETURN
+    DIVIDE(
+        CriticalAmount,
+        TotalRiskAmount,
+        0
+    )
+
+
+[Fraud KPI — Risk Concentration Status] :=
+VAR Ratio =
+    [Fraud KPI — Risk Concentration Ratio]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        Ratio >= 0.75, "CRITICAL_CONCENTRATION",
+        Ratio >= 0.50, "HIGH_CONCENTRATION",
+        Ratio >= 0.25, "MEDIUM_CONCENTRATION",
+        "BALANCED"
+    )
+
+
+// ============================================================================
+// 25. FRAUD CONTROL STATUS
+// ============================================================================
+
+[Fraud KPI — Control Status] :=
+[Anomaly — Control Status]
+
+
+[Fraud KPI — Data Quality Gate] :=
+[Anomaly — Data Quality Gate]
+
+
+[Fraud KPI — Data Quality] :=
+[Anomaly — Data Quality]
+
+
+[Fraud KPI — Data Completeness] :=
+[Anomaly — Data Completeness]
+
+
+// ============================================================================
+// 26. ML READINESS
+// ============================================================================
+
+[Fraud KPI — ML Ready Transactions] :=
+[Anomaly — ML Ready Count]
+
+
+[Fraud KPI — ML Readiness Rate] :=
+[Anomaly — ML Readiness Rate]
+
+
+[Fraud KPI — ML Readiness Status] :=
+[Anomaly — ML Readiness Status]
+
+
+// ============================================================================
+// 27. FRAUD MODEL KPI
+// ============================================================================
+
+[Fraud KPI — Model Prediction Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    NOT ISBLANK(
+        Anomaly[FraudProbability]
+    )
+)
+
+
+[Fraud KPI — Model Prediction Rate] :=
+DIVIDE(
+    [Fraud KPI — Model Prediction Count],
+    [Fraud KPI — Transaction Count],
+    0
+)
+
+
+[Fraud KPI — Average Fraud Probability] :=
+AVERAGE(
+    Anomaly[FraudProbability]
+)
+
+
+[Fraud KPI — Maximum Fraud Probability] :=
+MAX(
+    Anomaly[FraudProbability]
+)
+
+
+[Fraud KPI — High Probability Transactions] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[FraudProbability] >= 0.60
+)
+
+
+[Fraud KPI — Critical Probability Transactions] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[FraudProbability] >= 0.80
+)
+
+
+// ============================================================================
+// 28. MODEL / RULE AGREEMENT
+// ============================================================================
+
+[Fraud KPI — Model Rule Agreement Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[FraudModelRuleAgreement]
+        IN {
+            "HIGH_AGREEMENT",
+            "NORMAL_AGREEMENT"
+        }
+)
+
+
+[Fraud KPI — Model Rule Disagreement Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[FraudModelRuleAgreement]
+        = "MODEL_RULE_DISAGREEMENT"
+)
+
+
+[Fraud KPI — Model Rule Agreement Rate] :=
+DIVIDE(
+    [Fraud KPI — Model Rule Agreement Count],
+    [Fraud KPI — Model Prediction Count],
+    0
+)
+
+
+[Fraud KPI — Model Rule Disagreement Rate] :=
+DIVIDE(
+    [Fraud KPI — Model Rule Disagreement Count],
+    [Fraud KPI — Model Prediction Count],
+    0
+)
+
+
+// ============================================================================
+// 29. MODEL CONFIDENCE
+// ============================================================================
+
+[Fraud KPI — Average Model Confidence] :=
+AVERAGE(
+    Anomaly[FraudPredictionConfidence]
+)
+
+
+[Fraud KPI — High Confidence Fraud Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[HighConfidenceFraudFlag] = 1
+)
+
+
+[Fraud KPI — High Confidence Fraud Rate] :=
+DIVIDE(
+    [Fraud KPI — High Confidence Fraud Count],
+    [Fraud KPI — Model Prediction Count],
+    0
+)
+
+
+// ============================================================================
+// 30. COMBINED FRAUD SCORE
+// ============================================================================
+
+[Fraud KPI — Combined Fraud Score] :=
+AVERAGE(
+    Anomaly[CombinedFraudScore]
+)
+
+
+[Fraud KPI — Combined Fraud Health] :=
+100 - [Fraud KPI — Combined Fraud Score]
+
+
+[Fraud KPI — Combined Fraud Band] :=
+VAR Score =
+    [Fraud KPI — Combined Fraud Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 80, "CRITICAL",
+        Score >= 60, "HIGH",
+        Score >= 35, "MEDIUM",
+        Score >= 15, "LOW",
+        "INFO"
+    )
+
+
+// ============================================================================
+// 31. PREDICTION COUNTS
+// ============================================================================
+
+[Fraud KPI — Predicted Fraud Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[FraudPredictionClass] = "FRAUD"
+)
+
+
+[Fraud KPI — Predicted Legitimate Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[FraudPredictionClass] = "LEGITIMATE"
+)
+
+
+[Fraud KPI — Predicted Fraud Rate] :=
+DIVIDE(
+    [Fraud KPI — Predicted Fraud Count],
+    [Fraud KPI — Model Prediction Count],
+    0
+)
+
+
+// ============================================================================
+// 32. SUPERVISOR AGENT DECISION
+// ============================================================================
+
+[Fraud KPI — Supervisor Decision] :=
+VAR Score =
+    [Fraud KPI — Combined Fraud Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 80, "ESCALATE_IMMEDIATELY",
+        Score >= 60, "INVESTIGATE",
+        Score >= 35, "MONITOR",
+        "NORMAL"
+    )
+
+
+[Fraud KPI — Management Action] :=
+VAR Score =
+    [Fraud KPI — Combined Fraud Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        Score >= 80,
+            "Block or hold transaction and initiate immediate human investigation.",
+
+        Score >= 60,
+            "Place transaction on hold and perform enhanced fraud investigation.",
+
+        Score >= 35,
+            "Monitor transaction and retrieve supporting evidence.",
+
+        Score >= 15,
+            "Maintain on fraud watchlist.",
+
+        "No immediate fraud action required."
+    )
+
+
+// ============================================================================
+// 33. EXECUTIVE FRAUD SUMMARY
+// ============================================================================
+
+[Fraud KPI — Executive Summary] :=
+VAR Score =
+    [Fraud KPI — Combined Fraud Score]
+
+VAR Band =
+    [Fraud KPI — Combined Fraud Band]
+
+VAR Critical =
+    [Fraud KPI — Critical Transactions]
+
+VAR High =
+    [Fraud KPI — High Risk Transactions]
+
+VAR Factor =
+    [Fraud KPI — Primary Factor]
+
+RETURN
+    "Fraud risk score is "
+    & FORMAT(
+        Score,
+        "0.0"
+    )
+    & "/100 ("
+    & Band
+    & "). "
+    & FORMAT(
+        Critical,
+        "#,##0"
+    )
+    & " critical and "
+    & FORMAT(
+        High,
+        "#,##0"
+    )
+    & " high-risk transactions identified. "
+    & "Primary factor: "
+    & Factor
+    & "."
+
+
+// ============================================================================
+// 34. EXECUTIVE RECOMMENDATION
+// ============================================================================
+
+[Fraud KPI — Executive Recommendation] :=
+VAR Score =
+    [Fraud KPI — Combined Fraud Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        Score >= 80,
+            "Immediate containment, transaction hold/block, RAG evidence retrieval and human investigation are required.",
+
+        Score >= 60,
+            "Enhanced transaction review and fraud investigation are recommended before approval.",
+
+        Score >= 35,
+            "Continue monitoring and investigate supporting transaction patterns.",
+
+        Score >= 15,
+            "Maintain transaction on the anomaly watchlist.",
+
+        "Transaction activity is currently within normal analytical thresholds."
+    )
+
+
+// ============================================================================
+// 35. DISPLAY MEASURES
+// ============================================================================
+
+[Fraud KPI — Score Display] :=
+FORMAT(
+    [Fraud KPI — Combined Fraud Score],
+    "0.0"
+)
+& " / 100"
+
+
+[Fraud KPI — Health Display] :=
+FORMAT(
+    [Fraud KPI — Combined Fraud Health],
+    "0.0"
+)
+& " / 100"
+
+
+[Fraud KPI — Fraud Rate Display] :=
+FORMAT(
+    [Fraud KPI — Predicted Fraud Rate],
+    "0.0%"
+)
+
+
+[Fraud KPI — Risk Change Display] :=
+VAR Change =
+    [Fraud KPI — Anomaly Score Change]
+
+RETURN
+    IF(
+        Change > 0,
+        "+",
+        ""
+    )
+    &
+    FORMAT(
+        Change,
+        "0.0"
+    )
+
+
+[Fraud KPI — Critical Amount Display] :=
+FORMAT(
+    [Fraud KPI — Critical Amount],
+    "#,##0"
+)
+
+
+[Fraud KPI — At Risk Amount Display] :=
+FORMAT(
+    [Fraud KPI — At Risk Amount],
+    "#,##0"
+)
+
+
+// ============================================================================
+// 36. EXECUTIVE CARDS
+// ============================================================================
+
+[Fraud KPI Card 01] :=
+FORMAT(
+    [Fraud KPI — Transaction Count],
+    "#,##0"
+)
+
+
+[Fraud KPI Card 02] :=
+FORMAT(
+    [Fraud KPI — Predicted Fraud Count],
+    "#,##0"
+)
+
+
+[Fraud KPI Card 03] :=
+[Fraud KPI — Score Display]
+
+
+[Fraud KPI Card 04] :=
+[Fraud KPI — Critical Amount Display]
+
+
+[Fraud KPI Card 05] :=
+[Fraud KPI — Duplicate Transactions]
+
+
+[Fraud KPI Card 06] :=
+[Fraud KPI — High Value Transactions]
+
+
+[Fraud KPI Card 07] :=
+[Fraud KPI — Investigation Required]
+
+
+[Fraud KPI Card 08] :=
+[Fraud KPI — Human Review Required]
+
+
+// ============================================================================
+// 37. SCORECARD
+// ============================================================================
+
+[Fraud KPI Scorecard — Anomaly] :=
+[Fraud KPI — Anomaly Score]
+
+
+[Fraud KPI Scorecard — Exposure] :=
+[Fraud KPI — Exposure Score]
+
+
+[Fraud KPI Scorecard — Duplicate] :=
+MIN(
+    100,
+    [Fraud KPI — Duplicate Rate] * 100
+)
+
+
+[Fraud KPI Scorecard — Concentration] :=
+MIN(
+    100,
+    [Fraud KPI — Maximum Counterparty Concentration] * 100
+)
+
+
+[Fraud KPI Scorecard — Model Risk] :=
+MIN(
+    100,
+    [Fraud KPI — Predicted Fraud Rate] * 100
+)
+
+
+[Fraud KPI Scorecard Maximum] :=
+MAX(
+    [Fraud KPI Scorecard — Anomaly],
+    MAX(
+        [Fraud KPI Scorecard — Exposure],
+        MAX(
+            [Fraud KPI Scorecard — Duplicate],
+            MAX(
+                [Fraud KPI Scorecard — Concentration],
+                [Fraud KPI Scorecard — Model Risk]
+            )
+        )
+    )
+)
+
+
+[Fraud KPI Scorecard Minimum] :=
+MIN(
+    [Fraud KPI Scorecard — Anomaly],
+    MIN(
+        [Fraud KPI Scorecard — Exposure],
+        MIN(
+            [Fraud KPI Scorecard — Duplicate],
+            MIN(
+                [Fraud KPI Scorecard — Concentration],
+                [Fraud KPI Scorecard — Model Risk]
+            )
+        )
+    )
+)
+
+
+// ============================================================================
+// 38. DASHBOARD HEADERS
+// ============================================================================
+
+[Fraud KPI Dashboard Title] :=
+"FINCO AI — FRAUD & ANOMALY RISK DASHBOARD"
+
+
+[Fraud KPI Dashboard Subtitle] :=
+"Transaction Monitoring • Anomaly Detection • Fraud Prediction • Investigation"
+
+
+[Fraud KPI Transactions Header] :=
+"TRANSACTION MONITORING"
+
+
+[Fraud KPI Anomaly Header] :=
+"ANOMALY DETECTION"
+
+
+[Fraud KPI Fraud Header] :=
+"FRAUD RISK"
+
+
+[Fraud KPI Exposure Header] :=
+"FRAUD EXPOSURE"
+
+
+[Fraud KPI Investigation Header] :=
+"INVESTIGATION"
+
+
+[Fraud KPI AI Header] :=
+"AI DECISION SUPPORT"
+
+
+[Fraud KPI Alerts Header] :=
+"FRAUD ALERTS"
+
+
+[Fraud KPI Data Quality Header] :=
+"DATA QUALITY"
+
+
+// ============================================================================
+// 39. DASHBOARD STATUS
+// ============================================================================
+
+[Fraud KPI Dashboard Status] :=
+VAR Score =
+    [Fraud KPI — Combined Fraud Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 80, "CRITICAL_FRAUD_RISK",
+        Score >= 60, "HIGH_FRAUD_RISK",
+        Score >= 35, "FRAUD_WATCH",
+        Score >= 15, "MONITOR",
+        "STABLE"
+    )
+
+
+// ============================================================================
+// 40. OVERALL CONTROL STATUS
+// ============================================================================
+
+[Fraud KPI Overall Control Status] :=
+VAR DataGate =
+    [Fraud KPI — Data Quality Gate]
+
+VAR Score =
+    [Fraud KPI — Combined Fraud Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        DataGate = "REVIEW",
+            "DATA_QUALITY_REVIEW",
+
+        Score >= 80,
+            "CRITICAL_FRAUD_CONTROL",
+
+        Score >= 60,
+            "HIGH_FRAUD_CONTROL",
+
+        Score >= 35,
+            "FRAUD_CONTROL_WATCH",
+
+        "FRAUD_CONTROL_STABLE"
+    )
+
+
+// ============================================================================
+// 41. FINAL FRAUD DECISION SIGNAL
+// ============================================================================
+
+[Fraud KPI — Decision Signal] :=
+VAR Score =
+    [Fraud KPI — Combined Fraud Score]
+
+VAR HumanReview =
+    [Fraud KPI — Human Review Required]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        HumanReview > 0
+            && Score >= 80,
+            "CRITICAL_FRAUD_HUMAN_REVIEW",
+
+        HumanReview > 0
+            && Score >= 60,
+            "HIGH_FRAUD_HUMAN_REVIEW",
+
+        Score >= 35,
+            "FRAUD_RAG_REVIEW",
+
+        "NORMAL_TRANSACTION"
+    )

@@ -1,0 +1,914 @@
+// ============================================================
+// FinCo AI — Cash Flow Forecast Measures
+// File: cash_flow_forecast.dax
+//
+// Primary table:
+//     ForecastResults
+//
+// Expected columns:
+//     ForecastDate
+//     Company
+//     BusinessUnit
+//     Metric
+//     Actual
+//     Forecast
+//     LowerBound
+//     UpperBound
+//     Confidence
+//     ForecastError
+//     ForecastAccuracy
+//     ForecastRiskScore
+//     ForecastRiskLevel
+//     AlertFlag
+// ============================================================
+
+
+// ============================================================
+// 1. CASH FLOW — ACTUAL
+// ============================================================
+
+Cash Flow Actual =
+CALCULATE(
+    SUM(ForecastResults[Actual]),
+    ForecastResults[Metric] IN {
+        "Cash Flow",
+        "Operating Cash Flow",
+        "Free Cash Flow"
+    }
+)
+
+
+// ============================================================
+// 2. CASH FLOW — FORECAST
+// ============================================================
+
+Cash Flow Forecast =
+CALCULATE(
+    SUM(ForecastResults[Forecast]),
+    ForecastResults[Metric] IN {
+        "Cash Flow",
+        "Operating Cash Flow",
+        "Free Cash Flow"
+    }
+)
+
+
+// ============================================================
+// 3. OPERATING CASH FLOW — ACTUAL
+// ============================================================
+
+Operating Cash Flow Actual =
+CALCULATE(
+    SUM(ForecastResults[Actual]),
+    ForecastResults[Metric] = "Operating Cash Flow"
+)
+
+
+// ============================================================
+// 4. OPERATING CASH FLOW — FORECAST
+// ============================================================
+
+Operating Cash Flow Forecast =
+CALCULATE(
+    SUM(ForecastResults[Forecast]),
+    ForecastResults[Metric] = "Operating Cash Flow"
+)
+
+
+// ============================================================
+// 5. FREE CASH FLOW — ACTUAL
+// ============================================================
+
+Free Cash Flow Actual =
+CALCULATE(
+    SUM(ForecastResults[Actual]),
+    ForecastResults[Metric] = "Free Cash Flow"
+)
+
+
+// ============================================================
+// 6. FREE CASH FLOW — FORECAST
+// ============================================================
+
+Free Cash Flow Forecast =
+CALCULATE(
+    SUM(ForecastResults[Forecast]),
+    ForecastResults[Metric] = "Free Cash Flow"
+)
+
+
+// ============================================================
+// 7. CASH FLOW VARIANCE
+// ============================================================
+
+Cash Flow Forecast Variance =
+[Cash Flow Forecast]
+    - [Cash Flow Actual]
+
+
+// ============================================================
+// 8. CASH FLOW VARIANCE %
+// ============================================================
+
+Cash Flow Forecast Variance % =
+DIVIDE(
+    [Cash Flow Forecast Variance],
+    ABS([Cash Flow Actual])
+)
+
+
+// ============================================================
+// 9. OPERATING CASH FLOW VARIANCE
+// ============================================================
+
+Operating Cash Flow Forecast Variance =
+[Operating Cash Flow Forecast]
+    - [Operating Cash Flow Actual]
+
+
+// ============================================================
+// 10. OPERATING CASH FLOW VARIANCE %
+// ============================================================
+
+Operating Cash Flow Forecast Variance % =
+DIVIDE(
+    [Operating Cash Flow Forecast Variance],
+    ABS([Operating Cash Flow Actual])
+)
+
+
+// ============================================================
+// 11. FREE CASH FLOW VARIANCE
+// ============================================================
+
+Free Cash Flow Forecast Variance =
+[Free Cash Flow Forecast]
+    - [Free Cash Flow Actual]
+
+
+// ============================================================
+// 12. FREE CASH FLOW VARIANCE %
+// ============================================================
+
+Free Cash Flow Forecast Variance % =
+DIVIDE(
+    [Free Cash Flow Forecast Variance],
+    ABS([Free Cash Flow Actual])
+)
+
+
+// ============================================================
+// 13. FORECAST LOWER BOUND
+// ============================================================
+
+Cash Flow Forecast Lower Bound =
+CALCULATE(
+    SUM(ForecastResults[LowerBound]),
+    ForecastResults[Metric] IN {
+        "Cash Flow",
+        "Operating Cash Flow",
+        "Free Cash Flow"
+    }
+)
+
+
+// ============================================================
+// 14. FORECAST UPPER BOUND
+// ============================================================
+
+Cash Flow Forecast Upper Bound =
+CALCULATE(
+    SUM(ForecastResults[UpperBound]),
+    ForecastResults[Metric] IN {
+        "Cash Flow",
+        "Operating Cash Flow",
+        "Free Cash Flow"
+    }
+)
+
+
+// ============================================================
+// 15. FORECAST CONFIDENCE
+// ============================================================
+
+Cash Flow Forecast Confidence =
+CALCULATE(
+    AVERAGE(ForecastResults[Confidence]),
+    ForecastResults[Metric] IN {
+        "Cash Flow",
+        "Operating Cash Flow",
+        "Free Cash Flow"
+    }
+)
+
+
+// ============================================================
+// 16. CONFIDENCE %
+// ============================================================
+
+Cash Flow Forecast Confidence % =
+[Cash Flow Forecast Confidence]
+
+
+// ============================================================
+// 17. FORECAST ERROR
+// ============================================================
+
+Cash Flow Forecast Error =
+CALCULATE(
+    SUM(ForecastResults[ForecastError]),
+    ForecastResults[Metric] IN {
+        "Cash Flow",
+        "Operating Cash Flow",
+        "Free Cash Flow"
+    }
+)
+
+
+// ============================================================
+// 18. CASH FLOW MAE
+// ============================================================
+
+Cash Flow Forecast MAE =
+AVERAGEX(
+    FILTER(
+        ForecastResults,
+        ForecastResults[Metric] IN {
+            "Cash Flow",
+            "Operating Cash Flow",
+            "Free Cash Flow"
+        }
+            && NOT ISBLANK(ForecastResults[Actual])
+            && NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    ABS(
+        ForecastResults[Actual]
+            - ForecastResults[Forecast]
+    )
+)
+
+
+// ============================================================
+// 19. CASH FLOW MAPE
+// ============================================================
+
+Cash Flow Forecast MAPE =
+AVERAGEX(
+    FILTER(
+        ForecastResults,
+        ForecastResults[Metric] IN {
+            "Cash Flow",
+            "Operating Cash Flow",
+            "Free Cash Flow"
+        }
+            && NOT ISBLANK(ForecastResults[Actual])
+            && ForecastResults[Actual] <> 0
+            && NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    DIVIDE(
+        ABS(
+            ForecastResults[Actual]
+                - ForecastResults[Forecast]
+        ),
+        ABS(ForecastResults[Actual])
+    )
+)
+
+
+// ============================================================
+// 20. CASH FLOW FORECAST ACCURACY
+// ============================================================
+
+Cash Flow Forecast Accuracy =
+VAR MAPEValue =
+    [Cash Flow Forecast MAPE]
+
+RETURN
+    IF(
+        ISBLANK(MAPEValue),
+        BLANK(),
+        MAX(
+            0,
+            1 - MAPEValue
+        )
+    )
+
+
+// ============================================================
+// 21. FORECAST BAND WIDTH
+// ============================================================
+
+Cash Flow Forecast Band Width =
+[Cash Flow Forecast Upper Bound]
+    - [Cash Flow Forecast Lower Bound]
+
+
+// ============================================================
+// 22. FORECAST BAND WIDTH %
+// ============================================================
+
+Cash Flow Forecast Band Width % =
+DIVIDE(
+    [Cash Flow Forecast Band Width],
+    ABS([Cash Flow Forecast])
+)
+
+
+// ============================================================
+// 23. NEGATIVE CASH FLOW
+// ============================================================
+
+Negative Cash Flow Forecast =
+VAR ForecastValue =
+    [Cash Flow Forecast]
+
+RETURN
+    IF(
+        NOT ISBLANK(ForecastValue)
+            && ForecastValue < 0,
+        ForecastValue,
+        0
+    )
+
+
+// ============================================================
+// 24. NEGATIVE CASH FLOW FLAG
+// ============================================================
+
+Negative Cash Flow Flag =
+IF(
+    [Cash Flow Forecast] < 0,
+    "YES",
+    "NO"
+)
+
+
+// ============================================================
+// 25. CASH FLOW RISK SCORE
+// ============================================================
+
+Cash Flow Forecast Risk Score =
+VAR Confidence =
+    [Cash Flow Forecast Confidence]
+
+VAR BandWidth =
+    [Cash Flow Forecast Band Width %]
+
+VAR Forecast =
+    [Cash Flow Forecast]
+
+VAR Actual =
+    [Cash Flow Actual]
+
+VAR ConfidenceRisk =
+    SWITCH(
+        TRUE(),
+        ISBLANK(Confidence), 40,
+        Confidence < 0.40, 40,
+        Confidence < 0.60, 30,
+        Confidence < 0.75, 20,
+        Confidence < 0.90, 10,
+        0
+    )
+
+VAR VolatilityRisk =
+    SWITCH(
+        TRUE(),
+        ISBLANK(BandWidth), 0,
+        BandWidth >= 0.50, 40,
+        BandWidth >= 0.30, 30,
+        BandWidth >= 0.15, 20,
+        BandWidth >= 0.05, 10,
+        0
+    )
+
+VAR DownsideRisk =
+    SWITCH(
+        TRUE(),
+        ISBLANK(Forecast), 0,
+        Forecast < 0, 40,
+        NOT ISBLANK(Actual)
+            && Actual <> 0
+            && DIVIDE(
+                Forecast - Actual,
+                ABS(Actual)
+            ) <= -0.30, 40,
+        NOT ISBLANK(Actual)
+            && Actual <> 0
+            && DIVIDE(
+                Forecast - Actual,
+                ABS(Actual)
+            ) <= -0.20, 30,
+        NOT ISBLANK(Actual)
+            && Actual <> 0
+            && DIVIDE(
+                Forecast - Actual,
+                ABS(Actual)
+            ) <= -0.10, 20,
+        0
+    )
+
+RETURN
+    MIN(
+        100,
+        ConfidenceRisk
+            + VolatilityRisk
+            + DownsideRisk
+    )
+
+
+// ============================================================
+// 26. CASH FLOW RISK LEVEL
+// ============================================================
+
+Cash Flow Forecast Risk Level =
+VAR RiskScore =
+    [Cash Flow Forecast Risk Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        RiskScore >= 75, "CRITICAL",
+        RiskScore >= 50, "HIGH",
+        RiskScore >= 25, "MEDIUM",
+        "LOW"
+    )
+
+
+// ============================================================
+// 27. CASH FLOW HEALTH SCORE
+// ============================================================
+
+Cash Flow Forecast Health Score =
+MAX(
+    0,
+    100 - [Cash Flow Forecast Risk Score]
+)
+
+
+// ============================================================
+// 28. CASH FLOW HEALTH STATUS
+// ============================================================
+
+Cash Flow Forecast Health Status =
+VAR Score =
+    [Cash Flow Forecast Health Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 80, "Excellent",
+        Score >= 65, "Healthy",
+        Score >= 50, "Watch",
+        Score >= 30, "Weak",
+        "Critical"
+    )
+
+
+// ============================================================
+// 29. CASH FLOW STATUS
+// ============================================================
+
+Cash Flow Forecast Status =
+VAR ForecastValue =
+    [Cash Flow Forecast]
+
+VAR RiskLevel =
+    [Cash Flow Forecast Risk Level]
+
+VAR Accuracy =
+    [Cash Flow Forecast Accuracy]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(ForecastValue), "No Forecast",
+        RiskLevel = "CRITICAL", "Critical",
+        RiskLevel = "HIGH", "High Risk",
+        ForecastValue < 0, "Negative Cash Flow",
+        Accuracy >= 0.90, "Accurate",
+        Accuracy >= 0.75, "Acceptable",
+        "Needs Review"
+    )
+
+
+// ============================================================
+// 30. CASH FLOW ALERT FLAG
+// ============================================================
+
+Cash Flow Forecast Alert Flag =
+VAR RiskLevel =
+    [Cash Flow Forecast Risk Level]
+
+RETURN
+    IF(
+        RiskLevel IN {
+            "CRITICAL",
+            "HIGH"
+        }
+            || [Cash Flow Forecast] < 0,
+        "YES",
+        "NO"
+    )
+
+
+// ============================================================
+// 31. CASH FLOW ALERT TYPE
+// ============================================================
+
+Cash Flow Forecast Alert Type =
+VAR RiskLevel =
+    [Cash Flow Forecast Risk Level]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        [Cash Flow Forecast] < 0,
+            "Negative Cash Flow",
+        RiskLevel = "CRITICAL",
+            "Critical Cash Flow Risk",
+        RiskLevel = "HIGH",
+            "High Cash Flow Risk",
+        RiskLevel = "MEDIUM",
+            "Cash Flow Monitoring",
+        BLANK()
+    )
+
+
+// ============================================================
+// 32. RECOMMENDED ACTION
+// ============================================================
+
+Cash Flow Forecast Recommended Action =
+VAR RiskLevel =
+    [Cash Flow Forecast Risk Level]
+
+VAR ForecastValue =
+    [Cash Flow Forecast]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        ForecastValue < 0,
+            "Immediate liquidity review and cash preservation plan",
+
+        RiskLevel = "CRITICAL",
+            "Execute cash-flow stress test and management mitigation plan",
+
+        RiskLevel = "HIGH",
+            "Investigate cash-flow drivers and reduce discretionary outflows",
+
+        RiskLevel = "MEDIUM",
+            "Monitor cash conversion and review forecast assumptions",
+
+        "Continue normal cash-flow monitoring"
+    )
+
+
+// ============================================================
+// 33. CASH FLOW TREND
+// ============================================================
+
+Cash Flow Forecast Trend =
+VAR CurrentForecast =
+    [Cash Flow Forecast]
+
+VAR PreviousForecast =
+    CALCULATE(
+        [Cash Flow Forecast],
+        DATEADD(
+            ForecastResults[ForecastDate],
+            -1,
+            MONTH
+        )
+    )
+
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(CurrentForecast), BLANK(),
+        ISBLANK(PreviousForecast), "No Prior Period",
+        CurrentForecast > PreviousForecast, "Improving",
+        CurrentForecast < PreviousForecast, "Deteriorating",
+        "Stable"
+    )
+
+
+// ============================================================
+// 34. CASH FLOW MOMENTUM
+// ============================================================
+
+Cash Flow Forecast Momentum =
+VAR CurrentForecast =
+    [Cash Flow Forecast]
+
+VAR PreviousForecast =
+    CALCULATE(
+        [Cash Flow Forecast],
+        DATEADD(
+            ForecastResults[ForecastDate],
+            -1,
+            MONTH
+        )
+    )
+
+RETURN
+    DIVIDE(
+        CurrentForecast - PreviousForecast,
+        ABS(PreviousForecast)
+    )
+
+
+// ============================================================
+// 35. FUTURE CASH FLOW FORECAST
+// ============================================================
+
+Future Cash Flow Forecast =
+CALCULATE(
+    [Cash Flow Forecast],
+    FILTER(
+        ALL(ForecastResults[ForecastDate]),
+        ForecastResults[ForecastDate]
+            > TODAY()
+    )
+)
+
+
+// ============================================================
+// 36. NEXT 30 DAYS CASH FLOW
+// ============================================================
+
+Cash Flow Forecast Next 30 Days =
+CALCULATE(
+    [Cash Flow Forecast],
+    FILTER(
+        ALL(ForecastResults[ForecastDate]),
+        ForecastResults[ForecastDate] > TODAY()
+            &&
+        ForecastResults[ForecastDate]
+            <= TODAY() + 30
+    )
+)
+
+
+// ============================================================
+// 37. NEXT 90 DAYS CASH FLOW
+// ============================================================
+
+Cash Flow Forecast Next 90 Days =
+CALCULATE(
+    [Cash Flow Forecast],
+    FILTER(
+        ALL(ForecastResults[ForecastDate]),
+        ForecastResults[ForecastDate] > TODAY()
+            &&
+        ForecastResults[ForecastDate]
+            <= TODAY() + 90
+    )
+)
+
+
+// ============================================================
+// 38. NEXT 12 MONTHS CASH FLOW
+// ============================================================
+
+Cash Flow Forecast Next 12 Months =
+CALCULATE(
+    [Cash Flow Forecast],
+    FILTER(
+        ALL(ForecastResults[ForecastDate]),
+        ForecastResults[ForecastDate] > TODAY()
+            &&
+        ForecastResults[ForecastDate]
+            <= EDATE(TODAY(), 12)
+    )
+)
+
+
+// ============================================================
+// 39. HIGH-RISK CASH FLOW PERIODS
+// ============================================================
+
+High Risk Cash Flow Forecasts =
+CALCULATE(
+    COUNTROWS(ForecastResults),
+    ForecastResults[Metric] IN {
+        "Cash Flow",
+        "Operating Cash Flow",
+        "Free Cash Flow"
+    },
+    ForecastResults[ForecastRiskLevel] IN {
+        "HIGH",
+        "CRITICAL"
+    }
+)
+
+
+// ============================================================
+// 40. NEGATIVE CASH FLOW PERIODS
+// ============================================================
+
+Negative Cash Flow Forecast Periods =
+COUNTROWS(
+    FILTER(
+        ForecastResults,
+        ForecastResults[Metric] IN {
+            "Cash Flow",
+            "Operating Cash Flow",
+            "Free Cash Flow"
+        }
+            &&
+        ForecastResults[Forecast] < 0
+    )
+)
+
+
+// ============================================================
+// 41. CASH FLOW RISK %
+// ============================================================
+
+Cash Flow Forecast Risk % =
+DIVIDE(
+    [Cash Flow Forecast Risk Score],
+    100
+)
+
+
+// ============================================================
+// 42. CASH FLOW FORECAST CONFIDENCE BAND LOWER
+// ============================================================
+
+Cash Flow Forecast Lower Range =
+[Cash Flow Forecast Lower Bound]
+
+
+// ============================================================
+// 43. CASH FLOW FORECAST CONFIDENCE BAND UPPER
+// ============================================================
+
+Cash Flow Forecast Upper Range =
+[Cash Flow Forecast Upper Bound]
+
+
+// ============================================================
+// 44. CASH FLOW FORECAST MIDPOINT
+// ============================================================
+
+Cash Flow Forecast Midpoint =
+AVERAGEX(
+    {
+        [Cash Flow Forecast Lower Bound],
+        [Cash Flow Forecast Upper Bound]
+    },
+    [Value]
+)
+
+
+// ============================================================
+// 45. CASH FLOW FORECAST COVERAGE
+// ============================================================
+
+Cash Flow Forecast Coverage % =
+VAR TotalPeriods =
+    CALCULATE(
+        COUNTROWS(ForecastResults),
+        ForecastResults[Metric] IN {
+            "Cash Flow",
+            "Operating Cash Flow",
+            "Free Cash Flow"
+        }
+    )
+
+VAR ForecastPeriods =
+    CALCULATE(
+        COUNTROWS(ForecastResults),
+        ForecastResults[Metric] IN {
+            "Cash Flow",
+            "Operating Cash Flow",
+            "Free Cash Flow"
+        },
+        NOT ISBLANK(ForecastResults[Forecast])
+    )
+
+RETURN
+    DIVIDE(
+        ForecastPeriods,
+        TotalPeriods
+    )
+
+
+// ============================================================
+// 46. CASH FLOW FORECAST RECORD COUNT
+// ============================================================
+
+Cash Flow Forecast Records =
+CALCULATE(
+    COUNTROWS(ForecastResults),
+    ForecastResults[Metric] IN {
+        "Cash Flow",
+        "Operating Cash Flow",
+        "Free Cash Flow"
+    }
+)
+
+
+// ============================================================
+// 47. CASH FLOW FORECAST EXECUTIVE STATUS
+// ============================================================
+
+Cash Flow Forecast Executive Status =
+VAR RiskLevel =
+    [Cash Flow Forecast Risk Level]
+
+VAR ForecastValue =
+    [Cash Flow Forecast]
+
+VAR Confidence =
+    [Cash Flow Forecast Confidence]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        ForecastValue < 0
+            && RiskLevel = "CRITICAL",
+            "CRITICAL — Negative cash flow with severe forecast risk",
+
+        ForecastValue < 0,
+            "WARNING — Negative cash flow forecast",
+
+        RiskLevel = "CRITICAL",
+            "CRITICAL — Cash flow forecast uncertainty is severe",
+
+        RiskLevel = "HIGH",
+            "HIGH RISK — Cash flow requires management review",
+
+        Confidence < 0.60,
+            "LOW CONFIDENCE — Review forecast assumptions",
+
+        "HEALTHY — Cash flow forecast within expected range"
+    )
+
+
+// ============================================================
+// 48. CASH FLOW FORECAST SCORECARD
+// ============================================================
+
+Cash Flow Forecast Scorecard =
+VAR Health =
+    [Cash Flow Forecast Health Score]
+
+VAR Accuracy =
+    [Cash Flow Forecast Accuracy]
+
+VAR Confidence =
+    [Cash Flow Forecast Confidence]
+
+RETURN
+    ROUND(
+        (
+            Health
+            +
+            COALESCE(Accuracy, 0) * 100
+            +
+            COALESCE(Confidence, 0) * 100
+        ) / 3,
+        1
+    )
+
+
+// ============================================================
+// 49. CASH FLOW FORECAST DECISION PRIORITY
+// ============================================================
+
+Cash Flow Forecast Decision Priority =
+VAR RiskLevel =
+    [Cash Flow Forecast Risk Level]
+
+RETURN
+    SWITCH(
+        RiskLevel,
+        "CRITICAL", 1,
+        "HIGH", 2,
+        "MEDIUM", 3,
+        4
+    )
+
+
+// ============================================================
+// 50. CASH FLOW FORECAST DISPLAY
+// ============================================================
+
+Cash Flow Forecast Display =
+VAR ForecastValue =
+    [Cash Flow Forecast]
+
+RETURN
+    IF(
+        ISBLANK(ForecastValue),
+        "N/A",
+        FORMAT(
+            ForecastValue,
+            "#,##0.00"
+        )
+    )

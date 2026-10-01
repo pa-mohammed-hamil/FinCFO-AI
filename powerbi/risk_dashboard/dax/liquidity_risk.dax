@@ -1,0 +1,772 @@
+/*
+====================================================================
+ FinCo AI — Liquidity Risk Measures
+ File:
+   powerbi/risk_dashboard/liquidity_risk.dax
+
+ Purpose:
+   Liquidity, short-term solvency, cash availability,
+   working-capital pressure and liquidity-risk analytics.
+
+ Recommended source:
+   RiskTransformations
+
+ Expected columns:
+   CompanyId
+   CompanyName
+   Period
+   Revenue
+   Cash
+   CurrentAssets
+   CurrentLiabilities
+   TotalDebt
+   OperatingCashFlow
+   NetProfit
+   CurrentRatio
+   CashRatio
+   CashToCurrentLiabilities
+   CashToDebt
+   LiquidityPressureFlag
+   NegativeCashFlowFlag
+   RiskDataQuality
+====================================================================
+*/
+
+
+// ==================================================================
+// 1. CORE LIQUIDITY BALANCES
+// ==================================================================
+
+Liquidity Cash =
+SUM ( RiskTransformations[Cash] )
+
+
+Liquidity Current Assets =
+SUM ( RiskTransformations[CurrentAssets] )
+
+
+Liquidity Current Liabilities =
+SUM ( RiskTransformations[CurrentLiabilities] )
+
+
+Liquidity Total Debt =
+SUM ( RiskTransformations[TotalDebt] )
+
+
+Liquidity Operating Cash Flow =
+SUM ( RiskTransformations[OperatingCashFlow] )
+
+
+Liquidity Revenue =
+SUM ( RiskTransformations[Revenue] )
+
+
+Liquidity Net Profit =
+SUM ( RiskTransformations[NetProfit] )
+
+
+// ==================================================================
+// 2. WORKING CAPITAL
+// ==================================================================
+
+Liquidity Working Capital =
+[Liquidity Current Assets]
+    - [Liquidity Current Liabilities]
+
+
+Liquidity Working Capital Ratio =
+DIVIDE (
+    [Liquidity Working Capital],
+    [Liquidity Current Assets],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 3. CURRENT RATIO
+// ==================================================================
+
+Liquidity Current Ratio =
+DIVIDE (
+    [Liquidity Current Assets],
+    [Liquidity Current Liabilities],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 4. CASH RATIO
+// ==================================================================
+
+Liquidity Cash Ratio =
+DIVIDE (
+    [Liquidity Cash],
+    [Liquidity Current Liabilities],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 5. CASH TO CURRENT LIABILITIES
+// ==================================================================
+
+Liquidity Cash to Current Liabilities =
+DIVIDE (
+    [Liquidity Cash],
+    [Liquidity Current Liabilities],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 6. CASH TO DEBT
+// ==================================================================
+
+Liquidity Cash to Debt =
+DIVIDE (
+    [Liquidity Cash],
+    [Liquidity Total Debt],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 7. OPERATING CASH FLOW COVERAGE
+// ==================================================================
+
+Liquidity OCF Coverage =
+DIVIDE (
+    [Liquidity Operating Cash Flow],
+    [Liquidity Current Liabilities],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 8. TOTAL DEBT COVERAGE
+// ==================================================================
+
+Liquidity Debt Coverage =
+DIVIDE (
+    [Liquidity Cash] + [Liquidity Operating Cash Flow],
+    [Liquidity Total Debt],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 9. LIQUIDITY GAP
+// ==================================================================
+
+Liquidity Gap =
+[Liquidity Current Assets]
+    - [Liquidity Current Liabilities]
+
+
+// ==================================================================
+// 10. LIQUIDITY GAP %
+// ==================================================================
+
+Liquidity Gap Percentage =
+DIVIDE (
+    [Liquidity Gap],
+    [Liquidity Current Assets],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 11. LIQUIDITY RISK SCORE
+//
+// 0   = healthy
+// 25  = low
+// 50  = moderate
+// 75  = high
+// 90  = severe
+// 100 = critical
+// ==================================================================
+
+Liquidity Risk Score =
+VAR CurrentRatio =
+    [Liquidity Current Ratio]
+
+VAR CashRatio =
+    [Liquidity Cash Ratio]
+
+VAR OCF =
+    [Liquidity Operating Cash Flow]
+
+VAR CurrentLiabilities =
+    [Liquidity Current Liabilities]
+
+VAR OCFToLiabilities =
+    DIVIDE (
+        OCF,
+        CurrentLiabilities,
+        BLANK ()
+    )
+
+VAR CurrentRatioScore =
+    SWITCH (
+        TRUE (),
+        ISBLANK ( CurrentRatio ), BLANK (),
+        CurrentRatio < 0.50, 100,
+        CurrentRatio < 0.75, 90,
+        CurrentRatio < 1.00, 75,
+        CurrentRatio < 1.25, 50,
+        CurrentRatio < 1.50, 25,
+        0
+    )
+
+VAR CashRatioScore =
+    SWITCH (
+        TRUE (),
+        ISBLANK ( CashRatio ), BLANK (),
+        CashRatio < 0.10, 100,
+        CashRatio < 0.25, 90,
+        CashRatio < 0.50, 75,
+        CashRatio < 0.75, 50,
+        CashRatio < 1.00, 25,
+        0
+    )
+
+VAR OCFScore =
+    SWITCH (
+        TRUE (),
+        ISBLANK ( OCF ), BLANK (),
+        OCF < 0, 100,
+        OCFToLiabilities < 0.10, 90,
+        OCFToLiabilities < 0.25, 75,
+        OCFToLiabilities < 0.50, 50,
+        OCFToLiabilities < 1.00, 25,
+        0
+    )
+
+VAR CurrentWeight =
+    IF ( NOT ISBLANK ( CurrentRatioScore ), 0.45, 0 )
+
+VAR CashWeight =
+    IF ( NOT ISBLANK ( CashRatioScore ), 0.30, 0 )
+
+VAR OCFWeight =
+    IF ( NOT ISBLANK ( OCFScore ), 0.25, 0 )
+
+VAR WeightedScore =
+      COALESCE ( CurrentRatioScore, 0 ) * 0.45
+    + COALESCE ( CashRatioScore, 0 ) * 0.30
+    + COALESCE ( OCFScore, 0 ) * 0.25
+
+VAR AvailableWeight =
+    CurrentWeight
+    + CashWeight
+    + OCFWeight
+
+RETURN
+    IF (
+        AvailableWeight = 0,
+        BLANK (),
+        ROUND (
+            DIVIDE (
+                WeightedScore,
+                AvailableWeight
+            ),
+            2
+        )
+    )
+
+
+// ==================================================================
+// 12. LIQUIDITY RISK BAND
+// ==================================================================
+
+Liquidity Risk Band =
+VAR Score =
+    [Liquidity Risk Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "UNKNOWN",
+        Score >= 80, "CRITICAL",
+        Score >= 60, "HIGH",
+        Score >= 35, "MEDIUM",
+        Score >= 15, "LOW",
+        "INFO"
+    )
+
+
+// ==================================================================
+// 13. LIQUIDITY HEALTH SCORE
+// ==================================================================
+
+Liquidity Health Score =
+VAR Risk =
+    [Liquidity Risk Score]
+RETURN
+    IF (
+        ISBLANK ( Risk ),
+        BLANK (),
+        ROUND (
+            100 - Risk,
+            2
+        )
+    )
+
+
+// ==================================================================
+// 14. LIQUIDITY HEALTH BAND
+// ==================================================================
+
+Liquidity Health Band =
+VAR Health =
+    [Liquidity Health Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Health ), "UNKNOWN",
+        Health >= 80, "STRONG",
+        Health >= 60, "HEALTHY",
+        Health >= 40, "WATCH",
+        Health >= 20, "WEAK",
+        "CRITICAL"
+    )
+
+
+// ==================================================================
+// 15. LIQUIDITY STATUS
+// ==================================================================
+
+Liquidity Status =
+VAR Ratio =
+    [Liquidity Current Ratio]
+
+VAR CashRatio =
+    [Liquidity Cash Ratio]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Ratio ), "UNKNOWN",
+        Ratio < 0.50 || CashRatio < 0.10, "CRITICAL",
+        Ratio < 0.75 || CashRatio < 0.25, "SEVERE",
+        Ratio < 1.00 || CashRatio < 0.50, "HIGH_PRESSURE",
+        Ratio < 1.25 || CashRatio < 0.75, "MODERATE_PRESSURE",
+        Ratio < 1.50, "WATCH",
+        "HEALTHY"
+    )
+
+
+// ==================================================================
+// 16. LIQUIDITY PRESSURE FLAG
+// ==================================================================
+
+Liquidity Pressure Flag =
+IF (
+    [Liquidity Current Ratio] < 1
+        || [Liquidity Cash Ratio] < 0.50
+        || [Liquidity Operating Cash Flow] < 0,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 17. CRITICAL LIQUIDITY FLAG
+// ==================================================================
+
+Critical Liquidity Flag =
+IF (
+    [Liquidity Current Ratio] < 0.75
+        || [Liquidity Cash Ratio] < 0.25
+        || [Liquidity Operating Cash Flow] < 0,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 18. NEGATIVE WORKING CAPITAL FLAG
+// ==================================================================
+
+Negative Working Capital Flag =
+IF (
+    [Liquidity Working Capital] < 0,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 19. NEGATIVE OCF FLAG
+// ==================================================================
+
+Liquidity Negative OCF Flag =
+IF (
+    [Liquidity Operating Cash Flow] < 0,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 20. CASH SHORTFALL FLAG
+// ==================================================================
+
+Cash Shortfall Flag =
+IF (
+    [Liquidity Cash] < [Liquidity Current Liabilities] * 0.25,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 21. LIQUIDITY RISK FACTOR COUNT
+// ==================================================================
+
+Liquidity Risk Factor Count =
+    [Liquidity Pressure Flag]
+    + [Negative Working Capital Flag]
+    + [Liquidity Negative OCF Flag]
+    + [Cash Shortfall Flag]
+
+
+// ==================================================================
+// 22. LIQUIDITY ALERT LEVEL
+// ==================================================================
+
+Liquidity Alert Level =
+VAR Score =
+    [Liquidity Risk Score]
+
+VAR Factors =
+    [Liquidity Risk Factor Count]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        Score >= 80 || Factors >= 4, "CRITICAL",
+        Score >= 60 || Factors >= 3, "HIGH",
+        Score >= 35 || Factors >= 2, "MEDIUM",
+        Factors = 1, "LOW",
+        "NONE"
+    )
+
+
+// ==================================================================
+// 23. PRIMARY LIQUIDITY RISK FACTOR
+// ==================================================================
+
+Primary Liquidity Risk Factor =
+VAR CurrentRatio =
+    [Liquidity Current Ratio]
+
+VAR CashRatio =
+    [Liquidity Cash Ratio]
+
+VAR OCF =
+    [Liquidity Operating Cash Flow]
+
+VAR WorkingCapital =
+    [Liquidity Working Capital]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( CurrentRatio ), "INSUFFICIENT_DATA",
+        CurrentRatio < 0.50, "CURRENT_RATIO",
+        CashRatio < 0.25, "CASH_POSITION",
+        OCF < 0, "NEGATIVE_OPERATING_CASH_FLOW",
+        WorkingCapital < 0, "NEGATIVE_WORKING_CAPITAL",
+        CurrentRatio < 1.00, "CURRENT_LIABILITIES_PRESSURE",
+        CashRatio < 0.50, "LOW_CASH_COVERAGE",
+        "NONE"
+    )
+
+
+// ==================================================================
+// 24. LIQUIDITY DECISION
+// ==================================================================
+
+Liquidity Decision =
+VAR Score =
+    [Liquidity Risk Score]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "INSUFFICIENT_DATA",
+        Score >= 80, "IMMEDIATE_ACTION",
+        Score >= 60, "MANAGEMENT_REVIEW",
+        Score >= 35, "MONITOR",
+        "NORMAL"
+    )
+
+
+// ==================================================================
+// 25. LIQUIDITY RECOMMENDED ACTION
+// ==================================================================
+
+Liquidity Recommended Action =
+VAR Score =
+    [Liquidity Risk Score]
+
+VAR Factor =
+    [Primary Liquidity Risk Factor]
+
+RETURN
+    SWITCH (
+        TRUE (),
+
+        Score >= 80
+            && Factor = "CURRENT_RATIO",
+            "Immediately review short-term liabilities, working capital and available funding.",
+
+        Score >= 80
+            && Factor = "CASH_POSITION",
+            "Assess immediate cash requirements and establish a short-term liquidity buffer.",
+
+        Score >= 80
+            && Factor = "NEGATIVE_OPERATING_CASH_FLOW",
+            "Investigate operating cash-flow deterioration and accelerate cash preservation actions.",
+
+        Score >= 80
+            && Factor = "NEGATIVE_WORKING_CAPITAL",
+            "Review receivables, payables and inventory to restore positive working capital.",
+
+        Score >= 60,
+            "Perform management-level liquidity review and monitor near-term cash obligations.",
+
+        Score >= 35,
+            "Monitor liquidity ratios, cash balances and operating cash flow closely.",
+
+        "No immediate liquidity action required."
+    )
+
+
+// ==================================================================
+// 26. LIQUIDITY RISK SUMMARY
+// ==================================================================
+
+Liquidity Risk Summary =
+VAR Score =
+    [Liquidity Risk Score]
+
+VAR Band =
+    [Liquidity Risk Band]
+
+VAR Status =
+    [Liquidity Status]
+
+VAR Factor =
+    [Primary Liquidity Risk Factor]
+
+RETURN
+    IF (
+        ISBLANK ( Score ),
+        "Liquidity risk cannot be assessed because sufficient liquidity data is unavailable.",
+        "Liquidity risk score is "
+            & FORMAT ( Score, "0.0" )
+            & " ("
+            & Band
+            & "). Current status: "
+            & Status
+            & ". Primary risk factor: "
+            & Factor
+            & "."
+    )
+
+
+// ==================================================================
+// 27. LIQUIDITY TREND — PREVIOUS PERIOD
+// ==================================================================
+
+Previous Period Liquidity Risk Score =
+CALCULATE (
+    [Liquidity Risk Score],
+    DATEADD (
+        RiskTransformations[Period],
+        -1,
+        MONTH
+    )
+)
+
+
+// ==================================================================
+// 28. LIQUIDITY RISK CHANGE
+// ==================================================================
+
+Liquidity Risk Change =
+VAR CurrentScore =
+    [Liquidity Risk Score]
+
+VAR PreviousScore =
+    [Previous Period Liquidity Risk Score]
+
+RETURN
+    IF (
+        ISBLANK ( PreviousScore ),
+        BLANK (),
+        ROUND (
+            CurrentScore - PreviousScore,
+            2
+        )
+    )
+
+
+// ==================================================================
+// 29. LIQUIDITY TREND
+// ==================================================================
+
+Liquidity Risk Trend =
+VAR Change =
+    [Liquidity Risk Change]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Change ), "NO_HISTORY",
+        Change >= 15, "STRONGLY_DETERIORATING",
+        Change >= 5, "DETERIORATING",
+        Change <= -15, "STRONGLY_IMPROVING",
+        Change <= -5, "IMPROVING",
+        "STABLE"
+    )
+
+
+// ==================================================================
+// 30. LIQUIDITY DETERIORATION FLAG
+// ==================================================================
+
+Liquidity Deterioration Flag =
+IF (
+    [Liquidity Risk Change] >= 5,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 31. CASH BUFFER
+// ==================================================================
+
+Liquidity Cash Buffer =
+[Liquidity Cash]
+    - [Liquidity Current Liabilities]
+
+
+// ==================================================================
+// 32. CASH BUFFER RATIO
+// ==================================================================
+
+Liquidity Cash Buffer Ratio =
+DIVIDE (
+    [Liquidity Cash Buffer],
+    [Liquidity Current Liabilities],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 33. ESTIMATED LIQUIDITY COVERAGE
+//
+// Approximation using cash + one period of operating cash flow.
+// ==================================================================
+
+Liquidity Coverage Ratio =
+DIVIDE (
+    [Liquidity Cash]
+        + MAX ( [Liquidity Operating Cash Flow], 0 ),
+    [Liquidity Current Liabilities],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 34. LIQUIDITY DATA QUALITY
+// ==================================================================
+
+Liquidity Data Quality =
+VAR HasCash =
+    NOT ISBLANK ( [Liquidity Cash] )
+
+VAR HasCurrentAssets =
+    NOT ISBLANK ( [Liquidity Current Assets] )
+
+VAR HasCurrentLiabilities =
+    NOT ISBLANK ( [Liquidity Current Liabilities] )
+
+VAR HasOCF =
+    NOT ISBLANK ( [Liquidity Operating Cash Flow] )
+
+VAR AvailableFields =
+    HasCash
+        + HasCurrentAssets
+        + HasCurrentLiabilities
+        + HasOCF
+
+RETURN
+    SWITCH (
+        TRUE (),
+        AvailableFields = 4, "COMPLETE",
+        AvailableFields >= 2, "PARTIAL",
+        "INSUFFICIENT"
+    )
+
+
+// ==================================================================
+// 35. DISPLAY MEASURES
+// ==================================================================
+
+Liquidity Risk Score Display =
+IF (
+    ISBLANK ( [Liquidity Risk Score] ),
+    "N/A",
+    FORMAT (
+        [Liquidity Risk Score],
+        "0.0"
+    )
+)
+
+
+Liquidity Current Ratio Display =
+IF (
+    ISBLANK ( [Liquidity Current Ratio] ),
+    "N/A",
+    FORMAT (
+        [Liquidity Current Ratio],
+        "0.00x"
+    )
+)
+
+
+Liquidity Cash Ratio Display =
+IF (
+    ISBLANK ( [Liquidity Cash Ratio] ),
+    "N/A",
+    FORMAT (
+        [Liquidity Cash Ratio],
+        "0.00x"
+    )
+)
+
+
+Liquidity OCF Coverage Display =
+IF (
+    ISBLANK ( [Liquidity OCF Coverage] ),
+    "N/A",
+    FORMAT (
+        [Liquidity OCF Coverage],
+        "0.00x"
+    )
+)
+
+
+Liquidity Health Score Display =
+IF (
+    ISBLANK ( [Liquidity Health Score] ),
+    "N/A",
+    FORMAT (
+        [Liquidity Health Score],
+        "0.0"
+    )
+)

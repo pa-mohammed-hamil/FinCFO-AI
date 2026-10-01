@@ -1,0 +1,189 @@
+ /*
+    FinCo AI - Suspicious Transaction Measures
+    File: powerbi/shared/dax/suspicious_transactions.dax
+
+    Assumed Transactions columns:
+        Transactions[TransactionID]
+        Transactions[TransactionDate]
+        Transactions[Amount]
+        Transactions[FraudFlag]
+        Transactions[FraudProbability]
+        Transactions[Status]
+ */
+
+Suspicious Transaction Count =
+CALCULATE(
+    COUNTROWS(Transactions),
+    Transactions[FraudProbability] >= 0.50
+)
+
+
+Highly Suspicious Transaction Count =
+CALCULATE(
+    COUNTROWS(Transactions),
+    Transactions[FraudProbability] >= 0.80
+)
+
+
+Critical Suspicious Transaction Count =
+CALCULATE(
+    COUNTROWS(Transactions),
+    Transactions[FraudProbability] >= 0.90
+)
+
+
+Suspicious Transaction Amount =
+CALCULATE(
+    SUM(Transactions[Amount]),
+    Transactions[FraudProbability] >= 0.50
+)
+
+
+Highly Suspicious Transaction Amount =
+CALCULATE(
+    SUM(Transactions[Amount]),
+    Transactions[FraudProbability] >= 0.80
+)
+
+
+Critical Suspicious Transaction Amount =
+CALCULATE(
+    SUM(Transactions[Amount]),
+    Transactions[FraudProbability] >= 0.90
+)
+
+
+Suspicious Transaction Rate =
+DIVIDE(
+    [Suspicious Transaction Count],
+    [Total Transaction Count],
+    0
+)
+
+
+Highly Suspicious Transaction Rate =
+DIVIDE(
+    [Highly Suspicious Transaction Count],
+    [Total Transaction Count],
+    0
+)
+
+
+Suspicious Amount Rate =
+DIVIDE(
+    [Suspicious Transaction Amount],
+    [Total Transaction Amount],
+    0
+)
+
+
+Average Suspicious Transaction Amount =
+DIVIDE(
+    [Suspicious Transaction Amount],
+    [Suspicious Transaction Count],
+    0
+)
+
+
+Maximum Suspicious Transaction Amount =
+CALCULATE(
+    MAX(Transactions[Amount]),
+    Transactions[FraudProbability] >= 0.50
+)
+
+
+Suspicious Transactions Previous Period =
+CALCULATE(
+    [Suspicious Transaction Count],
+    DATEADD(
+        'Date'[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Suspicious Transaction Change =
+[Suspicious Transaction Count]
+    - [Suspicious Transactions Previous Period]
+
+
+Suspicious Transaction Change % =
+DIVIDE(
+    [Suspicious Transaction Change],
+    [Suspicious Transactions Previous Period],
+    0
+)
+
+
+Suspicious Transactions 30D =
+CALCULATE(
+    [Suspicious Transaction Count],
+    DATESINPERIOD(
+        'Date'[Date],
+        MAX('Date'[Date]),
+        -30,
+        DAY
+    )
+)
+
+
+Suspicious Transactions 90D =
+CALCULATE(
+    [Suspicious Transaction Count],
+    DATESINPERIOD(
+        'Date'[Date],
+        MAX('Date'[Date]),
+        -90,
+        DAY
+    )
+)
+
+
+Suspicious Transaction Risk Score =
+VAR Rate = [Suspicious Transaction Rate]
+VAR AmountRate = [Suspicious Amount Rate]
+RETURN
+    MIN(
+        100,
+        (Rate * 60)
+            + (AmountRate * 40)
+    )
+
+
+Suspicious Transaction Severity =
+SWITCH(
+    TRUE(),
+    [Critical Suspicious Transaction Count] > 0, "CRITICAL",
+    [Highly Suspicious Transaction Count] > 0, "HIGH",
+    [Suspicious Transaction Count] > 0, "MEDIUM",
+    "NORMAL"
+)
+
+
+Suspicious Transaction Alert =
+SWITCH(
+    TRUE(),
+    [Critical Suspicious Transaction Count] > 0,
+        "CRITICAL: Transactions have extremely high fraud probability",
+    [Highly Suspicious Transaction Count] > 0,
+        "HIGH: Highly suspicious transactions detected",
+    [Suspicious Transaction Count] > 0,
+        "MEDIUM: Suspicious transaction activity detected",
+    "NORMAL: No significant suspicious transaction activity"
+)
+
+
+Suspicious Transaction Exposure =
+[Suspicious Transaction Amount]
+    + [Highly Suspicious Transaction Amount]
+    + [Critical Suspicious Transaction Amount]
+
+
+Suspicious Transaction Investigation Rate =
+DIVIDE(
+    [Highly Suspicious Transaction Count]
+        + [Critical Suspicious Transaction Count],
+    [Suspicious Transaction Count],
+    0
+)

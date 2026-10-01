@@ -1,0 +1,1379 @@
+// ================================================================
+// FinCo AI — Overall Risk Score
+// File: overall_risk_score.dax
+// Purpose:
+//   Enterprise-level overall risk score combining:
+//   - Financial Risk
+//   - Liquidity Risk
+//   - Credit Risk
+//   - Market Risk
+//   - Operational Risk
+//
+// Architecture:
+//   RiskTransformations
+//          ↓
+//   RiskFactors
+//          ↓
+//   RiskScores
+//          ↓
+//   Overall Risk Score
+//          ↓
+//   Alerts / Supervisor Agent / RAG / Forecast / What-If
+//
+// IMPORTANT:
+//   The backend risk_scoring.py remains the authoritative
+//   production risk calculation.
+//   This DAX layer is intended for Power BI presentation,
+//   aggregation, filtering, and executive analytics.
+// ================================================================
+
+
+// ================================================================
+// 1. CANONICAL FINANCIAL RISK
+// ================================================================
+
+Overall Financial Risk Score =
+VAR Score =
+    CALCULATE(
+        MAX(RiskScores[OverallRiskScore])
+    )
+RETURN
+    IF(
+        ISBLANK(Score),
+        BLANK(),
+        MIN(100, MAX(0, Score))
+    )
+
+
+// ================================================================
+// 2. LIQUIDITY RISK
+// ================================================================
+
+Overall Liquidity Risk Score =
+VAR Score =
+    [Liquidity Risk Score]
+RETURN
+    IF(
+        ISBLANK(Score),
+        BLANK(),
+        MIN(100, MAX(0, Score))
+    )
+
+
+// ================================================================
+// 3. CREDIT RISK
+// ================================================================
+
+Overall Credit Risk Score =
+VAR Score =
+    [Credit Risk Score]
+RETURN
+    IF(
+        ISBLANK(Score),
+        BLANK(),
+        MIN(100, MAX(0, Score))
+    )
+
+
+// ================================================================
+// 4. MARKET RISK
+// ================================================================
+
+Overall Market Risk Score =
+VAR Score =
+    [Market Risk Score]
+RETURN
+    IF(
+        ISBLANK(Score),
+        BLANK(),
+        MIN(100, MAX(0, Score))
+    )
+
+
+// ================================================================
+// 5. OPERATIONAL RISK
+// ================================================================
+
+Overall Operational Risk Score =
+VAR Score =
+    [Operational Risk Score]
+RETURN
+    IF(
+        ISBLANK(Score),
+        BLANK(),
+        MIN(100, MAX(0, Score))
+    )
+
+
+// ================================================================
+// 6. AVAILABLE RISK DIMENSIONS
+// ================================================================
+
+Overall Risk Available Dimensions =
+VAR FinancialAvailable =
+    IF(
+        NOT ISBLANK([Overall Financial Risk Score]),
+        1,
+        0
+    )
+
+VAR LiquidityAvailable =
+    IF(
+        NOT ISBLANK([Overall Liquidity Risk Score]),
+        1,
+        0
+    )
+
+VAR CreditAvailable =
+    IF(
+        NOT ISBLANK([Overall Credit Risk Score]),
+        1,
+        0
+    )
+
+VAR MarketAvailable =
+    IF(
+        NOT ISBLANK([Overall Market Risk Score]),
+        1,
+        0
+    )
+
+VAR OperationalAvailable =
+    IF(
+        NOT ISBLANK([Overall Operational Risk Score]),
+        1,
+        0
+    )
+
+RETURN
+    FinancialAvailable
+        + LiquidityAvailable
+        + CreditAvailable
+        + MarketAvailable
+        + OperationalAvailable
+
+
+// ================================================================
+// 7. AVAILABLE WEIGHT
+// ================================================================
+//
+// Enterprise risk weighting:
+//
+// Financial     = 35%
+// Liquidity     = 25%
+// Credit        = 15%
+// Market        = 10%
+// Operational   = 15%
+//
+// The calculation normalizes the weights when a dimension
+// is unavailable.
+
+Overall Risk Available Weight =
+VAR FinancialWeight =
+    IF(
+        NOT ISBLANK([Overall Financial Risk Score]),
+        0.35,
+        0
+    )
+
+VAR LiquidityWeight =
+    IF(
+        NOT ISBLANK([Overall Liquidity Risk Score]),
+        0.25,
+        0
+    )
+
+VAR CreditWeight =
+    IF(
+        NOT ISBLANK([Overall Credit Risk Score]),
+        0.15,
+        0
+    )
+
+VAR MarketWeight =
+    IF(
+        NOT ISBLANK([Overall Market Risk Score]),
+        0.10,
+        0
+    )
+
+VAR OperationalWeight =
+    IF(
+        NOT ISBLANK([Overall Operational Risk Score]),
+        0.15,
+        0
+    )
+
+RETURN
+    FinancialWeight
+        + LiquidityWeight
+        + CreditWeight
+        + MarketWeight
+        + OperationalWeight
+
+
+// ================================================================
+// 8. OVERALL ENTERPRISE RISK SCORE
+// ================================================================
+
+Overall Risk Score =
+VAR FinancialScore =
+    [Overall Financial Risk Score]
+
+VAR LiquidityScore =
+    [Overall Liquidity Risk Score]
+
+VAR CreditScore =
+    [Overall Credit Risk Score]
+
+VAR MarketScore =
+    [Overall Market Risk Score]
+
+VAR OperationalScore =
+    [Overall Operational Risk Score]
+
+VAR FinancialWeight =
+    IF(
+        NOT ISBLANK(FinancialScore),
+        0.35,
+        0
+    )
+
+VAR LiquidityWeight =
+    IF(
+        NOT ISBLANK(LiquidityScore),
+        0.25,
+        0
+    )
+
+VAR CreditWeight =
+    IF(
+        NOT ISBLANK(CreditScore),
+        0.15,
+        0
+    )
+
+VAR MarketWeight =
+    IF(
+        NOT ISBLANK(MarketScore),
+        0.10,
+        0
+    )
+
+VAR OperationalWeight =
+    IF(
+        NOT ISBLANK(OperationalScore),
+        0.15,
+        0
+    )
+
+VAR WeightedScore =
+      COALESCE(FinancialScore, 0) * FinancialWeight
+    + COALESCE(LiquidityScore, 0) * LiquidityWeight
+    + COALESCE(CreditScore, 0) * CreditWeight
+    + COALESCE(MarketScore, 0) * MarketWeight
+    + COALESCE(OperationalScore, 0) * OperationalWeight
+
+VAR TotalWeight =
+      FinancialWeight
+    + LiquidityWeight
+    + CreditWeight
+    + MarketWeight
+    + OperationalWeight
+
+RETURN
+    IF(
+        TotalWeight = 0,
+        BLANK(),
+        ROUND(
+            MIN(
+                100,
+                MAX(
+                    0,
+                    DIVIDE(
+                        WeightedScore,
+                        TotalWeight
+                    )
+                )
+            ),
+            1
+        )
+    )
+
+
+// ================================================================
+// 9. ENTERPRISE HEALTH SCORE
+// ================================================================
+
+Overall Health Score =
+VAR RiskScore =
+    [Overall Risk Score]
+RETURN
+    IF(
+        ISBLANK(RiskScore),
+        BLANK(),
+        ROUND(
+            100 - RiskScore,
+            1
+        )
+    )
+
+
+// ================================================================
+// 10. ENTERPRISE RISK BAND
+// ================================================================
+
+Overall Risk Band =
+VAR Score =
+    [Overall Risk Score]
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(Score), "NO_DATA",
+        Score >= 80, "CRITICAL",
+        Score >= 60, "HIGH",
+        Score >= 35, "MEDIUM",
+        Score >= 15, "LOW",
+        "INFO"
+    )
+
+
+// ================================================================
+// 11. ENTERPRISE HEALTH BAND
+// ================================================================
+
+Overall Health Band =
+VAR Score =
+    [Overall Health Score]
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(Score), "NO_DATA",
+        Score >= 80, "STRONG",
+        Score >= 60, "HEALTHY",
+        Score >= 40, "WATCH",
+        Score >= 20, "WEAK",
+        "CRITICAL"
+    )
+
+
+// ================================================================
+// 12. RISK STATUS
+// ================================================================
+
+Overall Risk Status =
+VAR Score =
+    [Overall Risk Score]
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(Score), "NO_DATA",
+        Score >= 80, "CRITICAL_RISK",
+        Score >= 60, "HIGH_RISK",
+        Score >= 35, "AT_RISK",
+        Score >= 15, "WATCH",
+        "STABLE"
+    )
+
+
+// ================================================================
+// 13. HIGHEST RISK DIMENSION
+// ================================================================
+
+Highest Risk Dimension Score =
+VAR Financial =
+    [Overall Financial Risk Score]
+
+VAR Liquidity =
+    [Overall Liquidity Risk Score]
+
+VAR Credit =
+    [Overall Credit Risk Score]
+
+VAR Market =
+    [Overall Market Risk Score]
+
+VAR Operational =
+    [Overall Operational Risk Score]
+
+RETURN
+    MAXX(
+        FILTER(
+            UNION(
+                ROW("Dimension", "Financial", "Score", Financial),
+                ROW("Dimension", "Liquidity", "Score", Liquidity),
+                ROW("Dimension", "Credit", "Score", Credit),
+                ROW("Dimension", "Market", "Score", Market),
+                ROW("Dimension", "Operational", "Score", Operational)
+            ),
+            NOT ISBLANK([Score])
+        ),
+        [Score]
+    )
+
+
+Primary Overall Risk Dimension =
+VAR Financial =
+    [Overall Financial Risk Score]
+
+VAR Liquidity =
+    [Overall Liquidity Risk Score]
+
+VAR Credit =
+    [Overall Credit Risk Score]
+
+VAR Market =
+    [Overall Market Risk Score]
+
+VAR Operational =
+    [Overall Operational Risk Score]
+
+VAR MaxScore =
+    MAXX(
+        FILTER(
+            UNION(
+                ROW("Dimension", "Financial", "Score", Financial),
+                ROW("Dimension", "Liquidity", "Score", Liquidity),
+                ROW("Dimension", "Credit", "Score", Credit),
+                ROW("Dimension", "Market", "Score", Market),
+                ROW("Dimension", "Operational", "Score", Operational)
+            ),
+            NOT ISBLANK([Score])
+        ),
+        [Score]
+    )
+
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(MaxScore), "NO_DATA",
+        Financial = MaxScore, "FINANCIAL",
+        Liquidity = MaxScore, "LIQUIDITY",
+        Credit = MaxScore, "CREDIT",
+        Market = MaxScore, "MARKET",
+        Operational = MaxScore, "OPERATIONAL",
+        "FINANCIAL"
+    )
+
+
+// ================================================================
+// 14. SECONDARY RISK DIMENSION
+// ================================================================
+
+Secondary Overall Risk Dimension =
+VAR Financial =
+    [Overall Financial Risk Score]
+
+VAR Liquidity =
+    [Overall Liquidity Risk Score]
+
+VAR Credit =
+    [Overall Credit Risk Score]
+
+VAR Market =
+    [Overall Market Risk Score]
+
+VAR Operational =
+    [Overall Operational Risk Score]
+
+VAR Primary =
+    [Primary Overall Risk Dimension]
+
+VAR SecondaryScore =
+    MAXX(
+        FILTER(
+            UNION(
+                ROW("Dimension", "Financial", "Score", Financial),
+                ROW("Dimension", "Liquidity", "Score", Liquidity),
+                ROW("Dimension", "Credit", "Score", Credit),
+                ROW("Dimension", "Market", "Score", Market),
+                ROW("Dimension", "Operational", "Score", Operational)
+            ),
+            NOT ISBLANK([Score])
+                && [Dimension] <> Primary
+        ),
+        [Score]
+    )
+
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(SecondaryScore), "NO_DATA",
+        Financial = SecondaryScore && Primary <> "FINANCIAL", "FINANCIAL",
+        Liquidity = SecondaryScore && Primary <> "LIQUIDITY", "LIQUIDITY",
+        Credit = SecondaryScore && Primary <> "CREDIT", "CREDIT",
+        Market = SecondaryScore && Primary <> "MARKET", "MARKET",
+        Operational = SecondaryScore && Primary <> "OPERATIONAL", "OPERATIONAL",
+        "NONE"
+    )
+
+
+// ================================================================
+// 15. RISK DIMENSION SPREAD
+// ================================================================
+
+Overall Risk Dimension Spread =
+VAR Scores =
+    FILTER(
+        UNION(
+            ROW("Dimension", "Financial", "Score", [Overall Financial Risk Score]),
+            ROW("Dimension", "Liquidity", "Score", [Overall Liquidity Risk Score]),
+            ROW("Dimension", "Credit", "Score", [Overall Credit Risk Score]),
+            ROW("Dimension", "Market", "Score", [Overall Market Risk Score]),
+            ROW("Dimension", "Operational", "Score", [Overall Operational Risk Score])
+        ),
+        NOT ISBLANK([Score])
+    )
+
+VAR MaximumScore =
+    MAXX(
+        Scores,
+        [Score]
+    )
+
+VAR MinimumScore =
+    MINX(
+        Scores,
+        [Score]
+    )
+
+RETURN
+    IF(
+        COUNTROWS(Scores) < 2,
+        BLANK(),
+        ROUND(
+            MaximumScore - MinimumScore,
+            1
+        )
+    )
+
+
+// ================================================================
+// 16. CRITICAL DIMENSION COUNT
+// ================================================================
+
+Critical Risk Dimension Count =
+VAR Scores =
+    UNION(
+        ROW("Dimension", "Financial", "Score", [Overall Financial Risk Score]),
+        ROW("Dimension", "Liquidity", "Score", [Overall Liquidity Risk Score]),
+        ROW("Dimension", "Credit", "Score", [Overall Credit Risk Score]),
+        ROW("Dimension", "Market", "Score", [Overall Market Risk Score]),
+        ROW("Dimension", "Operational", "Score", [Overall Operational Risk Score])
+    )
+RETURN
+    COUNTROWS(
+        FILTER(
+            Scores,
+            NOT ISBLANK([Score])
+                && [Score] >= 80
+        )
+    )
+
+
+// ================================================================
+// 17. HIGH RISK DIMENSION COUNT
+// ================================================================
+
+High Risk Dimension Count =
+VAR Scores =
+    UNION(
+        ROW("Dimension", "Financial", "Score", [Overall Financial Risk Score]),
+        ROW("Dimension", "Liquidity", "Score", [Overall Liquidity Risk Score]),
+        ROW("Dimension", "Credit", "Score", [Overall Credit Risk Score]),
+        ROW("Dimension", "Market", "Score", [Overall Market Risk Score]),
+        ROW("Dimension", "Operational", "Score", [Overall Operational Risk Score])
+    )
+RETURN
+    COUNTROWS(
+        FILTER(
+            Scores,
+            NOT ISBLANK([Score])
+                && [Score] >= 60
+        )
+    )
+
+
+// ================================================================
+// 18. AT-RISK DIMENSION COUNT
+// ================================================================
+
+At Risk Dimension Count =
+VAR Scores =
+    UNION(
+        ROW("Dimension", "Financial", "Score", [Overall Financial Risk Score]),
+        ROW("Dimension", "Liquidity", "Score", [Overall Liquidity Risk Score]),
+        ROW("Dimension", "Credit", "Score", [Overall Credit Risk Score]),
+        ROW("Dimension", "Market", "Score", [Overall Market Risk Score]),
+        ROW("Dimension", "Operational", "Score", [Overall Operational Risk Score])
+    )
+RETURN
+    COUNTROWS(
+        FILTER(
+            Scores,
+            NOT ISBLANK([Score])
+                && [Score] >= 35
+        )
+    )
+
+
+// ================================================================
+// 19. AVERAGE RISK DIMENSION SCORE
+// ================================================================
+
+Average Risk Dimension Score =
+VAR Scores =
+    FILTER(
+        UNION(
+            ROW("Dimension", "Financial", "Score", [Overall Financial Risk Score]),
+            ROW("Dimension", "Liquidity", "Score", [Overall Liquidity Risk Score]),
+            ROW("Dimension", "Credit", "Score", [Overall Credit Risk Score]),
+            ROW("Dimension", "Market", "Score", [Overall Market Risk Score]),
+            ROW("Dimension", "Operational", "Score", [Overall Operational Risk Score])
+        ),
+        NOT ISBLANK([Score])
+    )
+RETURN
+    IF(
+        COUNTROWS(Scores) = 0,
+        BLANK(),
+        ROUND(
+            AVERAGEX(
+                Scores,
+                [Score]
+            ),
+            1
+        )
+    )
+
+
+// ================================================================
+// 20. RISK CONCENTRATION RATIO
+// ================================================================
+//
+// Measures how concentrated enterprise risk is in the
+// highest-risk dimension.
+
+Risk Concentration Ratio =
+VAR Highest =
+    [Highest Risk Dimension Score]
+
+VAR Total =
+    [Average Risk Dimension Score]
+
+RETURN
+    IF(
+        ISBLANK(Highest)
+            || ISBLANK(Total)
+            || Total = 0,
+        BLANK(),
+        ROUND(
+            DIVIDE(
+                Highest,
+                Total
+            ),
+            2
+        )
+    )
+
+
+// ================================================================
+// 21. RISK BALANCE STATUS
+// ================================================================
+
+Risk Balance Status =
+VAR Spread =
+    [Overall Risk Dimension Spread]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(Spread), "NO_DATA",
+        Spread >= 50, "HIGHLY_CONCENTRATED",
+        Spread >= 30, "CONCENTRATED",
+        Spread >= 15, "MODERATELY_BALANCED",
+        "BALANCED"
+    )
+
+
+// ================================================================
+// 22. ENTERPRISE ALERT LEVEL
+// ================================================================
+
+Overall Risk Alert Level =
+VAR Score =
+    [Overall Risk Score]
+
+VAR CriticalCount =
+    [Critical Risk Dimension Count]
+
+VAR HighCount =
+    [High Risk Dimension Count]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(Score), "NO_DATA",
+        CriticalCount >= 1, "CRITICAL",
+        Score >= 80, "CRITICAL",
+        HighCount >= 2, "HIGH",
+        Score >= 60, "HIGH",
+        Score >= 35, "MEDIUM",
+        Score >= 15, "LOW",
+        "INFO"
+    )
+
+
+// ================================================================
+// 23. ENTERPRISE DECISION
+// ================================================================
+
+Overall Risk Decision =
+VAR Score =
+    [Overall Risk Score]
+
+VAR Alert =
+    [Overall Risk Alert Level]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(Score), "NO_DATA",
+        Alert = "CRITICAL", "ESCALATE",
+        Alert = "HIGH", "MANAGEMENT_REVIEW",
+        Alert = "MEDIUM", "MONITOR",
+        Alert = "LOW", "WATCH",
+        "NORMAL"
+    )
+
+
+// ================================================================
+// 24. CRITICAL RISK FLAG
+// ================================================================
+
+Critical Overall Risk Flag =
+VAR Score =
+    [Overall Risk Score]
+
+VAR CriticalCount =
+    [Critical Risk Dimension Count]
+
+RETURN
+    IF(
+        CriticalCount > 0
+            || Score >= 80,
+        1,
+        0
+    )
+
+
+// ================================================================
+// 25. HIGH RISK FLAG
+// ================================================================
+
+High Overall Risk Flag =
+VAR Score =
+    [Overall Risk Score]
+
+VAR HighCount =
+    [High Risk Dimension Count]
+
+RETURN
+    IF(
+        HighCount > 0
+            || Score >= 60,
+        1,
+        0
+    )
+
+
+// ================================================================
+// 26. ENTERPRISE RISK CHANGE
+// ================================================================
+
+Previous Overall Risk Score =
+VAR CurrentPeriod =
+    MAX(
+        RiskTransformations[Period]
+    )
+
+VAR PreviousPeriod =
+    CALCULATE(
+        MAX(
+            RiskTransformations[Period]
+        ),
+        FILTER(
+            ALL(
+                RiskTransformations[Period]
+            ),
+            RiskTransformations[Period] < CurrentPeriod
+        )
+    )
+
+RETURN
+    CALCULATE(
+        [Overall Risk Score],
+        FILTER(
+            ALL(
+                RiskTransformations[Period]
+            ),
+            RiskTransformations[Period] = PreviousPeriod
+        )
+    )
+
+
+Overall Risk Change =
+VAR CurrentScore =
+    [Overall Risk Score]
+
+VAR PreviousScore =
+    [Previous Overall Risk Score]
+
+RETURN
+    IF(
+        ISBLANK(CurrentScore)
+            || ISBLANK(PreviousScore),
+        BLANK(),
+        ROUND(
+            CurrentScore - PreviousScore,
+            1
+        )
+    )
+
+
+// ================================================================
+// 27. RISK TREND
+// ================================================================
+
+Overall Risk Trend =
+VAR Change =
+    [Overall Risk Change]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(Change), "NO_DATA",
+        Change >= 10, "RAPIDLY_DETERIORATING",
+        Change >= 5, "DETERIORATING",
+        Change > 1, "WORSENING",
+        Change <= -10, "RAPIDLY_IMPROVING",
+        Change <= -5, "IMPROVING",
+        Change < -1, "SLIGHTLY_IMPROVING",
+        "STABLE"
+    )
+
+
+// ================================================================
+// 28. ENTERPRISE DETERIORATION FLAG
+// ================================================================
+
+Overall Risk Deterioration Flag =
+VAR Change =
+    [Overall Risk Change]
+
+RETURN
+    IF(
+        NOT ISBLANK(Change)
+            && Change >= 5,
+        1,
+        0
+    )
+
+
+// ================================================================
+// 29. ENTERPRISE IMPROVEMENT FLAG
+// ================================================================
+
+Overall Risk Improvement Flag =
+VAR Change =
+    [Overall Risk Change]
+
+RETURN
+    IF(
+        NOT ISBLANK(Change)
+            && Change <= -5,
+        1,
+        0
+    )
+
+
+// ================================================================
+// 30. EXECUTIVE RECOMMENDATION
+// ================================================================
+
+Overall Risk Recommendation =
+VAR Score =
+    [Overall Risk Score]
+
+VAR Primary =
+    [Primary Overall Risk Dimension]
+
+VAR Alert =
+    [Overall Risk Alert Level]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(Score),
+            "Insufficient risk data for enterprise assessment.",
+
+        Alert = "CRITICAL"
+            && Primary = "LIQUIDITY",
+            "Immediate liquidity review required. Assess cash buffers, working capital, short-term funding and near-term obligations.",
+
+        Alert = "CRITICAL"
+            && Primary = "CREDIT",
+            "Immediate credit-risk review required. Assess leverage, debt-service capacity, refinancing exposure and covenant pressure.",
+
+        Alert = "CRITICAL"
+            && Primary = "MARKET",
+            "Immediate market-risk review required. Investigate revenue deterioration, volatility, concentration and budget pressure.",
+
+        Alert = "CRITICAL"
+            && Primary = "OPERATIONAL",
+            "Immediate operational review required. Investigate revenue, profitability, cash-flow and execution deterioration.",
+
+        Alert = "CRITICAL"
+            && Primary = "FINANCIAL",
+            "Immediate financial-risk review required. Investigate the primary financial risk factors and their root causes.",
+
+        Alert = "HIGH",
+            "Management review required. Prioritize the highest-risk dimension and validate mitigation actions.",
+
+        Alert = "MEDIUM",
+            "Monitor risk closely. Review deteriorating indicators and establish corrective actions before risk escalates.",
+
+        Alert = "LOW",
+            "Maintain monitoring and review emerging risk indicators.",
+
+        "No immediate enterprise risk action required."
+    )
+
+
+// ================================================================
+// 31. MANAGEMENT ACTION PRIORITY
+// ================================================================
+
+Management Action Priority =
+VAR Alert =
+    [Overall Risk Alert Level]
+
+VAR Trend =
+    [Overall Risk Trend]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        Alert = "CRITICAL"
+            && Trend IN {
+                "RAPIDLY_DETERIORATING",
+                "DETERIORATING"
+            },
+            "P0 — IMMEDIATE",
+
+        Alert = "CRITICAL",
+            "P0 — CRITICAL",
+
+        Alert = "HIGH"
+            && Trend IN {
+                "RAPIDLY_DETERIORATING",
+                "DETERIORATING"
+            },
+            "P1 — URGENT",
+
+        Alert = "HIGH",
+            "P1 — HIGH",
+
+        Alert = "MEDIUM",
+            "P2 — MONITOR",
+
+        Alert = "LOW",
+            "P3 — WATCH",
+
+        "P4 — NORMAL"
+    )
+
+
+// ================================================================
+// 32. SUPERVISOR AGENT SIGNAL
+// ================================================================
+
+Supervisor Agent Signal =
+VAR Alert =
+    [Overall Risk Alert Level]
+
+VAR Trend =
+    [Overall Risk Trend]
+
+VAR Primary =
+    [Primary Overall Risk Dimension]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        Alert = "CRITICAL",
+            "SUPERVISOR_AGENT_REQUIRED — "
+                & Primary
+                & " risk requires root-cause analysis, evidence retrieval, forecast and mitigation assessment.",
+
+        Alert = "HIGH",
+            "SUPERVISOR_AGENT_REVIEW — "
+                & Primary
+                & " risk requires management-level investigation.",
+
+        Alert = "MEDIUM",
+            "SUPERVISOR_AGENT_MONITOR — "
+                & Primary
+                & " risk should be monitored for further deterioration.",
+
+        Trend IN {
+            "RAPIDLY_DETERIORATING",
+            "DETERIORATING"
+        },
+            "SUPERVISOR_AGENT_WATCH — risk trend is deteriorating.",
+
+        "SUPERVISOR_AGENT_NO_ACTION"
+    )
+
+
+// ================================================================
+// 33. HUMAN REVIEW REQUIRED
+// ================================================================
+
+Human Review Required =
+VAR Alert =
+    [Overall Risk Alert Level]
+
+VAR Deterioration =
+    [Overall Risk Deterioration Flag]
+
+VAR CriticalCount =
+    [Critical Risk Dimension Count]
+
+RETURN
+    IF(
+        Alert = "CRITICAL"
+            || CriticalCount > 0
+            || Deterioration = 1,
+        "YES",
+        "NO"
+    )
+
+
+// ================================================================
+// 34. OVERALL RISK SUMMARY
+// ================================================================
+
+Overall Risk Summary =
+VAR Score =
+    [Overall Risk Score]
+
+VAR Health =
+    [Overall Health Score]
+
+VAR Band =
+    [Overall Risk Band]
+
+VAR Primary =
+    [Primary Overall Risk Dimension]
+
+VAR Secondary =
+    [Secondary Overall Risk Dimension]
+
+VAR Trend =
+    [Overall Risk Trend]
+
+VAR CriticalCount =
+    [Critical Risk Dimension Count]
+
+VAR HighCount =
+    [High Risk Dimension Count]
+
+RETURN
+    IF(
+        ISBLANK(Score),
+        "Enterprise risk assessment is unavailable because sufficient risk data was not found.",
+        "Enterprise risk score is "
+            & FORMAT(Score, "0.0")
+            & "/100 with a "
+            & Band
+            & " risk band and health score of "
+            & FORMAT(Health, "0.0")
+            & "/100. Primary risk dimension: "
+            & Primary
+            & ". Secondary risk dimension: "
+            & Secondary
+            & ". Risk trend: "
+            & Trend
+            & ". Critical dimensions: "
+            & FORMAT(CriticalCount, "0")
+            & "; high-risk dimensions: "
+            & FORMAT(HighCount, "0")
+            & "."
+    )
+
+
+// ================================================================
+// 35. RISK DATA QUALITY
+// ================================================================
+
+Overall Risk Data Quality =
+VAR FinancialAvailable =
+    NOT ISBLANK([Overall Financial Risk Score])
+
+VAR LiquidityAvailable =
+    NOT ISBLANK([Overall Liquidity Risk Score])
+
+VAR CreditAvailable =
+    NOT ISBLANK([Overall Credit Risk Score])
+
+VAR MarketAvailable =
+    NOT ISBLANK([Overall Market Risk Score])
+
+VAR OperationalAvailable =
+    NOT ISBLANK([Overall Operational Risk Score])
+
+VAR AvailableCount =
+      IF(FinancialAvailable, 1, 0)
+    + IF(LiquidityAvailable, 1, 0)
+    + IF(CreditAvailable, 1, 0)
+    + IF(MarketAvailable, 1, 0)
+    + IF(OperationalAvailable, 1, 0)
+
+RETURN
+    SWITCH(
+        TRUE(),
+        AvailableCount = 5, "COMPLETE",
+        AvailableCount >= 4, "GOOD",
+        AvailableCount >= 3, "PARTIAL",
+        AvailableCount >= 1, "LIMITED",
+        "NO_DATA"
+    )
+
+
+// ================================================================
+// 36. DISPLAY MEASURES
+// ================================================================
+
+Overall Risk Score Display =
+VAR Score =
+    [Overall Risk Score]
+RETURN
+    IF(
+        ISBLANK(Score),
+        "N/A",
+        FORMAT(
+            Score,
+            "0.0"
+        )
+    )
+
+
+Overall Health Score Display =
+VAR Score =
+    [Overall Health Score]
+RETURN
+    IF(
+        ISBLANK(Score),
+        "N/A",
+        FORMAT(
+            Score,
+            "0.0"
+        )
+    )
+
+
+Overall Risk Change Display =
+VAR Change =
+    [Overall Risk Change]
+RETURN
+    IF(
+        ISBLANK(Change),
+        "N/A",
+        IF(
+            Change > 0,
+            "+" & FORMAT(Change, "0.0"),
+            FORMAT(Change, "0.0")
+        )
+    )
+
+
+Overall Risk Dimension Count Display =
+VAR Count =
+    [Overall Risk Available Dimensions]
+RETURN
+    FORMAT(
+        Count,
+        "0"
+    )
+
+
+Overall Risk Alert Display =
+[Overall Risk Alert Level]
+
+
+Overall Risk Decision Display =
+[Overall Risk Decision]
+
+
+// ================================================================
+// 37. EXECUTIVE DASHBOARD TITLE
+// ================================================================
+
+Overall Risk Dashboard Title =
+"FINCO AI — ENTERPRISE RISK DASHBOARD"
+
+
+Overall Risk Dashboard Subtitle =
+VAR Band =
+    [Overall Risk Band]
+
+VAR Trend =
+    [Overall Risk Trend]
+
+RETURN
+    "Enterprise Risk: "
+        & Band
+        & " | Trend: "
+        & Trend
+
+
+// ================================================================
+// 38. RISK SCORECARD MEASURES
+// ================================================================
+
+Overall Risk Scorecard — Financial =
+[Overall Financial Risk Score]
+
+
+Overall Risk Scorecard — Liquidity =
+[Overall Liquidity Risk Score]
+
+
+Overall Risk Scorecard — Credit =
+[Overall Credit Risk Score]
+
+
+Overall Risk Scorecard — Market =
+[Overall Market Risk Score]
+
+
+Overall Risk Scorecard — Operational =
+[Overall Operational Risk Score]
+
+
+Overall Risk Scorecard Maximum =
+MAXX(
+    FILTER(
+        UNION(
+            ROW("Dimension", "Financial", "Score", [Overall Financial Risk Score]),
+            ROW("Dimension", "Liquidity", "Score", [Overall Liquidity Risk Score]),
+            ROW("Dimension", "Credit", "Score", [Overall Credit Risk Score]),
+            ROW("Dimension", "Market", "Score", [Overall Market Risk Score]),
+            ROW("Dimension", "Operational", "Score", [Overall Operational Risk Score])
+        ),
+        NOT ISBLANK([Score])
+    ),
+    [Score]
+)
+
+
+Overall Risk Scorecard Minimum =
+MINX(
+    FILTER(
+        UNION(
+            ROW("Dimension", "Financial", "Score", [Overall Financial Risk Score]),
+            ROW("Dimension", "Liquidity", "Score", [Overall Liquidity Risk Score]),
+            ROW("Dimension", "Credit", "Score", [Overall Credit Risk Score]),
+            ROW("Dimension", "Market", "Score", [Overall Market Risk Score]),
+            ROW("Dimension", "Operational", "Score", [Overall Operational Risk Score])
+        ),
+        NOT ISBLANK([Score])
+    ),
+    [Score]
+)
+
+
+// ================================================================
+// 39. RISK FACTOR COUNTS
+// ================================================================
+
+Overall Total Risk Factor Count =
+[Critical Risk Dimension Count]
+    + [High Risk Dimension Count]
+    + [At Risk Dimension Count]
+
+
+Overall Critical Risk Count =
+[Critical Risk Dimension Count]
+
+
+Overall High Risk Count =
+[High Risk Dimension Count]
+
+
+// ================================================================
+// 40. FINAL DECISION SIGNAL
+// ================================================================
+
+Overall Decision Signal =
+VAR Score =
+    [Overall Risk Score]
+
+VAR Alert =
+    [Overall Risk Alert Level]
+
+VAR Trend =
+    [Overall Risk Trend]
+
+VAR Primary =
+    [Primary Overall Risk Dimension]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(Score),
+            "INSUFFICIENT_DATA",
+
+        Alert = "CRITICAL"
+            && Trend IN {
+                "RAPIDLY_DETERIORATING",
+                "DETERIORATING"
+            },
+            "ESCALATE_NOW — "
+                & Primary,
+
+        Alert = "CRITICAL",
+            "CRITICAL_REVIEW — "
+                & Primary,
+
+        Alert = "HIGH"
+            && Trend IN {
+                "RAPIDLY_DETERIORATING",
+                "DETERIORATING"
+            },
+            "URGENT_MANAGEMENT_REVIEW — "
+                & Primary,
+
+        Alert = "HIGH",
+            "MANAGEMENT_REVIEW — "
+                & Primary,
+
+        Alert = "MEDIUM",
+            "MONITOR — "
+                & Primary,
+
+        Alert = "LOW",
+            "WATCH",
+
+        "NORMAL"
+    )
+
+
+// ================================================================
+// END OF overall_risk_score.dax
+// ================================================================

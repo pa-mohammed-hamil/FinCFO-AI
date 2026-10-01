@@ -1,0 +1,1619 @@
+/*
+====================================================================
+ FinCo AI — Fraud Dashboard
+ File: Fraud_Dashboard_Full_Query.pq
+
+ Purpose:
+   Complete Power Query data preparation for the Fraud Dashboard.
+
+ Architecture:
+   ConnectionParameters
+          ↓
+   Transactions
+          ↓
+   Fraud Transformations
+          ↓
+   Fraud Features
+          ↓
+   Fraud Risk Scoring
+          ↓
+   Fraud Dashboard Dataset
+
+ Expected upstream:
+   ConnectionParameters
+
+ Expected source:
+   SQL Server / Power BI configured source
+
+ Primary tables:
+   Transactions
+   Customers
+   Suppliers
+   FraudAlerts
+
+ IMPORTANT:
+   ML fraud predictions should be produced by the backend ML service.
+   Power Query provides analytical features and dashboard preparation.
+====================================================================
+*/
+
+let
+
+    // ==============================================================
+    // 1. CONNECTION CONFIGURATION
+    // ==============================================================
+
+    Config =
+        try ConnectionParameters
+        otherwise [
+            SqlServer = "localhost",
+            SqlDatabase = "finco_ai",
+            SqlSchema = "dbo",
+            TransactionsTable = "Transactions",
+            CustomersTable = "Customers",
+            SuppliersTable = "Suppliers",
+            FraudAlertsTable = "FraudAlerts",
+            DefaultStartDate = #date(2020, 1, 1),
+            DefaultEndDate = #date(2035, 12, 31),
+            DefaultCurrency = "INR"
+        ],
+
+
+    Server =
+        Config[SqlServer],
+
+    Database =
+        Config[SqlDatabase],
+
+    Schema =
+        Config[SqlSchema],
+
+
+    // ==============================================================
+    // 2. SOURCE DATABASE
+    // ==============================================================
+
+    DatabaseSource =
+        try
+            Sql.Database(
+                Server,
+                Database
+            )
+        otherwise
+            #table(
+                {},
+                {}
+            ),
+
+
+    // ==============================================================
+    // 3. TRANSACTION TABLE
+    // ==============================================================
+
+    TransactionsRaw =
+        try
+            DatabaseSource{
+                [
+                    Schema = Schema,
+                    Item = Config[TransactionsTable]
+                ]
+            }[Data]
+        otherwise
+            #table(
+                {
+                    "TransactionId",
+                    "TransactionDate",
+                    "CustomerId",
+                    "SupplierId",
+                    "CompanyId",
+                    "Amount",
+                    "Currency",
+                    "TransactionType",
+                    "PaymentMethod",
+                    "Country",
+                    "Region",
+                    "Status"
+                },
+                {}
+            ),
+
+
+    // ==============================================================
+    // 4. STANDARDIZE COLUMN NAMES
+    // ==============================================================
+
+    StandardizedNames =
+        Table.TransformColumnNames(
+            TransactionsRaw,
+            each Text.Trim(_)
+        ),
+
+
+    // ==============================================================
+    // 5. ADD MISSING OPTIONAL COLUMNS
+    // ==============================================================
+
+    RequiredColumns =
+        {
+            "TransactionId",
+            "TransactionDate",
+            "CustomerId",
+            "SupplierId",
+            "CompanyId",
+            "Amount",
+            "Currency",
+            "TransactionType",
+            "PaymentMethod",
+            "Country",
+            "Region",
+            "Status"
+        },
+
+
+    AddMissingColumns =
+        List.Accumulate(
+            RequiredColumns,
+            StandardizedNames,
+            (state, columnName) =>
+                if List.Contains(
+                    Table.ColumnNames(state),
+                    columnName
+                )
+                then
+                    state
+                else
+                    Table.AddColumn(
+                        state,
+                        columnName,
+                        each null
+                    )
+        ),
+
+
+    // ==============================================================
+    // 6. TYPE NORMALIZATION
+    // ==============================================================
+
+    TypedTransactions =
+        Table.TransformColumns(
+            AddMissingColumns,
+            {
+                {
+                    "TransactionId",
+                    each try Text.From(_) otherwise null,
+                    type text
+                },
+                {
+                    "CustomerId",
+                    each try Text.From(_) otherwise null,
+                    type text
+                },
+                {
+                    "SupplierId",
+                    each try Text.From(_) otherwise null,
+                    type text
+                },
+                {
+                    "CompanyId",
+                    each try Text.From(_) otherwise null,
+                    type text
+                },
+                {
+                    "TransactionDate",
+                    each try DateTime.From(_) otherwise null,
+                    type datetime
+                },
+                {
+                    "Amount",
+                    each try Number.From(_) otherwise null,
+                    type number
+                },
+                {
+                    "Currency",
+                    each try Text.Upper(Text.Trim(Text.From(_))) otherwise null,
+                    type text
+                },
+                {
+                    "TransactionType",
+                    each try Text.Upper(Text.Trim(Text.From(_))) otherwise null,
+                    type text
+                },
+                {
+                    "PaymentMethod",
+                    each try Text.Upper(Text.Trim(Text.From(_))) otherwise null,
+                    type text
+                },
+                {
+                    "Country",
+                    each try Text.Upper(Text.Trim(Text.From(_))) otherwise null,
+                    type text
+                },
+                {
+                    "Region",
+                    each try Text.Trim(Text.From(_)) otherwise null,
+                    type text
+                },
+                {
+                    "Status",
+                    each try Text.Upper(Text.Trim(Text.From(_))) otherwise null,
+                    type text
+                }
+            }
+        ),
+
+
+    // ==============================================================
+    // 7. ERROR CLEANING
+    // ==============================================================
+
+    ErrorCleaned =
+        Table.ReplaceErrorValues(
+            TypedTransactions,
+            {
+                {"TransactionId", null},
+                {"CustomerId", null},
+                {"SupplierId", null},
+                {"CompanyId", null},
+                {"TransactionDate", null},
+                {"Amount", null},
+                {"Currency", null},
+                {"TransactionType", null},
+                {"PaymentMethod", null},
+                {"Country", null},
+                {"Region", null},
+                {"Status", null}
+            }
+        ),
+
+
+    // ==============================================================
+    // 8. TEXT CLEANING
+    // ==============================================================
+
+    CleanText =
+        Table.TransformColumns(
+            ErrorCleaned,
+            {
+                {
+                    "TransactionId",
+                    each if _ = null then null else Text.Trim(_),
+                    type text
+                },
+                {
+                    "CustomerId",
+                    each if _ = null then null else Text.Trim(_),
+                    type text
+                },
+                {
+                    "SupplierId",
+                    each if _ = null then null else Text.Trim(_),
+                    type text
+                },
+                {
+                    "CompanyId",
+                    each if _ = null then null else Text.Trim(_),
+                    type text
+                }
+            }
+        ),
+
+
+    // ==============================================================
+    // 9. DATE ATTRIBUTES
+    // ==============================================================
+
+    AddTransactionDate =
+        Table.AddColumn(
+            CleanText,
+            "FraudDate",
+            each
+                if [TransactionDate] = null
+                then null
+                else Date.From([TransactionDate]),
+            type date
+        ),
+
+
+    AddYear =
+        Table.AddColumn(
+            AddTransactionDate,
+            "FraudYear",
+            each
+                if [FraudDate] = null
+                then null
+                else Date.Year([FraudDate]),
+            Int64.Type
+        ),
+
+
+    AddMonth =
+        Table.AddColumn(
+            AddYear,
+            "FraudMonth",
+            each
+                if [FraudDate] = null
+                then null
+                else Date.Month([FraudDate]),
+            Int64.Type
+        ),
+
+
+    AddMonthName =
+        Table.AddColumn(
+            AddMonth,
+            "FraudMonthName",
+            each
+                if [FraudDate] = null
+                then null
+                else Date.MonthName([FraudDate]),
+            type text
+        ),
+
+
+    AddQuarter =
+        Table.AddColumn(
+            AddMonthName,
+            "FraudQuarter",
+            each
+                if [FraudDate] = null
+                then null
+                else "Q"
+                    & Text.From(
+                        Date.QuarterOfYear([FraudDate])
+                    ),
+            type text
+        ),
+
+
+    AddYearMonth =
+        Table.AddColumn(
+            AddQuarter,
+            "FraudYearMonth",
+            each
+                if [FraudDate] = null
+                then null
+                else
+                    Text.From(
+                        Date.Year([FraudDate])
+                    )
+                    & "-"
+                    & Text.PadStart(
+                        Text.From(
+                            Date.Month([FraudDate])
+                        ),
+                        2,
+                        "0"
+                    ),
+            type text
+        ),
+
+
+    // ==============================================================
+    // 10. DAY / TIME FEATURES
+    // ==============================================================
+
+    AddDayOfWeek =
+        Table.AddColumn(
+            AddYearMonth,
+            "FraudDayOfWeek",
+            each
+                if [FraudDate] = null
+                then null
+                else Date.DayOfWeekName([FraudDate]),
+            type text
+        ),
+
+
+    AddDayNumber =
+        Table.AddColumn(
+            AddDayOfWeek,
+            "FraudDayNumber",
+            each
+                if [FraudDate] = null
+                then null
+                else Date.DayOfWeek(
+                    [FraudDate],
+                    Day.Monday
+                ),
+            Int64.Type
+        ),
+
+
+    AddHour =
+        Table.AddColumn(
+            AddDayNumber,
+            "TransactionHour",
+            each
+                if [TransactionDate] = null
+                then null
+                else Time.Hour(
+                    Time.From(
+                        [TransactionDate]
+                    )
+                ),
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 11. TRANSACTION TIME WINDOW
+    // ==============================================================
+
+    AddTimeWindow =
+        Table.AddColumn(
+            AddHour,
+            "TransactionTimeWindow",
+            each
+                if [TransactionHour] = null then
+                    "UNKNOWN"
+                else if [TransactionHour] < 6 then
+                    "OVERNIGHT"
+                else if [TransactionHour] < 12 then
+                    "MORNING"
+                else if [TransactionHour] < 18 then
+                    "AFTERNOON"
+                else if [TransactionHour] < 22 then
+                    "EVENING"
+                else
+                    "LATE_NIGHT",
+            type text
+        ),
+
+
+    // ==============================================================
+    // 12. WEEKEND FLAG
+    // ==============================================================
+
+    AddWeekendFlag =
+        Table.AddColumn(
+            AddTimeWindow,
+            "WeekendFlag",
+            each
+                if [FraudDate] = null
+                then 0
+                else
+                    if Date.DayOfWeek(
+                        [FraudDate],
+                        Day.Monday
+                    ) >= 5
+                    then 1
+                    else 0,
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 13. OFF-HOURS FLAG
+    // ==============================================================
+
+    AddOffHoursFlag =
+        Table.AddColumn(
+            AddWeekendFlag,
+            "OffHoursFlag",
+            each
+                if [TransactionHour] = null
+                then 0
+                else
+                    if [TransactionHour] < 6
+                        or [TransactionHour] >= 22
+                    then 1
+                    else 0,
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 14. AMOUNT FEATURES
+    // ==============================================================
+
+    AddAbsoluteAmount =
+        Table.AddColumn(
+            AddOffHoursFlag,
+            "AbsoluteAmount",
+            each
+                if [Amount] = null
+                then null
+                else Number.Abs([Amount]),
+            type number
+        ),
+
+
+    AddPositiveAmount =
+        Table.AddColumn(
+            AddAbsoluteAmount,
+            "PositiveAmount",
+            each
+                if [Amount] = null
+                then null
+                else
+                    if [Amount] > 0
+                    then [Amount]
+                    else 0,
+            type number
+        ),
+
+
+    AddNegativeAmount =
+        Table.AddColumn(
+            AddPositiveAmount,
+            "NegativeAmount",
+            each
+                if [Amount] = null
+                then null
+                else
+                    if [Amount] < 0
+                    then Number.Abs([Amount])
+                    else 0,
+            type number
+        ),
+
+
+    // ==============================================================
+    // 15. TRANSACTION SIZE CLASS
+    // ==============================================================
+
+    AddTransactionSize =
+        Table.AddColumn(
+            AddNegativeAmount,
+            "TransactionSizeBand",
+            each
+                if [AbsoluteAmount] = null then
+                    "UNKNOWN"
+                else if [AbsoluteAmount] >= 10000000 then
+                    "EXTREME"
+                else if [AbsoluteAmount] >= 5000000 then
+                    "VERY_HIGH"
+                else if [AbsoluteAmount] >= 1000000 then
+                    "HIGH"
+                else if [AbsoluteAmount] >= 100000 then
+                    "MEDIUM"
+                else if [AbsoluteAmount] >= 10000 then
+                    "LOW"
+                else
+                    "MICRO",
+            type text
+        ),
+
+
+    // ==============================================================
+    // 16. LARGE TRANSACTION FLAG
+    // ==============================================================
+
+    AddLargeTransactionFlag =
+        Table.AddColumn(
+            AddTransactionSize,
+            "LargeTransactionFlag",
+            each
+                if [AbsoluteAmount] <> null
+                    and [AbsoluteAmount] >= 1000000
+                then 1
+                else 0,
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 17. EXTREME TRANSACTION FLAG
+    // ==============================================================
+
+    AddExtremeTransactionFlag =
+        Table.AddColumn(
+            AddLargeTransactionFlag,
+            "ExtremeTransactionFlag",
+            each
+                if [AbsoluteAmount] <> null
+                    and [AbsoluteAmount] >= 10000000
+                then 1
+                else 0,
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 18. TRANSACTION VALIDITY
+    // ==============================================================
+
+    AddValidity =
+        Table.AddColumn(
+            AddExtremeTransactionFlag,
+            "TransactionValid",
+            each
+                if [TransactionId] = null
+                    or [TransactionDate] = null
+                    or [Amount] = null
+                then 0
+                else 1,
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 19. MISSING DATA SCORE
+    // ==============================================================
+
+    AddMissingDataScore =
+        Table.AddColumn(
+            AddValidity,
+            "MissingDataCount",
+            each
+                (if [TransactionId] = null then 1 else 0)
+                + (if [TransactionDate] = null then 1 else 0)
+                + (if [CustomerId] = null then 1 else 0)
+                + (if [SupplierId] = null then 1 else 0)
+                + (if [CompanyId] = null then 1 else 0)
+                + (if [Amount] = null then 1 else 0)
+                + (if [Currency] = null then 1 else 0)
+                + (if [TransactionType] = null then 1 else 0)
+                + (if [PaymentMethod] = null then 1 else 0),
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 20. DATA QUALITY
+    // ==============================================================
+
+    AddDataQuality =
+        Table.AddColumn(
+            AddMissingDataScore,
+            "FraudDataQuality",
+            each
+                if [MissingDataCount] = 0 then
+                    "VALID"
+                else if [MissingDataCount] <= 2 then
+                    "PARTIAL"
+                else
+                    "POOR",
+            type text
+        ),
+
+
+    // ==============================================================
+    // 21. TRANSACTION KEY
+    // ==============================================================
+
+    AddRecordKey =
+        Table.AddColumn(
+            AddDataQuality,
+            "FraudRecordKey",
+            each
+                Text.Combine(
+                    {
+                        if [CompanyId] = null then "" else [CompanyId],
+                        if [TransactionId] = null then "" else [TransactionId],
+                        if [FraudDate] = null
+                            then ""
+                            else Date.ToText(
+                                [FraudDate],
+                                "yyyyMMdd"
+                            )
+                    },
+                    "|"
+                ),
+            type text
+        ),
+
+
+    // ==============================================================
+    // 22. DUPLICATE TRANSACTION FLAG
+    // ==============================================================
+
+    TransactionCounts =
+        Table.Group(
+            AddRecordKey,
+            {"TransactionId"},
+            {
+                {
+                    "TransactionRecordCount",
+                    each Table.RowCount(_),
+                    Int64.Type
+                }
+            }
+        ),
+
+
+    MergeCounts =
+        Table.NestedJoin(
+            AddRecordKey,
+            {"TransactionId"},
+            TransactionCounts,
+            {"TransactionId"},
+            "TransactionCountTable",
+            JoinKind.LeftOuter
+        ),
+
+
+    ExpandCounts =
+        Table.ExpandTableColumn(
+            MergeCounts,
+            "TransactionCountTable",
+            {"TransactionRecordCount"},
+            {"TransactionRecordCount"}
+        ),
+
+
+    AddDuplicateFlag =
+        Table.AddColumn(
+            ExpandCounts,
+            "DuplicateTransactionFlag",
+            each
+                if [TransactionRecordCount] <> null
+                    and [TransactionRecordCount] > 1
+                then 1
+                else 0,
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 23. DUPLICATE RISK
+    // ==============================================================
+
+    AddDuplicateRisk =
+        Table.AddColumn(
+            AddDuplicateFlag,
+            "DuplicateRiskScore",
+            each
+                if [DuplicateTransactionFlag] = 1
+                then 75
+                else 0,
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 24. VELOCITY FEATURES
+    // ==============================================================
+
+    CustomerDayCounts =
+        Table.Group(
+            AddDuplicateRisk,
+            {
+                "CustomerId",
+                "FraudDate"
+            },
+            {
+                {
+                    "CustomerDailyTransactionCount",
+                    each Table.RowCount(_),
+                    Int64.Type
+                },
+                {
+                    "CustomerDailyAmount",
+                    each
+                        List.Sum(
+                            List.RemoveNulls(
+                                [AbsoluteAmount]
+                            )
+                        ),
+                    type number
+                }
+            }
+        ),
+
+
+    MergeCustomerVelocity =
+        Table.NestedJoin(
+            AddDuplicateRisk,
+            {
+                "CustomerId",
+                "FraudDate"
+            },
+            CustomerDayCounts,
+            {
+                "CustomerId",
+                "FraudDate"
+            },
+            "CustomerVelocity",
+            JoinKind.LeftOuter
+        ),
+
+
+    ExpandCustomerVelocity =
+        Table.ExpandTableColumn(
+            MergeCustomerVelocity,
+            "CustomerVelocity",
+            {
+                "CustomerDailyTransactionCount",
+                "CustomerDailyAmount"
+            },
+            {
+                "CustomerDailyTransactionCount",
+                "CustomerDailyAmount"
+            }
+        ),
+
+
+    // ==============================================================
+    // 25. VELOCITY RISK
+    // ==============================================================
+
+    AddVelocityRisk =
+        Table.AddColumn(
+            ExpandCustomerVelocity,
+            "VelocityRiskScore",
+            each
+                if [CustomerDailyTransactionCount] = null
+                then 0
+                else if [CustomerDailyTransactionCount] >= 50
+                then 100
+                else if [CustomerDailyTransactionCount] >= 25
+                then 90
+                else if [CustomerDailyTransactionCount] >= 15
+                then 75
+                else if [CustomerDailyTransactionCount] >= 10
+                then 50
+                else if [CustomerDailyTransactionCount] >= 5
+                then 25
+                else 0,
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 26. VELOCITY FLAG
+    // ==============================================================
+
+    AddVelocityFlag =
+        Table.AddColumn(
+            AddVelocityRisk,
+            "VelocityAnomalyFlag",
+            each
+                if [VelocityRiskScore] >= 75
+                then 1
+                else 0,
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 27. CUSTOMER AMOUNT VELOCITY
+    // ==============================================================
+
+    AddAmountVelocityRisk =
+        Table.AddColumn(
+            AddVelocityFlag,
+            "AmountVelocityRiskScore",
+            each
+                if [CustomerDailyAmount] = null
+                then 0
+                else if [CustomerDailyAmount] >= 50000000
+                then 100
+                else if [CustomerDailyAmount] >= 25000000
+                then 90
+                else if [CustomerDailyAmount] >= 10000000
+                then 75
+                else if [CustomerDailyAmount] >= 5000000
+                then 50
+                else if [CustomerDailyAmount] >= 1000000
+                then 25
+                else 0,
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 28. BEHAVIORAL FEATURES
+    // ==============================================================
+
+    AddBehavioralRisk =
+        Table.AddColumn(
+            AddAmountVelocityRisk,
+            "BehavioralRiskScore",
+            each
+                (
+                    [OffHoursFlag] * 30
+                    + [WeekendFlag] * 20
+                    + [LargeTransactionFlag] * 25
+                    + [DuplicateTransactionFlag] * 25
+                ),
+            Int64.Type
+        ),
+
+
+    AddBehavioralRiskClamped =
+        Table.TransformColumns(
+            AddBehavioralRisk,
+            {
+                {
+                    "BehavioralRiskScore",
+                    each
+                        if _ > 100
+                        then 100
+                        else if _ < 0
+                        then 0
+                        else _,
+                    Int64.Type
+                }
+            }
+        ),
+
+
+    // ==============================================================
+    // 29. TIME ANOMALY
+    // ==============================================================
+
+    AddTimeAnomaly =
+        Table.AddColumn(
+            AddBehavioralRiskClamped,
+            "TimeAnomalyFlag",
+            each
+                if [OffHoursFlag] = 1
+                    and [WeekendFlag] = 1
+                then 1
+                else 0,
+            Int64.Type
+        ),
+
+
+    AddTimeRisk =
+        Table.AddColumn(
+            AddTimeAnomaly,
+            "TimeRiskScore",
+            each
+                if [TimeAnomalyFlag] = 1
+                then 75
+                else if [OffHoursFlag] = 1
+                then 40
+                else 0,
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 30. COUNTRY / REGION RISK PROXY
+    // ==============================================================
+
+    AddLocationRisk =
+        Table.AddColumn(
+            AddTimeRisk,
+            "LocationRiskScore",
+            each
+                if [Country] = null
+                then 0
+                else if List.Contains(
+                    {
+                        "UNKNOWN",
+                        "XX",
+                        "ZZ"
+                    },
+                    [Country]
+                )
+                then 75
+                else 0,
+            Int64.Type
+        ),
+
+
+    AddLocationFlag =
+        Table.AddColumn(
+            AddLocationRisk,
+            "LocationAnomalyFlag",
+            each
+                if [LocationRiskScore] >= 75
+                then 1
+                else 0,
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 31. TRANSACTION TYPE RISK
+    // ==============================================================
+
+    AddTransactionTypeRisk =
+        Table.AddColumn(
+            AddLocationFlag,
+            "TransactionTypeRiskScore",
+            each
+                if [TransactionType] = null
+                then 25
+                else if List.Contains(
+                    {
+                        "REVERSAL",
+                        "REFUND",
+                        "CASH_WITHDRAWAL",
+                        "MANUAL_ADJUSTMENT"
+                    },
+                    [TransactionType]
+                )
+                then 50
+                else 0,
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 32. PAYMENT METHOD RISK
+    // ==============================================================
+
+    AddPaymentMethodRisk =
+        Table.AddColumn(
+            AddTransactionTypeRisk,
+            "PaymentMethodRiskScore",
+            each
+                if [PaymentMethod] = null
+                then 25
+                else if List.Contains(
+                    {
+                        "CASH",
+                        "MANUAL",
+                        "UNKNOWN"
+                    },
+                    [PaymentMethod]
+                )
+                then 50
+                else 0,
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 33. AMOUNT ANOMALY PROXY
+    // ==============================================================
+
+    AddAmountAnomalyRisk =
+        Table.AddColumn(
+            AddPaymentMethodRisk,
+            "AmountAnomalyRiskScore",
+            each
+                if [AbsoluteAmount] = null
+                then 0
+                else if [AbsoluteAmount] >= 10000000
+                then 100
+                else if [AbsoluteAmount] >= 5000000
+                then 90
+                else if [AbsoluteAmount] >= 1000000
+                then 75
+                else if [AbsoluteAmount] >= 100000
+                then 50
+                else if [AbsoluteAmount] >= 10000
+                then 25
+                else 0,
+            Int64.Type
+        ),
+
+
+    AddAmountAnomalyFlag =
+        Table.AddColumn(
+            AddAmountAnomalyRisk,
+            "AmountAnomalyFlag",
+            each
+                if [AmountAnomalyRiskScore] >= 75
+                then 1
+                else 0,
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 34. COMPOSITE RULE-BASED FRAUD SCORE
+    // ==============================================================
+
+    AddRuleBasedFraudScore =
+        Table.AddColumn(
+            AddAmountAnomalyFlag,
+            "RuleBasedFraudScore",
+            each
+                Number.Round(
+                    (
+                        [AmountAnomalyRiskScore] * 0.25
+                        + [VelocityRiskScore] * 0.20
+                        + [AmountVelocityRiskScore] * 0.10
+                        + [BehavioralRiskScore] * 0.15
+                        + [TimeRiskScore] * 0.10
+                        + [LocationRiskScore] * 0.05
+                        + [TransactionTypeRiskScore] * 0.05
+                        + [PaymentMethodRiskScore] * 0.05
+                        + [DuplicateRiskScore] * 0.05
+                    ),
+                    2
+                ),
+            type number
+        ),
+
+
+    // ==============================================================
+    // 35. FRAUD RISK BAND
+    // ==============================================================
+
+    AddFraudRiskBand =
+        Table.AddColumn(
+            AddRuleBasedFraudScore,
+            "FraudRiskBand",
+            each
+                if [RuleBasedFraudScore] >= 80
+                then "CRITICAL"
+                else if [RuleBasedFraudScore] >= 60
+                then "HIGH"
+                else if [RuleBasedFraudScore] >= 35
+                then "MEDIUM"
+                else if [RuleBasedFraudScore] >= 15
+                then "LOW"
+                else "INFO",
+            type text
+        ),
+
+
+    // ==============================================================
+    // 36. FRAUD SEVERITY
+    // ==============================================================
+
+    AddFraudSeverity =
+        Table.AddColumn(
+            AddFraudRiskBand,
+            "FraudSeverity",
+            each
+                [FraudRiskBand],
+            type text
+        ),
+
+
+    // ==============================================================
+    // 37. FRAUD ALERT FLAG
+    // ==============================================================
+
+    AddFraudAlertFlag =
+        Table.AddColumn(
+            AddFraudSeverity,
+            "FraudAlertFlag",
+            each
+                if [RuleBasedFraudScore] >= 35
+                then 1
+                else 0,
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 38. CRITICAL FRAUD FLAG
+    // ==============================================================
+
+    AddCriticalFraudFlag =
+        Table.AddColumn(
+            AddFraudAlertFlag,
+            "CriticalFraudFlag",
+            each
+                if [RuleBasedFraudScore] >= 80
+                then 1
+                else 0,
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 39. INVESTIGATION FLAG
+    // ==============================================================
+
+    AddInvestigationFlag =
+        Table.AddColumn(
+            AddCriticalFraudFlag,
+            "InvestigationRequired",
+            each
+                if [RuleBasedFraudScore] >= 60
+                    or [DuplicateTransactionFlag] = 1
+                    or [VelocityAnomalyFlag] = 1
+                    or [AmountAnomalyFlag] = 1
+                then "YES"
+                else "NO",
+            type text
+        ),
+
+
+    // ==============================================================
+    // 40. HUMAN REVIEW
+    // ==============================================================
+
+    AddHumanReview =
+        Table.AddColumn(
+            AddInvestigationFlag,
+            "HumanReviewRequired",
+            each
+                if [RuleBasedFraudScore] >= 80
+                    or (
+                        [RuleBasedFraudScore] >= 60
+                        and [FraudAlertFlag] = 1
+                    )
+                then "YES"
+                else "NO",
+            type text
+        ),
+
+
+    // ==============================================================
+    // 41. FRAUD DECISION
+    // ==============================================================
+
+    AddFraudDecision =
+        Table.AddColumn(
+            AddHumanReview,
+            "FraudDecision",
+            each
+                if [RuleBasedFraudScore] >= 80
+                then "ESCALATE"
+                else if [RuleBasedFraudScore] >= 60
+                then "REVIEW"
+                else if [RuleBasedFraudScore] >= 35
+                then "MONITOR"
+                else "NORMAL",
+            type text
+        ),
+
+
+    // ==============================================================
+    // 42. PRIMARY FRAUD FACTOR
+    // ==============================================================
+
+    AddPrimaryFactor =
+        Table.AddColumn(
+            AddFraudDecision,
+            "PrimaryFraudFactor",
+            each
+                let
+                    Scores =
+                        {
+                            [
+                                Factor = "AMOUNT_ANOMALY",
+                                Score = [AmountAnomalyRiskScore]
+                            ],
+                            [
+                                Factor = "VELOCITY",
+                                Score = [VelocityRiskScore]
+                            ],
+                            [
+                                Factor = "AMOUNT_VELOCITY",
+                                Score = [AmountVelocityRiskScore]
+                            ],
+                            [
+                                Factor = "BEHAVIORAL",
+                                Score = [BehavioralRiskScore]
+                            ],
+                            [
+                                Factor = "TIME",
+                                Score = [TimeRiskScore]
+                            ],
+                            [
+                                Factor = "LOCATION",
+                                Score = [LocationRiskScore]
+                            ],
+                            [
+                                Factor = "TRANSACTION_TYPE",
+                                Score = [TransactionTypeRiskScore]
+                            ],
+                            [
+                                Factor = "PAYMENT_METHOD",
+                                Score = [PaymentMethodRiskScore]
+                            ],
+                            [
+                                Factor = "DUPLICATE",
+                                Score = [DuplicateRiskScore]
+                            ]
+                        },
+
+                    Sorted =
+                        List.Sort(
+                            Scores,
+                            (x, y) =>
+                                if x[Score] > y[Score]
+                                then -1
+                                else if x[Score] < y[Score]
+                                then 1
+                                else 0
+                        )
+                in
+                    if List.Count(Sorted) = 0
+                    then "NONE"
+                    else Sorted{0}[Factor],
+            type text
+        ),
+
+
+    // ==============================================================
+    // 43. FACTOR COUNT
+    // ==============================================================
+
+    AddFraudFactorCount =
+        Table.AddColumn(
+            AddPrimaryFactor,
+            "FraudFactorCount",
+            each
+                [AmountAnomalyFlag]
+                + [VelocityAnomalyFlag]
+                + [LocationAnomalyFlag]
+                + [TimeAnomalyFlag]
+                + [DuplicateTransactionFlag]
+                + (
+                    if [TransactionTypeRiskScore] >= 50
+                    then 1
+                    else 0
+                )
+                + (
+                    if [PaymentMethodRiskScore] >= 50
+                    then 1
+                    else 0
+                ),
+            Int64.Type
+        ),
+
+
+    // ==============================================================
+    // 44. MULTI-FACTOR FRAUD
+    // ==============================================================
+
+    AddMultiFactorStatus =
+        Table.AddColumn(
+            AddFraudFactorCount,
+            "MultiFactorFraudStatus",
+            each
+                if [FraudFactorCount] >= 5
+                then "SEVERE_MULTI_FACTOR"
+                else if [FraudFactorCount] >= 3
+                then "HIGH_MULTI_FACTOR"
+                else if [FraudFactorCount] >= 2
+                then "MULTI_FACTOR"
+                else if [FraudFactorCount] = 1
+                then "SINGLE_FACTOR"
+                else "NO_MAJOR_FACTOR",
+            type text
+        ),
+
+
+    // ==============================================================
+    // 45. AGENT SIGNAL
+    // ==============================================================
+
+    AddAgentSignal =
+        Table.AddColumn(
+            AddMultiFactorStatus,
+            "FraudAgentSignal",
+            each
+                if [RuleBasedFraudScore] >= 80
+                then
+                    "FRAUD_ALERT → INVESTIGATION → RAG → HUMAN_REVIEW"
+                else if [RuleBasedFraudScore] >= 60
+                then
+                    "FRAUD_REVIEW → INVESTIGATION → RAG"
+                else if [RuleBasedFraudScore] >= 35
+                then
+                    "FRAUD_MONITOR → INVESTIGATION"
+                else
+                    "NORMAL_MONITORING",
+            type text
+        ),
+
+
+    // ==============================================================
+    // 46. RAG EVIDENCE FLAG
+    // ==============================================================
+
+    AddRAGFlag =
+        Table.AddColumn(
+            AddAgentSignal,
+            "RAGEvidenceRequired",
+            each
+                if [RuleBasedFraudScore] >= 60
+                    or [FraudFactorCount] >= 3
+                then "YES"
+                else "NO",
+            type text
+        ),
+
+
+    // ==============================================================
+    // 47. RECOMMENDATION FLAG
+    // ==============================================================
+
+    AddRecommendationFlag =
+        Table.AddColumn(
+            AddRAGFlag,
+            "RecommendationRequired",
+            each
+                if [RuleBasedFraudScore] >= 35
+                then "YES"
+                else "NO",
+            type text
+        ),
+
+
+    // ==============================================================
+    // 48. RECOMMENDATION
+    // ==============================================================
+
+    AddRecommendation =
+        Table.AddColumn(
+            AddRecommendationFlag,
+            "FraudRecommendation",
+            each
+                if [RuleBasedFraudScore] >= 80
+                then
+                    "Immediately hold/review transaction and escalate for human investigation."
+                else if [RuleBasedFraudScore] >= 60
+                then
+                    "Perform enhanced transaction investigation and validate customer/supplier activity."
+                else if [RuleBasedFraudScore] >= 35
+                then
+                    "Monitor transaction and review supporting evidence."
+                else
+                    "No immediate fraud intervention required.",
+            type text
+        ),
+
+
+    // ==============================================================
+    // 49. TRANSACTION STATUS
+    // ==============================================================
+
+    AddInvestigationStatus =
+        Table.AddColumn(
+            AddRecommendation,
+            "InvestigationStatus",
+            each
+                if [HumanReviewRequired] = "YES"
+                then "HUMAN_REVIEW"
+                else if [InvestigationRequired] = "YES"
+                then "INVESTIGATION"
+                else if [FraudAlertFlag] = 1
+                then "MONITORING"
+                else "NORMAL",
+            type text
+        ),
+
+
+    // ==============================================================
+    // 50. FINAL RISK SCORE
+    // ==============================================================
+
+    AddFinalFraudScore =
+        Table.AddColumn(
+            AddInvestigationStatus,
+            "FraudScore",
+            each
+                Number.Round(
+                    List.Min(
+                        {
+                            100,
+                            List.Max(
+                                {
+                                    0,
+                                    [RuleBasedFraudScore]
+                                }
+                            )
+                        }
+                    ),
+                    2
+                ),
+            type number
+        ),
+
+
+    // ==============================================================
+    // 51. SORT BY DATE
+    // ==============================================================
+
+    SortedRows =
+        Table.Sort(
+            AddFinalFraudScore,
+            {
+                {
+                    "TransactionDate",
+                    Order.Descending
+                }
+            }
+        ),
+
+
+    // ==============================================================
+    // 52. FINAL COLUMN ORDER
+    // ==============================================================
+
+    PreferredColumns =
+        {
+            "TransactionId",
+            "TransactionDate",
+            "FraudDate",
+            "FraudYear",
+            "FraudMonth",
+            "FraudMonthName",
+            "FraudQuarter",
+            "FraudYearMonth",
+            "FraudDayOfWeek",
+            "TransactionHour",
+            "TransactionTimeWindow",
+            "WeekendFlag",
+            "OffHoursFlag",
+
+            "CompanyId",
+            "CustomerId",
+            "SupplierId",
+
+            "Amount",
+            "AbsoluteAmount",
+            "PositiveAmount",
+            "NegativeAmount",
+            "TransactionSizeBand",
+            "LargeTransactionFlag",
+            "ExtremeTransactionFlag",
+
+            "Currency",
+            "TransactionType",
+            "PaymentMethod",
+            "Country",
+            "Region",
+            "Status",
+
+            "CustomerDailyTransactionCount",
+            "CustomerDailyAmount",
+
+            "AmountAnomalyRiskScore",
+            "AmountAnomalyFlag",
+
+            "VelocityRiskScore",
+            "VelocityAnomalyFlag",
+
+            "AmountVelocityRiskScore",
+
+            "BehavioralRiskScore",
+
+            "TimeRiskScore",
+            "TimeAnomalyFlag",
+
+            "LocationRiskScore",
+            "LocationAnomalyFlag",
+
+            "TransactionTypeRiskScore",
+            "PaymentMethodRiskScore",
+
+            "DuplicateRiskScore",
+            "DuplicateTransactionFlag",
+
+            "RuleBasedFraudScore",
+            "FraudScore",
+            "FraudRiskBand",
+            "FraudSeverity",
+            "FraudAlertFlag",
+            "CriticalFraudFlag",
+
+            "FraudFactorCount",
+            "MultiFactorFraudStatus",
+            "PrimaryFraudFactor",
+
+            "InvestigationRequired",
+            "HumanReviewRequired",
+            "FraudDecision",
+            "InvestigationStatus",
+
+            "FraudAgentSignal",
+            "RAGEvidenceRequired",
+            "RecommendationRequired",
+            "FraudRecommendation",
+
+            "TransactionValid",
+            "MissingDataCount",
+            "FraudDataQuality",
+            "FraudRecordKey"
+        },
+
+
+    ExistingColumns =
+        Table.ColumnNames(
+            SortedRows
+        ),
+
+
+    FinalColumns =
+        List.Intersect(
+            {
+                PreferredColumns,
+                ExistingColumns
+            }
+        ),
+
+
+    FinalOutput =
+        Table.SelectColumns(
+            SortedRows,
+            FinalColumns
+        )
+
+in
+    FinalOutput

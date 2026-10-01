@@ -1,0 +1,1017 @@
+let
+    // ============================================================
+    // FinCo AI - Risk Dashboard
+    // Complete Power Query M Script
+    // ============================================================
+
+    // ------------------------------------------------------------
+    // 1. CONNECTION SETTINGS
+    // ------------------------------------------------------------
+    DatabaseHost =
+        "localhost",
+
+    DatabaseName =
+        "finco",
+
+    DatabaseSchema =
+        "public",
+
+    SourceDatabase =
+        PostgreSQL.Database(
+            DatabaseHost,
+            DatabaseName,
+            [
+                CreateNavigationProperties = false,
+                CommandTimeout = #duration(0, 0, 30, 0)
+            ]
+        ),
+
+    SourceSchema =
+        SourceDatabase{[Schema = DatabaseSchema]}[Data],
+
+    // ------------------------------------------------------------
+    // 2. SAFE TABLE LOADER
+    // ------------------------------------------------------------
+    LoadTable =
+        (TableName as text, Columns as list) as table =>
+        let
+            LoadedTable =
+                try
+                    SourceSchema{
+                        [
+                            Item = TableName,
+                            Kind = "Table"
+                        ]
+                    }[Data]
+                otherwise
+                    #table(
+                        Columns,
+                        {}
+                    )
+        in
+            LoadedTable,
+
+    // ------------------------------------------------------------
+    // 3. DATE DIMENSION
+    // ------------------------------------------------------------
+    StartDate =
+        #date(2020, 1, 1),
+
+    EndDate =
+        #date(2035, 12, 31),
+
+    NumberOfDays =
+        Duration.Days(EndDate - StartDate) + 1,
+
+    DateList =
+        List.Dates(
+            StartDate,
+            NumberOfDays,
+            #duration(1, 0, 0, 0)
+        ),
+
+    DateTable =
+        Table.FromList(
+            DateList,
+            Splitter.SplitByNothing(),
+            {"Date"}
+        ),
+
+    DateTyped =
+        Table.TransformColumnTypes(
+            DateTable,
+            {
+                {"Date", type date}
+            }
+        ),
+
+    DateWithYear =
+        Table.AddColumn(
+            DateTyped,
+            "Year",
+            each Date.Year([Date]),
+            Int64.Type
+        ),
+
+    DateWithQuarterNumber =
+        Table.AddColumn(
+            DateWithYear,
+            "Quarter Number",
+            each Date.QuarterOfYear([Date]),
+            Int64.Type
+        ),
+
+    DateWithQuarter =
+        Table.AddColumn(
+            DateWithQuarterNumber,
+            "Quarter",
+            each "Q" & Text.From([Quarter Number]),
+            type text
+        ),
+
+    DateWithMonthNumber =
+        Table.AddColumn(
+            DateWithQuarter,
+            "Month Number",
+            each Date.Month([Date]),
+            Int64.Type
+        ),
+
+    DateWithMonth =
+        Table.AddColumn(
+            DateWithMonthNumber,
+            "Month",
+            each Date.MonthName([Date]),
+            type text
+        ),
+
+    DateWithMonthShort =
+        Table.AddColumn(
+            DateWithMonth,
+            "Month Short",
+            each Date.ToText([Date], "MMM"),
+            type text
+        ),
+
+    DateWithYearMonth =
+        Table.AddColumn(
+            DateWithMonthShort,
+            "Year Month",
+            each Date.ToText([Date], "yyyy-MM"),
+            type text
+        ),
+
+    DateWithWeek =
+        Table.AddColumn(
+            DateWithYearMonth,
+            "Week Number",
+            each Date.WeekOfYear([Date], Day.Monday),
+            Int64.Type
+        ),
+
+    DateWithDay =
+        Table.AddColumn(
+            DateWithWeek,
+            "Day",
+            each Date.Day([Date]),
+            Int64.Type
+        ),
+
+    DateWithDayName =
+        Table.AddColumn(
+            DateWithDay,
+            "Day Name",
+            each Date.DayOfWeekName([Date]),
+            type text
+        ),
+
+    DateWithWeekend =
+        Table.AddColumn(
+            DateWithDayName,
+            "Is Weekend",
+            each Date.DayOfWeek([Date], Day.Monday) >= 5,
+            type logical
+        ),
+
+    DateWithFiscalYear =
+        Table.AddColumn(
+            DateWithWeekend,
+            "Fiscal Year",
+            each
+                if Date.Month([Date]) >= 4
+                then Date.Year([Date]) + 1
+                else Date.Year([Date]),
+            Int64.Type
+        ),
+
+    DateWithFiscalQuarter =
+        Table.AddColumn(
+            DateWithFiscalYear,
+            "Fiscal Quarter",
+            each
+                let
+                    MonthNumber =
+                        Date.Month([Date]),
+
+                    FiscalQuarter =
+                        if MonthNumber >= 4 and MonthNumber <= 6 then 1
+                        else if MonthNumber >= 7 and MonthNumber <= 9 then 2
+                        else if MonthNumber >= 10 and MonthNumber <= 12 then 3
+                        else 4
+                in
+                    "FQ" & Text.From(FiscalQuarter),
+            type text
+        ),
+
+    DimDate =
+        Table.Sort(
+            DateWithFiscalQuarter,
+            {
+                {"Date", Order.Ascending}
+            }
+        ),
+
+    // ------------------------------------------------------------
+    // 4. COMPANY DIMENSION
+    // ------------------------------------------------------------
+    CompanyRaw =
+        LoadTable(
+            "dim_company",
+            {
+                "company_id",
+                "company_name",
+                "industry",
+                "country",
+                "region",
+                "company_status"
+            }
+        ),
+
+    CompanySelected =
+        Table.SelectColumns(
+            CompanyRaw,
+            {
+                "company_id",
+                "company_name",
+                "industry",
+                "country",
+                "region",
+                "company_status"
+            },
+            MissingField.Ignore
+        ),
+
+    DimCompany =
+        Table.TransformColumnTypes(
+            Table.RenameColumns(
+                CompanySelected,
+                {
+                    {"company_id", "CompanyId"},
+                    {"company_name", "CompanyName"},
+                    {"industry", "Industry"},
+                    {"country", "Country"},
+                    {"region", "Region"},
+                    {"company_status", "CompanyStatus"}
+                },
+                MissingField.Ignore
+            ),
+            {
+                {"CompanyId", type text},
+                {"CompanyName", type text},
+                {"Industry", type text},
+                {"Country", type text},
+                {"Region", type text},
+                {"CompanyStatus", type text}
+            }
+        ),
+
+    DimCompanyDistinct =
+        Table.Distinct(
+            DimCompany,
+            {"CompanyId"}
+        ),
+
+    // ------------------------------------------------------------
+    // 5. RISK CATEGORY DIMENSION
+    // ------------------------------------------------------------
+    RiskCategoryTable =
+        #table(
+            {
+                "RiskCategoryId",
+                "RiskCategory",
+                "RiskDescription",
+                "RiskOwner"
+            },
+            {
+                {
+                    1,
+                    "Credit Risk",
+                    "Risk of financial loss caused by counterparty default.",
+                    "Credit Risk Team"
+                },
+                {
+                    2,
+                    "Liquidity Risk",
+                    "Risk of inability to meet short-term obligations.",
+                    "Treasury Team"
+                },
+                {
+                    3,
+                    "Operational Risk",
+                    "Risk caused by failed processes, systems, or people.",
+                    "Operations Team"
+                },
+                {
+                    4,
+                    "Market Risk",
+                    "Risk caused by changes in market prices or rates.",
+                    "Market Risk Team"
+                },
+                {
+                    5,
+                    "Fraud Risk",
+                    "Risk of loss caused by fraudulent activity.",
+                    "Fraud Investigation Team"
+                }
+            }
+        ),
+
+    DimRiskCategory =
+        Table.TransformColumnTypes(
+            RiskCategoryTable,
+            {
+                {"RiskCategoryId", Int64.Type},
+                {"RiskCategory", type text},
+                {"RiskDescription", type text},
+                {"RiskOwner", type text}
+            }
+        ),
+
+    // ------------------------------------------------------------
+    // 6. RISK SCORE FACT TABLE
+    // ------------------------------------------------------------
+    RiskScoreRaw =
+        LoadTable(
+            "fact_risk_scores",
+            {
+                "risk_score_id",
+                "entity_id",
+                "company_id",
+                "assessment_date",
+                "overall_risk_score",
+                "credit_risk_score",
+                "liquidity_risk_score",
+                "operational_risk_score",
+                "market_risk_score",
+                "fraud_risk_score",
+                "exposure_amount",
+                "risk_level",
+                "risk_status",
+                "model_version",
+                "created_at"
+            }
+        ),
+
+    RiskScoreSelected =
+        Table.SelectColumns(
+            RiskScoreRaw,
+            {
+                "risk_score_id",
+                "entity_id",
+                "company_id",
+                "assessment_date",
+                "overall_risk_score",
+                "credit_risk_score",
+                "liquidity_risk_score",
+                "operational_risk_score",
+                "market_risk_score",
+                "fraud_risk_score",
+                "exposure_amount",
+                "risk_level",
+                "risk_status",
+                "model_version",
+                "created_at"
+            },
+            MissingField.Ignore
+        ),
+
+    RiskScoreRenamed =
+        Table.RenameColumns(
+            RiskScoreSelected,
+            {
+                {"risk_score_id", "RiskScoreId"},
+                {"entity_id", "EntityId"},
+                {"company_id", "CompanyId"},
+                {"assessment_date", "AssessmentDate"},
+                {"overall_risk_score", "OverallRiskScore"},
+                {"credit_risk_score", "CreditRiskScore"},
+                {"liquidity_risk_score", "LiquidityRiskScore"},
+                {"operational_risk_score", "OperationalRiskScore"},
+                {"market_risk_score", "MarketRiskScore"},
+                {"fraud_risk_score", "FraudRiskScore"},
+                {"exposure_amount", "ExposureAmount"},
+                {"risk_level", "RiskLevel"},
+                {"risk_status", "RiskStatus"},
+                {"model_version", "ModelVersion"},
+                {"created_at", "CreatedAt"}
+            },
+            MissingField.Ignore
+        ),
+
+    RiskScoreTyped =
+        Table.TransformColumnTypes(
+            RiskScoreRenamed,
+            {
+                {"RiskScoreId", type text},
+                {"EntityId", type text},
+                {"CompanyId", type text},
+                {"AssessmentDate", type date},
+                {"OverallRiskScore", type number},
+                {"CreditRiskScore", type number},
+                {"LiquidityRiskScore", type number},
+                {"OperationalRiskScore", type number},
+                {"MarketRiskScore", type number},
+                {"FraudRiskScore", type number},
+                {"ExposureAmount", Currency.Type},
+                {"RiskLevel", type text},
+                {"RiskStatus", type text},
+                {"ModelVersion", type text},
+                {"CreatedAt", type datetime}
+            },
+            "en-US"
+        ),
+
+    RiskScoreClean =
+        Table.SelectRows(
+            RiskScoreTyped,
+            each
+                [OverallRiskScore] = null
+                or (
+                    [OverallRiskScore] >= 0
+                    and [OverallRiskScore] <= 100
+                )
+        ),
+
+    RiskScoreWithCategory =
+        Table.AddColumn(
+            RiskScoreClean,
+            "RiskCategory",
+            each
+                if [OverallRiskScore] = null then "Unknown"
+                else if [OverallRiskScore] >= 75 then "Critical"
+                else if [OverallRiskScore] >= 50 then "High"
+                else if [OverallRiskScore] >= 25 then "Medium"
+                else "Low",
+            type text
+        ),
+
+    RiskScoreWithBand =
+        Table.AddColumn(
+            RiskScoreWithCategory,
+            "RiskBand",
+            each
+                if [OverallRiskScore] = null then "Not Rated"
+                else if [OverallRiskScore] >= 75 then "75-100"
+                else if [OverallRiskScore] >= 50 then "50-74"
+                else if [OverallRiskScore] >= 25 then "25-49"
+                else "0-24",
+            type text
+        ),
+
+    FactRiskScores =
+        Table.AddColumn(
+            RiskScoreWithBand,
+            "AssessmentMonth",
+            each
+                if [AssessmentDate] = null
+                then null
+                else Date.StartOfMonth([AssessmentDate]),
+            type date
+        ),
+
+    // ------------------------------------------------------------
+    // 7. RISK FACTORS FACT TABLE
+    // ------------------------------------------------------------
+    RiskFactorRaw =
+        LoadTable(
+            "fact_risk_factors",
+            {
+                "risk_factor_id",
+                "risk_score_id",
+                "company_id",
+                "risk_category",
+                "factor_name",
+                "factor_value",
+                "factor_score",
+                "factor_weight",
+                "factor_status",
+                "detected_at"
+            }
+        ),
+
+    RiskFactorSelected =
+        Table.SelectColumns(
+            RiskFactorRaw,
+            {
+                "risk_factor_id",
+                "risk_score_id",
+                "company_id",
+                "risk_category",
+                "factor_name",
+                "factor_value",
+                "factor_score",
+                "factor_weight",
+                "factor_status",
+                "detected_at"
+            },
+            MissingField.Ignore
+        ),
+
+    RiskFactorRenamed =
+        Table.RenameColumns(
+            RiskFactorSelected,
+            {
+                {"risk_factor_id", "RiskFactorId"},
+                {"risk_score_id", "RiskScoreId"},
+                {"company_id", "CompanyId"},
+                {"risk_category", "RiskCategory"},
+                {"factor_name", "FactorName"},
+                {"factor_value", "FactorValue"},
+                {"factor_score", "FactorScore"},
+                {"factor_weight", "FactorWeight"},
+                {"factor_status", "FactorStatus"},
+                {"detected_at", "DetectedAt"}
+            },
+            MissingField.Ignore
+        ),
+
+    RiskFactorTyped =
+        Table.TransformColumnTypes(
+            RiskFactorRenamed,
+            {
+                {"RiskFactorId", type text},
+                {"RiskScoreId", type text},
+                {"CompanyId", type text},
+                {"RiskCategory", type text},
+                {"FactorName", type text},
+                {"FactorValue", type text},
+                {"FactorScore", type number},
+                {"FactorWeight", type number},
+                {"FactorStatus", type text},
+                {"DetectedAt", type datetime}
+            }
+        ),
+
+    FactRiskFactors =
+        Table.AddColumn(
+            RiskFactorTyped,
+            "WeightedRiskScore",
+            each
+                if [FactorScore] = null
+                    or [FactorWeight] = null
+                then null
+                else [FactorScore] * [FactorWeight],
+            type number
+        ),
+
+    // ------------------------------------------------------------
+    // 8. RISK EXPOSURE FACT TABLE
+    // ------------------------------------------------------------
+    ExposureRaw =
+        LoadTable(
+            "fact_risk_exposure",
+            {
+                "exposure_id",
+                "company_id",
+                "entity_id",
+                "exposure_date",
+                "exposure_type",
+                "counterparty",
+                "exposure_amount",
+                "secured_amount",
+                "unsecured_amount",
+                "currency",
+                "exposure_status"
+            }
+        ),
+
+    ExposureSelected =
+        Table.SelectColumns(
+            ExposureRaw,
+            {
+                "exposure_id",
+                "company_id",
+                "entity_id",
+                "exposure_date",
+                "exposure_type",
+                "counterparty",
+                "exposure_amount",
+                "secured_amount",
+                "unsecured_amount",
+                "currency",
+                "exposure_status"
+            },
+            MissingField.Ignore
+        ),
+
+    ExposureRenamed =
+        Table.RenameColumns(
+            ExposureSelected,
+            {
+                {"exposure_id", "ExposureId"},
+                {"company_id", "CompanyId"},
+                {"entity_id", "EntityId"},
+                {"exposure_date", "ExposureDate"},
+                {"exposure_type", "ExposureType"},
+                {"counterparty", "Counterparty"},
+                {"exposure_amount", "ExposureAmount"},
+                {"secured_amount", "SecuredAmount"},
+                {"unsecured_amount", "UnsecuredAmount"},
+                {"currency", "Currency"},
+                {"exposure_status", "ExposureStatus"}
+            },
+            MissingField.Ignore
+        ),
+
+    ExposureTyped =
+        Table.TransformColumnTypes(
+            ExposureRenamed,
+            {
+                {"ExposureId", type text},
+                {"CompanyId", type text},
+                {"EntityId", type text},
+                {"ExposureDate", type date},
+                {"ExposureType", type text},
+                {"Counterparty", type text},
+                {"ExposureAmount", Currency.Type},
+                {"SecuredAmount", Currency.Type},
+                {"UnsecuredAmount", Currency.Type},
+                {"Currency", type text},
+                {"ExposureStatus", type text}
+            },
+            "en-US"
+        ),
+
+    ExposureWithUnsecuredPct =
+        Table.AddColumn(
+            ExposureTyped,
+            "UnsecuredExposurePct",
+            each
+                if [ExposureAmount] = null
+                    or [ExposureAmount] = 0
+                then null
+                else [UnsecuredAmount] / [ExposureAmount],
+            Percentage.Type
+        ),
+
+    FactRiskExposure =
+        Table.AddColumn(
+            ExposureWithUnsecuredPct,
+            "ExposureRiskLevel",
+            each
+                if [UnsecuredExposurePct] = null
+                then "Unknown"
+                else if [UnsecuredExposurePct] >= 0.75
+                then "Critical"
+                else if [UnsecuredExposurePct] >= 0.50
+                then "High"
+                else if [UnsecuredExposurePct] >= 0.25
+                then "Medium"
+                else "Low",
+            type text
+        ),
+
+    // ------------------------------------------------------------
+    // 9. RISK ALERTS FACT TABLE
+    // ------------------------------------------------------------
+    AlertRaw =
+        LoadTable(
+            "fact_alerts",
+            {
+                "alert_id",
+                "company_id",
+                "entity_id",
+                "alert_date",
+                "alert_type",
+                "risk_category",
+                "severity",
+                "title",
+                "description",
+                "status",
+                "assigned_to",
+                "resolved_at"
+            }
+        ),
+
+    AlertSelected =
+        Table.SelectColumns(
+            AlertRaw,
+            {
+                "alert_id",
+                "company_id",
+                "entity_id",
+                "alert_date",
+                "alert_type",
+                "risk_category",
+                "severity",
+                "title",
+                "description",
+                "status",
+                "assigned_to",
+                "resolved_at"
+            },
+            MissingField.Ignore
+        ),
+
+    AlertRenamed =
+        Table.RenameColumns(
+            AlertSelected,
+            {
+                {"alert_id", "AlertId"},
+                {"company_id", "CompanyId"},
+                {"entity_id", "EntityId"},
+                {"alert_date", "AlertDate"},
+                {"alert_type", "AlertType"},
+                {"risk_category", "RiskCategory"},
+                {"severity", "Severity"},
+                {"title", "Title"},
+                {"description", "Description"},
+                {"status", "Status"},
+                {"assigned_to", "AssignedTo"},
+                {"resolved_at", "ResolvedAt"}
+            },
+            MissingField.Ignore
+        ),
+
+    AlertTyped =
+        Table.TransformColumnTypes(
+            AlertRenamed,
+            {
+                {"AlertId", type text},
+                {"CompanyId", type text},
+                {"EntityId", type text},
+                {"AlertDate", type datetime},
+                {"AlertType", type text},
+                {"RiskCategory", type text},
+                {"Severity", type text},
+                {"Title", type text},
+                {"Description", type text},
+                {"Status", type text},
+                {"AssignedTo", type text},
+                {"ResolvedAt", type datetime}
+            }
+        ),
+
+    AlertsWithOpenFlag =
+        Table.AddColumn(
+            AlertTyped,
+            "IsOpen",
+            each
+                Text.Upper(
+                    if [Status] = null then "" else [Status]
+                ) = "OPEN",
+            type logical
+        ),
+
+    AlertsWithCriticalFlag =
+        Table.AddColumn(
+            AlertsWithOpenFlag,
+            "IsCritical",
+            each
+                List.Contains(
+                    {
+                        "CRITICAL",
+                        "HIGH"
+                    },
+                    Text.Upper(
+                        if [Severity] = null then "" else [Severity]
+                    )
+                ),
+            type logical
+        ),
+
+    FactRiskAlerts =
+        Table.AddColumn(
+            AlertsWithCriticalFlag,
+            "AlertAgeDays",
+            each
+                if [AlertDate] = null
+                then null
+                else
+                    Duration.Days(
+                        Date.From(DateTime.LocalNow())
+                        - DateTime.Date([AlertDate])
+                    ),
+            Int64.Type
+        ),
+
+    // ------------------------------------------------------------
+    // 10. RISK MITIGATION FACT TABLE
+    // ------------------------------------------------------------
+    MitigationRaw =
+        LoadTable(
+            "fact_risk_mitigation",
+            {
+                "mitigation_id",
+                "risk_score_id",
+                "company_id",
+                "risk_category",
+                "action_name",
+                "action_owner",
+                "priority",
+                "due_date",
+                "completion_date",
+                "status",
+                "progress_percentage"
+            }
+        ),
+
+    MitigationSelected =
+        Table.SelectColumns(
+            MitigationRaw,
+            {
+                "mitigation_id",
+                "risk_score_id",
+                "company_id",
+                "risk_category",
+                "action_name",
+                "action_owner",
+                "priority",
+                "due_date",
+                "completion_date",
+                "status",
+                "progress_percentage"
+            },
+            MissingField.Ignore
+        ),
+
+    MitigationRenamed =
+        Table.RenameColumns(
+            MitigationSelected,
+            {
+                {"mitigation_id", "MitigationId"},
+                {"risk_score_id", "RiskScoreId"},
+                {"company_id", "CompanyId"},
+                {"risk_category", "RiskCategory"},
+                {"action_name", "ActionName"},
+                {"action_owner", "ActionOwner"},
+                {"priority", "Priority"},
+                {"due_date", "DueDate"},
+                {"completion_date", "CompletionDate"},
+                {"status", "Status"},
+                {"progress_percentage", "ProgressPercentage"}
+            },
+            MissingField.Ignore
+        ),
+
+    MitigationTyped =
+        Table.TransformColumnTypes(
+            MitigationRenamed,
+            {
+                {"MitigationId", type text},
+                {"RiskScoreId", type text},
+                {"CompanyId", type text},
+                {"RiskCategory", type text},
+                {"ActionName", type text},
+                {"ActionOwner", type text},
+                {"Priority", type text},
+                {"DueDate", type date},
+                {"CompletionDate", type date},
+                {"Status", type text},
+                {"ProgressPercentage", Percentage.Type}
+            }
+        ),
+
+    MitigationWithOverdueFlag =
+        Table.AddColumn(
+            MitigationTyped,
+            "IsOverdue",
+            each
+                [DueDate] <> null
+                and [DueDate] < Date.From(DateTime.LocalNow())
+                and Text.Upper(
+                    if [Status] = null then "" else [Status]
+                ) <> "COMPLETED",
+            type logical
+        ),
+
+    FactRiskMitigation =
+        Table.AddColumn(
+            MitigationWithOverdueFlag,
+            "DaysToDue",
+            each
+                if [DueDate] = null
+                then null
+                else
+                    Duration.Days(
+                        [DueDate]
+                        - Date.From(DateTime.LocalNow())
+                    ),
+            Int64.Type
+        ),
+
+    // ------------------------------------------------------------
+    // 11. RISK HISTORY FACT TABLE
+    // ------------------------------------------------------------
+    RiskHistoryRaw =
+        LoadTable(
+            "fact_risk_score_history",
+            {
+                "history_id",
+                "company_id",
+                "entity_id",
+                "assessment_date",
+                "risk_category",
+                "risk_score",
+                "risk_level"
+            }
+        ),
+
+    RiskHistorySelected =
+        Table.SelectColumns(
+            RiskHistoryRaw,
+            {
+                "history_id",
+                "company_id",
+                "entity_id",
+                "assessment_date",
+                "risk_category",
+                "risk_score",
+                "risk_level"
+            },
+            MissingField.Ignore
+        ),
+
+    RiskHistoryRenamed =
+        Table.RenameColumns(
+            RiskHistorySelected,
+            {
+                {"history_id", "HistoryId"},
+                {"company_id", "CompanyId"},
+                {"entity_id", "EntityId"},
+                {"assessment_date", "AssessmentDate"},
+                {"risk_category", "RiskCategory"},
+                {"risk_score", "RiskScore"},
+                {"risk_level", "RiskLevel"}
+            },
+            MissingField.Ignore
+        ),
+
+    FactRiskHistory =
+        Table.TransformColumnTypes(
+            RiskHistoryRenamed,
+            {
+                {"HistoryId", type text},
+                {"CompanyId", type text},
+                {"EntityId", type text},
+                {"AssessmentDate", type date},
+                {"RiskCategory", type text},
+                {"RiskScore", type number},
+                {"RiskLevel", type text}
+            }
+        ),
+
+    // ------------------------------------------------------------
+    // 12. FLATTENED RISK VALIDATION TABLE
+    // ------------------------------------------------------------
+    RiskScoreCompanyJoin =
+        Table.NestedJoin(
+            FactRiskScores,
+            {"CompanyId"},
+            DimCompanyDistinct,
+            {"CompanyId"},
+            "Company",
+            JoinKind.LeftOuter
+        ),
+
+    RiskScoreCompanyExpanded =
+        Table.ExpandTableColumn(
+            RiskScoreCompanyJoin,
+            "Company",
+            {
+                "CompanyName",
+                "Industry",
+                "Country",
+                "Region",
+                "CompanyStatus"
+            },
+            {
+                "CompanyName",
+                "Industry",
+                "Country",
+                "Region",
+                "CompanyStatus"
+            }
+        ),
+
+    RiskDashboardModel =
+        Table.AddColumn(
+            RiskScoreCompanyExpanded,
+            "RiskPriority",
+            each
+                if [RiskCategory] = "Critical" then 1
+                else if [RiskCategory] = "High" then 2
+                else if [RiskCategory] = "Medium" then 3
+                else if [RiskCategory] = "Low" then 4
+                else 5,
+            Int64.Type
+        ),
+
+    // ------------------------------------------------------------
+    // 13. FINAL OUTPUT
+    // ------------------------------------------------------------
+    Output =
+        [
+            DimDate = DimDate,
+            DimCompany = DimCompanyDistinct,
+            DimRiskCategory = DimRiskCategory,
+            FactRiskScores = FactRiskScores,
+            FactRiskFactors = FactRiskFactors,
+            FactRiskExposure = FactRiskExposure,
+            FactRiskAlerts = FactRiskAlerts,
+            FactRiskMitigation = FactRiskMitigation,
+            FactRiskHistory = FactRiskHistory,
+            RiskDashboardModel = RiskDashboardModel
+        ]
+in
+    Output

@@ -1,0 +1,1365 @@
+// ============================================================================
+// FinCo AI — Anomaly Score DAX
+// File: anomaly_score.dax
+// ============================================================================
+//
+// PURPOSE
+// -------
+// Power BI anomaly scoring, severity, investigation, trend and AI-routing
+// measures for transaction-level fraud/anomaly analytics.
+//
+// SOURCE
+// ------
+// anomaly_query.pq
+//
+// PRODUCTION MODEL
+// ----------------
+// Authoritative ML anomaly scoring remains in:
+//
+// backend/app/fraud/anomaly_model.py
+// backend/app/fraud/feature_engineering.py
+// backend/app/fraud/scoring.py
+//
+// Power BI uses this layer for analytical scoring, visualization,
+// investigation prioritization and decision support.
+//
+// ============================================================================
+
+
+// ============================================================================
+// 1. CORE TRANSACTION MEASURES
+// ============================================================================
+
+[Anomaly — Transaction Count] :=
+COUNTROWS(Anomaly)
+
+[Anomaly — Unique Transactions] :=
+DISTINCTCOUNT(Anomaly[TransactionId])
+
+[Anomaly — Total Amount] :=
+SUM(Anomaly[Amount])
+
+[Anomaly — Absolute Amount] :=
+SUM(Anomaly[AnomalyAbsoluteAmount])
+
+[Anomaly — Average Transaction Amount] :=
+AVERAGE(Anomaly[AnomalyAbsoluteAmount])
+
+[Anomaly — Maximum Transaction Amount] :=
+MAX(Anomaly[AnomalyAbsoluteAmount])
+
+[Anomaly — Minimum Transaction Amount] :=
+MIN(Anomaly[AnomalyAbsoluteAmount])
+
+
+// ============================================================================
+// 2. RULE-BASED ANOMALY SCORE
+// ============================================================================
+
+[Anomaly — Rule Score] :=
+VAR Score =
+    AVERAGEX(
+        Anomaly,
+        COALESCE(
+            Anomaly[AnomalyRuleScore],
+            0
+        )
+    )
+RETURN
+    MIN(
+        100,
+        MAX(
+            0,
+            Score
+        )
+    )
+
+
+// ============================================================================
+// 3. WEIGHTED COMPONENT SCORE
+// ============================================================================
+
+[Anomaly — Duplicate Score] :=
+VAR Flag =
+    AVERAGE(
+        Anomaly[AnomalyDuplicateFlag]
+    )
+RETURN
+    MIN(
+        100,
+        COALESCE(Flag, 0) * 100
+    )
+
+
+[Anomaly — High Value Score] :=
+VAR Flag =
+    AVERAGE(
+        Anomaly[AnomalyHighValueFlag]
+    )
+RETURN
+    MIN(
+        100,
+        COALESCE(Flag, 0) * 100
+    )
+
+
+[Anomaly — Very High Value Score] :=
+VAR Flag =
+    AVERAGE(
+        Anomaly[AnomalyVeryHighValueFlag]
+    )
+RETURN
+    MIN(
+        100,
+        COALESCE(Flag, 0) * 100
+    )
+
+
+[Anomaly — Round Value Score] :=
+VAR Flag =
+    AVERAGE(
+        Anomaly[AnomalyRoundValueFlag]
+    )
+RETURN
+    MIN(
+        100,
+        COALESCE(Flag, 0) * 100
+    )
+
+
+[Anomaly — Weekend Score] :=
+VAR Flag =
+    AVERAGE(
+        Anomaly[AnomalyWeekendFlag]
+    )
+RETURN
+    MIN(
+        100,
+        COALESCE(Flag, 0) * 100
+    )
+
+
+[Anomaly — Month End Score] :=
+VAR Flag =
+    AVERAGE(
+        Anomaly[AnomalyMonthEndFlag]
+    )
+RETURN
+    MIN(
+        100,
+        COALESCE(Flag, 0) * 100
+    )
+
+
+[Anomaly — Payment Method Score] :=
+VAR Flag =
+    AVERAGE(
+        Anomaly[AnomalyPaymentMethodFlag]
+    )
+RETURN
+    MIN(
+        100,
+        COALESCE(Flag, 0) * 100
+    )
+
+
+[Anomaly — Missing Party Score] :=
+VAR Flag =
+    AVERAGE(
+        Anomaly[AnomalyMissingPartyFlag]
+    )
+RETURN
+    MIN(
+        100,
+        COALESCE(Flag, 0) * 100
+    )
+
+
+[Anomaly — Concentration Score] :=
+VAR Flag =
+    AVERAGE(
+        Anomaly[AnomalyConcentrationFlag]
+    )
+RETURN
+    MIN(
+        100,
+        COALESCE(Flag, 0) * 100
+    )
+
+
+// ============================================================================
+// 4. SIGNAL COUNT
+// ============================================================================
+
+[Anomaly — Signal Count] :=
+SUM(
+    Anomaly[AnomalySignalCount]
+)
+
+
+[Anomaly — Average Signal Count] :=
+AVERAGE(
+    Anomaly[AnomalySignalCount]
+)
+
+
+[Anomaly — High Signal Transaction Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalySignalCount] >= 5
+)
+
+
+[Anomaly — Critical Signal Transaction Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalySignalCount] >= 7
+)
+
+
+// ============================================================================
+// 5. ANOMALY SCORE
+// ============================================================================
+
+[Anomaly — Score] :=
+VAR RuleScore =
+    [Anomaly — Rule Score]
+
+VAR SignalScore =
+    MIN(
+        100,
+        [Anomaly — Average Signal Count] * 12.5
+    )
+
+VAR DuplicateScore =
+    [Anomaly — Duplicate Score]
+
+VAR HighValueScore =
+    [Anomaly — High Value Score]
+
+VAR ConcentrationScore =
+    [Anomaly — Concentration Score]
+
+VAR WeightedScore =
+    RuleScore * 0.50
+    +
+    SignalScore * 0.20
+    +
+    DuplicateScore * 0.10
+    +
+    HighValueScore * 0.10
+    +
+    ConcentrationScore * 0.10
+
+RETURN
+    MIN(
+        100,
+        MAX(
+            0,
+            WeightedScore
+        )
+    )
+
+
+// ============================================================================
+// 6. ANOMALY RISK BAND
+// ============================================================================
+
+[Anomaly — Risk Band] :=
+VAR Score =
+    [Anomaly — Score]
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 80, "CRITICAL",
+        Score >= 60, "HIGH",
+        Score >= 35, "MEDIUM",
+        Score >= 15, "LOW",
+        "INFO"
+    )
+
+
+// ============================================================================
+// 7. ANOMALY HEALTH
+// ============================================================================
+
+[Anomaly — Health Score] :=
+100 - [Anomaly — Score]
+
+
+[Anomaly — Health Band] :=
+VAR Health =
+    [Anomaly — Health Score]
+RETURN
+    SWITCH(
+        TRUE(),
+        Health >= 80, "STRONG",
+        Health >= 60, "HEALTHY",
+        Health >= 40, "WATCH",
+        Health >= 20, "WEAK",
+        "CRITICAL"
+    )
+
+
+// ============================================================================
+// 8. ANOMALY STATUS
+// ============================================================================
+
+[Anomaly — Status] :=
+VAR Score =
+    [Anomaly — Score]
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 80, "CRITICAL_ANOMALY",
+        Score >= 60, "HIGH_ANOMALY",
+        Score >= 35, "ANOMALY_WATCH",
+        Score >= 15, "LOW_ANOMALY",
+        "NORMAL"
+    )
+
+
+// ============================================================================
+// 9. ANOMALY SEVERITY RANK
+// ============================================================================
+
+[Anomaly — Severity Rank] :=
+VAR Score =
+    [Anomaly — Score]
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 80, 5,
+        Score >= 60, 4,
+        Score >= 35, 3,
+        Score >= 15, 2,
+        1
+    )
+
+
+// ============================================================================
+// 10. TRANSACTION ANOMALY COUNTS
+// ============================================================================
+
+[Anomaly — Critical Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyRuleScore] >= 80
+)
+
+
+[Anomaly — High Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyRuleScore] >= 60,
+    Anomaly[AnomalyRuleScore] < 80
+)
+
+
+[Anomaly — Medium Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyRuleScore] >= 35,
+    Anomaly[AnomalyRuleScore] < 60
+)
+
+
+[Anomaly — Low Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyRuleScore] >= 15,
+    Anomaly[AnomalyRuleScore] < 35
+)
+
+
+[Anomaly — Info Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyRuleScore] < 15
+)
+
+
+// ============================================================================
+// 11. ANOMALY RATE
+// ============================================================================
+
+[Anomaly — High Risk Rate] :=
+DIVIDE(
+    [Anomaly — High Count]
+        + [Anomaly — Critical Count],
+    [Anomaly — Transaction Count],
+    0
+)
+
+
+[Anomaly — Critical Rate] :=
+DIVIDE(
+    [Anomaly — Critical Count],
+    [Anomaly — Transaction Count],
+    0
+)
+
+
+[Anomaly — Medium Or Higher Rate] :=
+DIVIDE(
+    [Anomaly — Medium Count]
+        + [Anomaly — High Count]
+        + [Anomaly — Critical Count],
+    [Anomaly — Transaction Count],
+    0
+)
+
+
+// ============================================================================
+// 12. FRAUD SIGNAL FLAGS
+// ============================================================================
+
+[Anomaly — Duplicate Flag] :=
+IF(
+    SUM(Anomaly[AnomalyDuplicateFlag]) > 0,
+    1,
+    0
+)
+
+
+[Anomaly — Weekend Flag] :=
+IF(
+    SUM(Anomaly[AnomalyWeekendFlag]) > 0,
+    1,
+    0
+)
+
+
+[Anomaly — Month End Flag] :=
+IF(
+    SUM(Anomaly[AnomalyMonthEndFlag]) > 0,
+    1,
+    0
+)
+
+
+[Anomaly — High Value Flag] :=
+IF(
+    SUM(Anomaly[AnomalyHighValueFlag]) > 0,
+    1,
+    0
+)
+
+
+[Anomaly — Very High Value Flag] :=
+IF(
+    SUM(Anomaly[AnomalyVeryHighValueFlag]) > 0,
+    1,
+    0
+)
+
+
+[Anomaly — Round Value Flag] :=
+IF(
+    SUM(Anomaly[AnomalyRoundValueFlag]) > 0,
+    1,
+    0
+)
+
+
+[Anomaly — Payment Method Flag] :=
+IF(
+    SUM(Anomaly[AnomalyPaymentMethodFlag]) > 0,
+    1,
+    0
+)
+
+
+[Anomaly — Missing Party Flag] :=
+IF(
+    SUM(Anomaly[AnomalyMissingPartyFlag]) > 0,
+    1,
+    0
+)
+
+
+[Anomaly — Concentration Flag] :=
+IF(
+    SUM(Anomaly[AnomalyConcentrationFlag]) > 0,
+    1,
+    0
+)
+
+
+// ============================================================================
+// 13. PRIMARY ANOMALY FACTOR
+// ============================================================================
+
+[Anomaly — Primary Factor] :=
+VAR DuplicateScore =
+    [Anomaly — Duplicate Score]
+
+VAR HighValueScore =
+    [Anomaly — High Value Score]
+
+VAR ConcentrationScore =
+    [Anomaly — Concentration Score]
+
+VAR WeekendScore =
+    [Anomaly — Weekend Score]
+
+VAR MonthEndScore =
+    [Anomaly — Month End Score]
+
+VAR PaymentScore =
+    [Anomaly — Payment Method Score]
+
+VAR MissingPartyScore =
+    [Anomaly — Missing Party Score]
+
+VAR MaximumScore =
+    MAX(
+        DuplicateScore,
+        MAX(
+            HighValueScore,
+            MAX(
+                ConcentrationScore,
+                MAX(
+                    WeekendScore,
+                    MAX(
+                        MonthEndScore,
+                        MAX(
+                            PaymentScore,
+                            MissingPartyScore
+                        )
+                    )
+                )
+            )
+        )
+    )
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        MaximumScore = DuplicateScore
+            && DuplicateScore > 0,
+            "DUPLICATE_TRANSACTION",
+
+        MaximumScore = HighValueScore
+            && HighValueScore > 0,
+            "HIGH_TRANSACTION_VALUE",
+
+        MaximumScore = ConcentrationScore
+            && ConcentrationScore > 0,
+            "COUNTERPARTY_CONCENTRATION",
+
+        MaximumScore = WeekendScore
+            && WeekendScore > 0,
+            "WEEKEND_ACTIVITY",
+
+        MaximumScore = MonthEndScore
+            && MonthEndScore > 0,
+            "MONTH_END_ACTIVITY",
+
+        MaximumScore = PaymentScore
+            && PaymentScore > 0,
+            "PAYMENT_METHOD_RISK",
+
+        MaximumScore = MissingPartyScore
+            && MissingPartyScore > 0,
+            "MISSING_COUNTERPARTY",
+
+        "NO_MATERIAL_FACTOR"
+    )
+
+
+// ============================================================================
+// 14. FACTOR COUNT
+// ============================================================================
+
+[Anomaly — Risk Factor Count] :=
+[Anomaly — Duplicate Flag]
++
+[Anomaly — Weekend Flag]
++
+[Anomaly — Month End Flag]
++
+[Anomaly — High Value Flag]
++
+[Anomaly — Very High Value Flag]
++
+[Anomaly — Round Value Flag]
++
+[Anomaly — Payment Method Flag]
++
+[Anomaly — Missing Party Flag]
++
+[Anomaly — Concentration Flag]
+
+
+// ============================================================================
+// 15. MULTI-FACTOR ANOMALY
+// ============================================================================
+
+[Anomaly — Multi Factor Flag] :=
+IF(
+    [Anomaly — Risk Factor Count] >= 3,
+    1,
+    0
+)
+
+
+[Anomaly — Multi Factor Status] :=
+IF(
+    [Anomaly — Multi Factor Flag] = 1,
+    "MULTI_FACTOR_ANOMALY",
+    "SINGLE_OR_NO_FACTOR"
+)
+
+
+// ============================================================================
+// 16. INVESTIGATION PRIORITY
+// ============================================================================
+
+[Anomaly — Investigation Priority] :=
+VAR Score =
+    [Anomaly — Score]
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 80, "P1 — CRITICAL",
+        Score >= 60, "P2 — HIGH",
+        Score >= 35, "P3 — MEDIUM",
+        "P4 — LOW"
+    )
+
+
+[Anomaly — Investigation Required] :=
+IF(
+    [Anomaly — Score] >= 60,
+    "YES",
+    "NO"
+)
+
+
+// ============================================================================
+// 17. ALERT LEVEL
+// ============================================================================
+
+[Anomaly — Alert Level] :=
+VAR Score =
+    [Anomaly — Score]
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 80, "CRITICAL",
+        Score >= 60, "HIGH",
+        Score >= 35, "MEDIUM",
+        Score >= 15, "LOW",
+        "NONE"
+    )
+
+
+[Anomaly — Alert Required] :=
+IF(
+    [Anomaly — Score] >= 60,
+    "YES",
+    "NO"
+)
+
+
+// ============================================================================
+// 18. ANOMALY DECISION
+// ============================================================================
+
+[Anomaly — Decision] :=
+VAR Score =
+    [Anomaly — Score]
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 80, "BLOCK_AND_ESCALATE",
+        Score >= 60, "HOLD_AND_INVESTIGATE",
+        Score >= 35, "MONITOR",
+        "NORMAL"
+    )
+
+
+// ============================================================================
+// 19. SUPERVISOR AGENT SIGNAL
+// ============================================================================
+
+[Anomaly — Supervisor Agent Signal] :=
+VAR Score =
+    [Anomaly — Score]
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 80, "ESCALATE_TO_SUPERVISOR",
+        Score >= 60, "START_FRAUD_INVESTIGATION",
+        Score >= 35, "REVIEW_TRANSACTION",
+        "NO_IMMEDIATE_ACTION"
+    )
+
+
+// ============================================================================
+// 20. RAG EVIDENCE
+// ============================================================================
+
+[Anomaly — RAG Evidence Required] :=
+IF(
+    [Anomaly — Score] >= 35,
+    "YES",
+    "NO"
+)
+
+
+// ============================================================================
+// 21. HUMAN REVIEW
+// ============================================================================
+
+[Anomaly — Human Review Required] :=
+IF(
+    [Anomaly — Score] >= 60,
+    "YES",
+    "NO"
+)
+
+
+[Anomaly — Human Review Priority] :=
+VAR Score =
+    [Anomaly — Score]
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 80, "URGENT",
+        Score >= 60, "HIGH",
+        Score >= 35, "MEDIUM",
+        "LOW"
+    )
+
+
+// ============================================================================
+// 22. FORECAST / WHAT-IF / RECOMMENDATION TRIGGERS
+// ============================================================================
+
+[Anomaly — Forecast Required] :=
+IF(
+    [Anomaly — Score] >= 60,
+    "YES",
+    "NO"
+)
+
+
+[Anomaly — What If Required] :=
+IF(
+    [Anomaly — Score] >= 80,
+    "YES",
+    "NO"
+)
+
+
+[Anomaly — Recommendation Required] :=
+IF(
+    [Anomaly — Score] >= 35,
+    "YES",
+    "NO"
+)
+
+
+// ============================================================================
+// 23. TREND ANALYSIS
+// ============================================================================
+
+[Anomaly — Previous Score] :=
+CALCULATE(
+    [Anomaly — Score],
+    DATEADD(
+        Anomaly[TransactionDate],
+        -1,
+        MONTH
+    )
+)
+
+
+[Anomaly — Score Change] :=
+[Anomaly — Score]
+-
+[Anomaly — Previous Score]
+
+
+[Anomaly — Score Change %] :=
+DIVIDE(
+    [Anomaly — Score Change],
+    ABS(
+        [Anomaly — Previous Score]
+    ),
+    0
+)
+
+
+[Anomaly — Trend] :=
+VAR Change =
+    [Anomaly — Score Change]
+RETURN
+    SWITCH(
+        TRUE(),
+        Change >= 10, "DETERIORATING_FAST",
+        Change > 0, "DETERIORATING",
+        Change <= -10, "IMPROVING_FAST",
+        Change < 0, "IMPROVING",
+        "STABLE"
+    )
+
+
+[Anomaly — Deterioration Flag] :=
+IF(
+    [Anomaly — Score Change] > 0,
+    1,
+    0
+)
+
+
+[Anomaly — Improvement Flag] :=
+IF(
+    [Anomaly — Score Change] < 0,
+    1,
+    0
+)
+
+
+// ============================================================================
+// 24. TRANSACTION CONCENTRATION
+// ============================================================================
+
+[Anomaly — Customer Concentration] :=
+MAX(
+    Anomaly[AnomalyCustomerAmountShare]
+)
+
+
+[Anomaly — Supplier Concentration] :=
+MAX(
+    Anomaly[AnomalySupplierAmountShare]
+)
+
+
+[Anomaly — Maximum Concentration] :=
+MAX(
+    [Anomaly — Customer Concentration],
+    [Anomaly — Supplier Concentration]
+)
+
+
+[Anomaly — Concentration Band] :=
+VAR Concentration =
+    [Anomaly — Maximum Concentration]
+RETURN
+    SWITCH(
+        TRUE(),
+        Concentration >= 0.75, "CRITICAL",
+        Concentration >= 0.50, "HIGH",
+        Concentration >= 0.25, "MEDIUM",
+        "LOW"
+    )
+
+
+// ============================================================================
+// 25. DUPLICATE ANALYTICS
+// ============================================================================
+
+[Anomaly — Duplicate Transaction Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyDuplicateFlag] = 1
+)
+
+
+[Anomaly — Duplicate Rate] :=
+DIVIDE(
+    [Anomaly — Duplicate Transaction Count],
+    [Anomaly — Transaction Count],
+    0
+)
+
+
+[Anomaly — Duplicate Amount] :=
+CALCULATE(
+    [Anomaly — Absolute Amount],
+    Anomaly[AnomalyDuplicateFlag] = 1
+)
+
+
+// ============================================================================
+// 26. HIGH-VALUE ANALYTICS
+// ============================================================================
+
+[Anomaly — High Value Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyHighValueFlag] = 1
+)
+
+
+[Anomaly — Very High Value Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyVeryHighValueFlag] = 1
+)
+
+
+[Anomaly — High Value Amount] :=
+CALCULATE(
+    [Anomaly — Absolute Amount],
+    Anomaly[AnomalyHighValueFlag] = 1
+)
+
+
+[Anomaly — High Value Rate] :=
+DIVIDE(
+    [Anomaly — High Value Count],
+    [Anomaly — Transaction Count],
+    0
+)
+
+
+// ============================================================================
+// 27. WEEKEND / MONTH-END ANALYTICS
+// ============================================================================
+
+[Anomaly — Weekend Transaction Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyWeekendFlag] = 1
+)
+
+
+[Anomaly — Month End Transaction Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyMonthEndFlag] = 1
+)
+
+
+[Anomaly — Weekend Rate] :=
+DIVIDE(
+    [Anomaly — Weekend Transaction Count],
+    [Anomaly — Transaction Count],
+    0
+)
+
+
+[Anomaly — Month End Rate] :=
+DIVIDE(
+    [Anomaly — Month End Transaction Count],
+    [Anomaly — Transaction Count],
+    0
+)
+
+
+// ============================================================================
+// 28. DATA QUALITY
+// ============================================================================
+
+[Anomaly — Data Quality] :=
+VAR Quality =
+    SELECTEDVALUE(
+        Anomaly[AnomalyDataQuality],
+        "UNKNOWN"
+    )
+RETURN
+    Quality
+
+
+[Anomaly — Data Completeness] :=
+AVERAGE(
+    Anomaly[AnomalyTransactionCompleteness]
+)
+
+
+[Anomaly — Data Quality Status] :=
+VAR Completeness =
+    [Anomaly — Data Completeness]
+RETURN
+    SWITCH(
+        TRUE(),
+        Completeness >= 95, "HIGH",
+        Completeness >= 80, "MEDIUM",
+        Completeness >= 60, "LOW",
+        "CRITICAL"
+    )
+
+
+[Anomaly — Data Quality Gate] :=
+IF(
+    [Anomaly — Data Completeness] >= 80,
+    "PASS",
+    "REVIEW"
+)
+
+
+// ============================================================================
+// 29. ML READINESS
+// ============================================================================
+
+[Anomaly — ML Ready Count] :=
+CALCULATE(
+    COUNTROWS(Anomaly),
+    Anomaly[AnomalyMLReady] = "YES"
+)
+
+
+[Anomaly — ML Readiness Rate] :=
+DIVIDE(
+    [Anomaly — ML Ready Count],
+    [Anomaly — Transaction Count],
+    0
+)
+
+
+[Anomaly — ML Readiness Status] :=
+IF(
+    [Anomaly — ML Readiness Rate] >= 0.80,
+    "READY",
+    "REVIEW"
+)
+
+
+// ============================================================================
+// 30. AI DECISION SIGNAL
+// ============================================================================
+
+[Anomaly — AI Decision Signal] :=
+VAR Score =
+    [Anomaly — Score]
+
+VAR HumanReview =
+    [Anomaly — Human Review Required]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        HumanReview = "YES"
+            && Score >= 80,
+            "CRITICAL_ANOMALY_HUMAN_REVIEW",
+
+        HumanReview = "YES"
+            && Score >= 60,
+            "HIGH_ANOMALY_HUMAN_REVIEW",
+
+        Score >= 35,
+            "ANOMALY_RAG_REVIEW",
+
+        "NO_AI_ACTION"
+    )
+
+
+// ============================================================================
+// 31. EXECUTIVE SUMMARY
+// ============================================================================
+
+[Anomaly — Executive Summary] :=
+VAR Score =
+    [Anomaly — Score]
+
+VAR Band =
+    [Anomaly — Risk Band]
+
+VAR Factor =
+    [Anomaly — Primary Factor]
+
+VAR Trend =
+    [Anomaly — Trend]
+
+VAR Required =
+    [Anomaly — Human Review Required]
+
+RETURN
+    "Anomaly score is "
+    & FORMAT(Score, "0.0")
+    & "/100 ("
+    & Band
+    & "). Primary factor: "
+    & Factor
+    & ". Trend: "
+    & Trend
+    & ". Human review: "
+    & Required
+    & "."
+
+
+// ============================================================================
+// 32. RECOMMENDED ACTION
+// ============================================================================
+
+[Anomaly — Recommended Action] :=
+VAR Score =
+    [Anomaly — Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        Score >= 80,
+            "Block or hold the transaction, escalate immediately, retrieve RAG evidence and initiate human investigation.",
+
+        Score >= 60,
+            "Place transaction under review, initiate fraud investigation and require human approval.",
+
+        Score >= 35,
+            "Monitor transaction, retrieve supporting evidence and investigate recurring patterns.",
+
+        Score >= 15,
+            "Continue monitoring and include in anomaly watchlist.",
+
+        "No immediate action required."
+    )
+
+
+// ============================================================================
+// 33. DASHBOARD DISPLAY MEASURES
+// ============================================================================
+
+[Anomaly — Score Display] :=
+FORMAT(
+    [Anomaly — Score],
+    "0.0"
+)
+& " / 100"
+
+
+[Anomaly — Health Display] :=
+FORMAT(
+    [Anomaly — Health Score],
+    "0.0"
+)
+& " / 100"
+
+
+[Anomaly — Rate Display] :=
+FORMAT(
+    [Anomaly — High Risk Rate],
+    "0.0%"
+)
+
+
+[Anomaly — Change Display] :=
+VAR Change =
+    [Anomaly — Score Change]
+RETURN
+    IF(
+        Change > 0,
+        "+",
+        ""
+    )
+    &
+    FORMAT(
+        Change,
+        "0.0"
+    )
+
+
+// ============================================================================
+// 34. SCORECARD
+// ============================================================================
+
+[Anomaly — Scorecard Risk] :=
+[Anomaly — Score]
+
+
+[Anomaly — Scorecard Health] :=
+[Anomaly — Health Score]
+
+
+[Anomaly — Scorecard Maximum] :=
+MAX(
+    [Anomaly — Score],
+    [Anomaly — Rule Score]
+)
+
+
+[Anomaly — Scorecard Minimum] :=
+MIN(
+    [Anomaly — Score],
+    [Anomaly — Rule Score]
+)
+
+
+// ============================================================================
+// 35. DASHBOARD STATUS
+// ============================================================================
+
+[Anomaly — Dashboard Status] :=
+VAR Score =
+    [Anomaly — Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 80, "CRITICAL_ANOMALY",
+        Score >= 60, "HIGH_RISK",
+        Score >= 35, "WATCH",
+        Score >= 15, "MONITOR",
+        "STABLE"
+    )
+
+
+[Anomaly — Dashboard Title] :=
+"FINCO AI — TRANSACTION ANOMALY ANALYTICS"
+
+
+[Anomaly — Dashboard Subtitle] :=
+"Anomaly Detection • Fraud Signals • Investigation • AI Decision Support"
+
+
+// ============================================================================
+// 36. ALERT COUNTS
+// ============================================================================
+
+[Anomaly — Critical Alert Flag] :=
+IF(
+    [Anomaly — Score] >= 80,
+    1,
+    0
+)
+
+
+[Anomaly — High Alert Flag] :=
+IF(
+    [Anomaly — Score] >= 60,
+    1,
+    0
+)
+
+
+[Anomaly — Medium Alert Flag] :=
+IF(
+    [Anomaly — Score] >= 35,
+    1,
+    0
+)
+
+
+[Anomaly — Total Alert Flag] :=
+IF(
+    [Anomaly — Score] >= 35,
+    1,
+    0
+)
+
+
+// ============================================================================
+// 37. SUPERVISOR PRIORITY
+// ============================================================================
+
+[Anomaly — Agent Priority] :=
+VAR Score =
+    [Anomaly — Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+        Score >= 80, 5,
+        Score >= 60, 4,
+        Score >= 35, 3,
+        Score >= 15, 2,
+        1
+    )
+
+
+[Anomaly — Agent Priority Label] :=
+VAR Priority =
+    [Anomaly — Agent Priority]
+
+RETURN
+    SWITCH(
+        Priority,
+        5, "P1 — CRITICAL",
+        4, "P2 — HIGH",
+        3, "P3 — MEDIUM",
+        2, "P4 — LOW",
+        "P5 — INFO"
+    )
+
+
+// ============================================================================
+// 38. FRAUD INVESTIGATION SIGNAL
+// ============================================================================
+
+[Anomaly — Fraud Investigation Signal] :=
+VAR Score =
+    [Anomaly — Score]
+
+VAR MultiFactor =
+    [Anomaly — Multi Factor Flag]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        Score >= 80
+            && MultiFactor = 1,
+            "CRITICAL_MULTI_FACTOR_FRAUD_SIGNAL",
+
+        Score >= 80,
+            "CRITICAL_FRAUD_SIGNAL",
+
+        Score >= 60
+            && MultiFactor = 1,
+            "HIGH_MULTI_FACTOR_FRAUD_SIGNAL",
+
+        Score >= 60,
+            "HIGH_FRAUD_SIGNAL",
+
+        Score >= 35,
+            "FRAUD_WATCH_SIGNAL",
+
+        "NO_FRAUD_SIGNAL"
+    )
+
+
+// ============================================================================
+// 39. ROOT CAUSE SIGNAL
+// ============================================================================
+
+[Anomaly — Root Cause Signal] :=
+VAR PrimaryFactor =
+    [Anomaly — Primary Factor]
+
+VAR Score =
+    [Anomaly — Score]
+
+RETURN
+    IF(
+        Score >= 35,
+        "INVESTIGATE_" & PrimaryFactor,
+        "NO_ROOT_CAUSE_REQUIRED"
+    )
+
+
+// ============================================================================
+// 40. FINAL CONTROL STATUS
+// ============================================================================
+
+[Anomaly — Control Status] :=
+VAR Score =
+    [Anomaly — Score]
+
+VAR DataGate =
+    [Anomaly — Data Quality Gate]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        DataGate = "REVIEW",
+            "DATA_QUALITY_REVIEW",
+
+        Score >= 80,
+            "CRITICAL_CONTROL_BREACH",
+
+        Score >= 60,
+            "HIGH_CONTROL_RISK",
+
+        Score >= 35,
+            "CONTROL_WATCH",
+
+        "CONTROL_STABLE"
+    )

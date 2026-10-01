@@ -1,0 +1,856 @@
+// ============================================================
+// FinCo AI
+// executive_risk_score.dax
+//
+// Executive Financial Risk Scoring Framework
+//
+// Primary table:
+//     ExecutiveDataModel
+//
+// Risk dimensions:
+//     Profitability
+//     Liquidity
+//     Cash Flow
+//     Leverage
+//     Balance Sheet Integrity
+//
+// Score:
+//     0   = Lowest Risk
+//     100 = Highest Risk
+//
+// Level:
+//     0-24   LOW
+//     25-49  MEDIUM
+//     50-74  HIGH
+//     75-100 CRITICAL
+// ============================================================
+
+
+// ============================================================
+// 01. BASE RISK COMPONENTS
+// ============================================================
+
+Executive Profitability Risk Score =
+VAR NetProfitRisk =
+    AVERAGE (
+        ExecutiveDataModel[ExecutiveProfitRisk]
+    )
+VAR MarginRisk =
+    SWITCH (
+        TRUE (),
+        [Executive Net Margin] < 0, 40,
+        [Executive Net Margin] < 0.05, 30,
+        [Executive Net Margin] < 0.10, 20,
+        [Executive Net Margin] < 0.15, 10,
+        0
+    )
+RETURN
+    MIN (
+        100,
+        COALESCE ( NetProfitRisk, 0 )
+            + MarginRisk
+    )
+
+
+Executive Liquidity Risk Score =
+VAR CurrentRatio =
+    [Executive Current Ratio]
+VAR QuickRatio =
+    [Executive Quick Ratio]
+VAR CashRatio =
+    [Executive Cash Ratio]
+VAR CurrentRisk =
+    SWITCH (
+        TRUE (),
+        ISBLANK ( CurrentRatio ), 25,
+        CurrentRatio < 0.75, 40,
+        CurrentRatio < 1.00, 30,
+        CurrentRatio < 1.50, 20,
+        CurrentRatio < 2.00, 10,
+        0
+    )
+VAR QuickRisk =
+    SWITCH (
+        TRUE (),
+        ISBLANK ( QuickRatio ), 20,
+        QuickRatio < 0.50, 40,
+        QuickRatio < 0.75, 30,
+        QuickRatio < 1.00, 20,
+        QuickRatio < 1.50, 10,
+        0
+    )
+VAR CashRisk =
+    SWITCH (
+        TRUE (),
+        ISBLANK ( CashRatio ), 15,
+        CashRatio < 0.25, 40,
+        CashRatio < 0.50, 30,
+        CashRatio < 0.75, 20,
+        CashRatio < 1.00, 10,
+        0
+    )
+RETURN
+    MIN (
+        100,
+        DIVIDE (
+            CurrentRisk
+                + QuickRisk
+                + CashRisk,
+            3
+        )
+    )
+
+
+Executive Cash Flow Risk Score =
+VAR OCF =
+    [Total Operating Cash Flow]
+VAR FCF =
+    [Total Free Cash Flow]
+VAR OCFMargin =
+    [Executive OCF Margin]
+VAR FCFMargin =
+    [Executive FCF Margin]
+VAR OCFRisk =
+    SWITCH (
+        TRUE (),
+        ISBLANK ( OCF ), 25,
+        OCF < 0, 40,
+        OCFMargin < 0.05, 30,
+        OCFMargin < 0.10, 20,
+        OCFMargin < 0.15, 10,
+        0
+    )
+VAR FCFRisk =
+    SWITCH (
+        TRUE (),
+        ISBLANK ( FCF ), 25,
+        FCF < 0, 40,
+        FCFMargin < 0.03, 30,
+        FCFMargin < 0.05, 20,
+        FCFMargin < 0.10, 10,
+        0
+    )
+RETURN
+    MIN (
+        100,
+        DIVIDE (
+            OCFRisk + FCFRisk,
+            2
+        )
+    )
+
+
+Executive Leverage Risk Score =
+VAR DebtAssets =
+    [Executive Debt to Assets]
+VAR DebtEquity =
+    [Executive Debt to Equity]
+VAR DebtAssetRisk =
+    SWITCH (
+        TRUE (),
+        ISBLANK ( DebtAssets ), 20,
+        DebtAssets >= 0.75, 40,
+        DebtAssets >= 0.60, 30,
+        DebtAssets >= 0.45, 20,
+        DebtAssets >= 0.30, 10,
+        0
+    )
+VAR DebtEquityRisk =
+    SWITCH (
+        TRUE (),
+        ISBLANK ( DebtEquity ), 20,
+        DebtEquity >= 3.00, 40,
+        DebtEquity >= 2.00, 30,
+        DebtEquity >= 1.00, 20,
+        DebtEquity >= 0.50, 10,
+        0
+    )
+RETURN
+    MIN (
+        100,
+        DIVIDE (
+            DebtAssetRisk + DebtEquityRisk,
+            2
+        )
+    )
+
+
+Executive Integrity Risk Score =
+VAR Difference =
+    SUM (
+        ExecutiveDataModel[BalanceSheetDifference]
+    )
+VAR OutOfBalance =
+    CALCULATE (
+        COUNTROWS ( ExecutiveDataModel ),
+        ExecutiveDataModel[BalanceSheetCheck]
+            = "Out of Balance"
+    )
+VAR Records =
+    COUNTROWS (
+        ExecutiveDataModel
+    )
+VAR IntegrityRate =
+    DIVIDE (
+        OutOfBalance,
+        Records
+    )
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Difference ), 15,
+        ABS ( Difference ) > 0, 40,
+        IntegrityRate > 0.10, 30,
+        IntegrityRate > 0.05, 20,
+        IntegrityRate > 0, 10,
+        0
+    )
+
+
+// ============================================================
+// 02. EXECUTIVE RISK SCORE
+// ============================================================
+
+Executive Risk Score =
+VAR ProfitabilityRisk =
+    [Executive Profitability Risk Score]
+VAR LiquidityRisk =
+    [Executive Liquidity Risk Score]
+VAR CashFlowRisk =
+    [Executive Cash Flow Risk Score]
+VAR LeverageRisk =
+    [Executive Leverage Risk Score]
+VAR IntegrityRisk =
+    [Executive Integrity Risk Score]
+
+VAR WeightedScore =
+      ProfitabilityRisk * 0.25
+    + LiquidityRisk * 0.20
+    + CashFlowRisk * 0.25
+    + LeverageRisk * 0.20
+    + IntegrityRisk * 0.10
+
+RETURN
+    MIN (
+        100,
+        MAX (
+            0,
+            WeightedScore
+        )
+    )
+
+
+// ============================================================
+// 03. RISK LEVEL
+// ============================================================
+
+Executive Risk Level =
+VAR Score =
+    [Executive Risk Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "No Data",
+        Score >= 75, "CRITICAL",
+        Score >= 50, "HIGH",
+        Score >= 25, "MEDIUM",
+        "LOW"
+    )
+
+
+// ============================================================
+// 04. RISK PERCENTAGE
+// ============================================================
+
+Executive Risk Percentage =
+DIVIDE (
+    [Executive Risk Score],
+    100
+)
+
+
+// ============================================================
+// 05. RISK HEALTH SCORE
+// ============================================================
+
+Executive Risk Health Score =
+MAX (
+    0,
+    100 - [Executive Risk Score]
+)
+
+
+// ============================================================
+// 06. RISK HEALTH STATUS
+// ============================================================
+
+Executive Risk Health Status =
+VAR Health =
+    [Executive Risk Health Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Health ), "No Data",
+        Health >= 80, "Excellent",
+        Health >= 65, "Healthy",
+        Health >= 50, "Watch",
+        Health >= 30, "Weak",
+        "Critical"
+    )
+
+
+// ============================================================
+// 07. RISK COMPONENT CONTRIBUTION
+// ============================================================
+
+Executive Profitability Risk Contribution =
+DIVIDE (
+    [Executive Profitability Risk Score],
+    [Executive Risk Score]
+)
+
+
+Executive Liquidity Risk Contribution =
+DIVIDE (
+    [Executive Liquidity Risk Score],
+    [Executive Risk Score]
+)
+
+
+Executive Cash Flow Risk Contribution =
+DIVIDE (
+    [Executive Cash Flow Risk Score],
+    [Executive Risk Score]
+)
+
+
+Executive Leverage Risk Contribution =
+DIVIDE (
+    [Executive Leverage Risk Score],
+    [Executive Risk Score]
+)
+
+
+Executive Integrity Risk Contribution =
+DIVIDE (
+    [Executive Integrity Risk Score],
+    [Executive Risk Score]
+)
+
+
+// ============================================================
+// 08. PRIMARY RISK DRIVER
+// ============================================================
+
+Executive Primary Risk Driver =
+VAR Profitability =
+    [Executive Profitability Risk Score]
+VAR Liquidity =
+    [Executive Liquidity Risk Score]
+VAR CashFlow =
+    [Executive Cash Flow Risk Score]
+VAR Leverage =
+    [Executive Leverage Risk Score]
+VAR Integrity =
+    [Executive Integrity Risk Score]
+
+VAR MaximumRisk =
+    MAX (
+        Profitability,
+        MAX (
+            Liquidity,
+            MAX (
+                CashFlow,
+                MAX (
+                    Leverage,
+                    Integrity
+                )
+            )
+        )
+    )
+RETURN
+    SWITCH (
+        TRUE (),
+        MaximumRisk = Profitability, "Profitability",
+        MaximumRisk = Liquidity, "Liquidity",
+        MaximumRisk = CashFlow, "Cash Flow",
+        MaximumRisk = Leverage, "Leverage",
+        MaximumRisk = Integrity, "Balance Sheet Integrity",
+        "None"
+    )
+
+
+// ============================================================
+// 09. SECONDARY RISK DRIVER
+// ============================================================
+
+Executive Secondary Risk Driver =
+VAR Profitability =
+    [Executive Profitability Risk Score]
+VAR Liquidity =
+    [Executive Liquidity Risk Score]
+VAR CashFlow =
+    [Executive Cash Flow Risk Score]
+VAR Leverage =
+    [Executive Leverage Risk Score]
+VAR Integrity =
+    [Executive Integrity Risk Score]
+
+VAR MaximumRisk =
+    MAX (
+        Profitability,
+        MAX (
+            Liquidity,
+            MAX (
+                CashFlow,
+                MAX (
+                    Leverage,
+                    Integrity
+                )
+            )
+        )
+    )
+
+VAR SecondRisk =
+    MAXX (
+        FILTER (
+            {
+                Profitability,
+                Liquidity,
+                CashFlow,
+                Leverage,
+                Integrity
+            },
+            [Value] < MaximumRisk
+        ),
+        [Value]
+    )
+RETURN
+    SWITCH (
+        TRUE (),
+        SecondRisk = Profitability, "Profitability",
+        SecondRisk = Liquidity, "Liquidity",
+        SecondRisk = CashFlow, "Cash Flow",
+        SecondRisk = Leverage, "Leverage",
+        SecondRisk = Integrity, "Balance Sheet Integrity",
+        "None"
+    )
+
+
+// ============================================================
+// 10. CRITICAL RISK FLAG
+// ============================================================
+
+Executive Critical Risk Flag =
+IF (
+    [Executive Risk Score] >= 75,
+    1,
+    0
+)
+
+
+// ============================================================
+// 11. HIGH RISK FLAG
+// ============================================================
+
+Executive High Risk Flag =
+IF (
+    [Executive Risk Score] >= 50,
+    1,
+    0
+)
+
+
+// ============================================================
+// 12. MEDIUM RISK FLAG
+// ============================================================
+
+Executive Medium Risk Flag =
+IF (
+    [Executive Risk Score] >= 25
+        && [Executive Risk Score] < 50,
+    1,
+    0
+)
+
+
+// ============================================================
+// 13. LOW RISK FLAG
+// ============================================================
+
+Executive Low Risk Flag =
+IF (
+    [Executive Risk Score] < 25,
+    1,
+    0
+)
+
+
+// ============================================================
+// 14. EXECUTIVE ESCALATION FLAG
+// ============================================================
+
+Executive Escalation Flag =
+VAR Risk =
+    [Executive Risk Score]
+VAR Alerts =
+    [Executive Alert Records]
+RETURN
+    IF (
+        Risk >= 75
+            || Alerts > 0,
+        "ESCALATE",
+        "MONITOR"
+    )
+
+
+// ============================================================
+// 15. EXECUTIVE RISK PRIORITY
+// ============================================================
+
+Executive Risk Priority =
+VAR Score =
+    [Executive Risk Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        Score >= 75, "P1 - Immediate",
+        Score >= 50, "P2 - High",
+        Score >= 25, "P3 - Monitor",
+        "P4 - Normal"
+    )
+
+
+// ============================================================
+// 16. EXECUTIVE RISK ACTION
+// ============================================================
+
+Executive Risk Action =
+VAR Driver =
+    [Executive Primary Risk Driver]
+VAR Level =
+    [Executive Risk Level]
+RETURN
+    SWITCH (
+        TRUE (),
+        Level = "CRITICAL"
+            && Driver = "Profitability",
+            "Immediate profitability intervention required.",
+        Level = "CRITICAL"
+            && Driver = "Liquidity",
+            "Immediate liquidity strengthening required.",
+        Level = "CRITICAL"
+            && Driver = "Cash Flow",
+            "Immediate cash-flow intervention required.",
+        Level = "CRITICAL"
+            && Driver = "Leverage",
+            "Immediate debt and leverage review required.",
+        Level = "CRITICAL"
+            && Driver = "Balance Sheet Integrity",
+            "Immediate balance-sheet reconciliation required.",
+        Level = "HIGH",
+            "Escalate risk for management review.",
+        Level = "MEDIUM",
+            "Monitor risk indicators and prepare mitigation.",
+        "Continue normal monitoring."
+    )
+
+
+// ============================================================
+// 17. RISK TREND
+// ============================================================
+
+Executive Risk Score Previous Period =
+CALCULATE (
+    [Executive Risk Score],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Executive Risk Score Change =
+[Executive Risk Score]
+    - [Executive Risk Score Previous Period]
+
+
+Executive Risk Score Change % =
+DIVIDE (
+    [Executive Risk Score Change],
+    [Executive Risk Score Previous Period]
+)
+
+
+Executive Risk Trend =
+VAR Change =
+    [Executive Risk Score Change]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Change ), "No Data",
+        Change >= 10, "Rapidly Increasing",
+        Change >= 3, "Increasing",
+        Change > -3, "Stable",
+        Change > -10, "Improving",
+        "Rapidly Improving"
+    )
+
+
+// ============================================================
+// 18. RISK MOMENTUM
+// ============================================================
+
+Executive Risk Momentum =
+VAR CurrentRisk =
+    [Executive Risk Score]
+VAR PreviousRisk =
+    [Executive Risk Score Previous Period]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( PreviousRisk ), "No Baseline",
+        CurrentRisk > PreviousRisk + 10, "Severe Deterioration",
+        CurrentRisk > PreviousRisk + 3, "Deteriorating",
+        CurrentRisk >= PreviousRisk - 3, "Stable",
+        CurrentRisk >= PreviousRisk - 10, "Improving",
+        "Strong Improvement"
+    )
+
+
+// ============================================================
+// 19. RISK RECORD COUNTS
+// ============================================================
+
+Executive Critical Risk Count =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutiveRiskLevel]
+        = "CRITICAL"
+)
+
+
+Executive High Risk Count =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutiveRiskLevel]
+        = "HIGH"
+)
+
+
+Executive Medium Risk Count =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutiveRiskLevel]
+        = "MEDIUM"
+)
+
+
+Executive Low Risk Count =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutiveRiskLevel]
+        = "LOW"
+)
+
+
+// ============================================================
+// 20. RISK RATES
+// ============================================================
+
+Executive Critical Risk Rate =
+DIVIDE (
+    [Executive Critical Risk Count],
+    COUNTROWS ( ExecutiveDataModel )
+)
+
+
+Executive High Risk Rate =
+DIVIDE (
+    [Executive High Risk Count],
+    COUNTROWS ( ExecutiveDataModel )
+)
+
+
+Executive Medium Risk Rate =
+DIVIDE (
+    [Executive Medium Risk Count],
+    COUNTROWS ( ExecutiveDataModel )
+)
+
+
+Executive Low Risk Rate =
+DIVIDE (
+    [Executive Low Risk Count],
+    COUNTROWS ( ExecutiveDataModel )
+)
+
+
+// ============================================================
+// 21. RISK DISTRIBUTION
+// ============================================================
+
+Executive Risk Concentration =
+VAR Critical =
+    [Executive Critical Risk Rate]
+VAR High =
+    [Executive High Risk Rate]
+RETURN
+    Critical + High
+
+
+Executive Risk Distribution Status =
+VAR Critical =
+    [Executive Critical Risk Rate]
+VAR High =
+    [Executive High Risk Rate]
+RETURN
+    SWITCH (
+        TRUE (),
+        Critical >= 0.10, "Critical Concentration",
+        High >= 0.25, "High Risk Concentration",
+        High >= 0.10, "Elevated Risk",
+        "Controlled"
+    )
+
+
+// ============================================================
+// 22. COMPOSITE EXECUTIVE RISK INDEX
+// ============================================================
+
+Executive Risk Index =
+VAR Risk =
+    [Executive Risk Score]
+VAR Momentum =
+    [Executive Risk Score Change]
+VAR Alerts =
+    [Executive Alert Records]
+VAR CriticalAlerts =
+    [Executive Critical Alerts]
+
+VAR MomentumPenalty =
+    SWITCH (
+        TRUE (),
+        Momentum >= 10, 15,
+        Momentum >= 3, 8,
+        Momentum > -3, 0,
+        Momentum > -10, -5,
+        -10
+    )
+
+VAR AlertPenalty =
+    SWITCH (
+        TRUE (),
+        CriticalAlerts > 0, 15,
+        Alerts > 5, 10,
+        Alerts > 0, 5,
+        0
+    )
+
+RETURN
+    MIN (
+        100,
+        MAX (
+            0,
+            Risk
+                + MomentumPenalty
+                + AlertPenalty
+        )
+    )
+
+
+// ============================================================
+// 23. COMPOSITE RISK LEVEL
+// ============================================================
+
+Executive Risk Index Level =
+VAR Score =
+    [Executive Risk Index]
+RETURN
+    SWITCH (
+        TRUE (),
+        Score >= 75, "CRITICAL",
+        Score >= 50, "HIGH",
+        Score >= 25, "MEDIUM",
+        "LOW"
+    )
+
+
+// ============================================================
+// 24. EXECUTIVE RISK SCORECARD
+// ============================================================
+
+Executive Risk Scorecard =
+VAR Score =
+    [Executive Risk Score]
+VAR Level =
+    [Executive Risk Level]
+VAR Health =
+    [Executive Risk Health Score]
+VAR Driver =
+    [Executive Primary Risk Driver]
+VAR Trend =
+    [Executive Risk Trend]
+VAR Priority =
+    [Executive Risk Priority]
+RETURN
+    "Risk Score: "
+        & FORMAT ( Score, "0.0" )
+        & "/100"
+        & " | Level: "
+        & Level
+        & " | Health: "
+        & FORMAT ( Health, "0.0" )
+        & "/100"
+        & " | Primary Driver: "
+        & Driver
+        & " | Trend: "
+        & Trend
+        & " | Priority: "
+        & Priority
+
+
+// ============================================================
+// 25. EXECUTIVE RISK DISPLAY
+// ============================================================
+
+Executive Risk Score Display =
+FORMAT (
+    [Executive Risk Score],
+    "0.0"
+)
+    & "/100"
+
+
+Executive Risk Health Display =
+FORMAT (
+    [Executive Risk Health Score],
+    "0.0"
+)
+    & "/100"
+
+
+Executive Risk Percentage Display =
+FORMAT (
+    [Executive Risk Percentage],
+    "0.0%"
+)
+
+
+// ============================================================
+// 26. EXECUTIVE RISK KPI STATUS
+// ============================================================
+
+Executive Risk KPI Status =
+VAR Level =
+    [Executive Risk Level]
+RETURN
+    SWITCH (
+        Level,
+        "CRITICAL", "🔴 CRITICAL",
+        "HIGH", "🔴 HIGH",
+        "MEDIUM", "🟡 MEDIUM",
+        "LOW", "🟢 LOW",
+        "⚪ NO DATA"
+    )

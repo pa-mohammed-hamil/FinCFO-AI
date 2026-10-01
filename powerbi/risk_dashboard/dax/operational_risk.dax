@@ -1,0 +1,1149 @@
+ /*
+====================================================================
+ FinCo AI — Operational Risk Measures
+ File:
+   powerbi/risk_dashboard/operational_risk.dax
+
+ Purpose:
+   Operational performance, cost pressure, profitability,
+   cash-flow deterioration and business-process risk analytics.
+
+ Expected source:
+   RiskTransformations
+
+ Expected columns where available:
+   CompanyId
+   CompanyName
+   Period
+   Revenue
+   PreviousRevenue
+   NetProfit
+   PreviousNetProfit
+   GrossProfit
+   PreviousGrossProfit
+   OperatingCashFlow
+   CurrentAssets
+   CurrentLiabilities
+   TotalDebt
+   TotalAssets
+   TotalEquity
+   BudgetRevenue
+   BudgetProfit
+   RevenueGrowthPct
+   ProfitGrowthPct
+   GrossProfitGrowthPct
+   NetProfitMargin
+   GrossMargin
+   OperatingCashFlowMargin
+   RevenueBudgetVariancePct
+   ProfitBudgetVariancePct
+   LossFlag
+   RevenueDeclineFlag
+   ProfitDeclineFlag
+   NegativeCashFlowFlag
+   NegativeMarginFlag
+   RiskDataQuality
+====================================================================
+*/
+
+
+// ==================================================================
+// 1. CORE OPERATING METRICS
+// ==================================================================
+
+Operational Revenue =
+SUM ( RiskTransformations[Revenue] )
+
+
+Operational Previous Revenue =
+SUM ( RiskTransformations[PreviousRevenue] )
+
+
+Operational Gross Profit =
+SUM ( RiskTransformations[GrossProfit] )
+
+
+Operational Previous Gross Profit =
+SUM ( RiskTransformations[PreviousGrossProfit] )
+
+
+Operational Net Profit =
+SUM ( RiskTransformations[NetProfit] )
+
+
+Operational Previous Net Profit =
+SUM ( RiskTransformations[PreviousNetProfit] )
+
+
+Operational Operating Cash Flow =
+SUM ( RiskTransformations[OperatingCashFlow] )
+
+
+Operational Total Assets =
+SUM ( RiskTransformations[TotalAssets] )
+
+
+Operational Total Equity =
+SUM ( RiskTransformations[TotalEquity] )
+
+
+Operational Total Debt =
+SUM ( RiskTransformations[TotalDebt] )
+
+
+// ==================================================================
+// 2. REVENUE GROWTH
+// ==================================================================
+
+Operational Revenue Growth % =
+DIVIDE (
+    [Operational Revenue]
+        - [Operational Previous Revenue],
+    ABS ( [Operational Previous Revenue] ),
+    BLANK ()
+)
+
+
+// ==================================================================
+// 3. GROSS PROFIT GROWTH
+// ==================================================================
+
+Operational Gross Profit Growth % =
+DIVIDE (
+    [Operational Gross Profit]
+        - [Operational Previous Gross Profit],
+    ABS ( [Operational Previous Gross Profit] ),
+    BLANK ()
+)
+
+
+// ==================================================================
+// 4. NET PROFIT GROWTH
+// ==================================================================
+
+Operational Net Profit Growth % =
+DIVIDE (
+    [Operational Net Profit]
+        - [Operational Previous Net Profit],
+    ABS ( [Operational Previous Net Profit] ),
+    BLANK ()
+)
+
+
+// ==================================================================
+// 5. NET PROFIT MARGIN
+// ==================================================================
+
+Operational Net Profit Margin =
+DIVIDE (
+    [Operational Net Profit],
+    [Operational Revenue],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 6. GROSS MARGIN
+// ==================================================================
+
+Operational Gross Margin =
+DIVIDE (
+    [Operational Gross Profit],
+    [Operational Revenue],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 7. OPERATING CASH FLOW MARGIN
+// ==================================================================
+
+Operational Cash Flow Margin =
+DIVIDE (
+    [Operational Operating Cash Flow],
+    [Operational Revenue],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 8. OPERATING CASH FLOW TO PROFIT
+// ==================================================================
+
+Operational Cash Conversion =
+DIVIDE (
+    [Operational Operating Cash Flow],
+    [Operational Net Profit],
+    BLANK ()
+)
+
+
+// ==================================================================
+// 9. REVENUE BUDGET VARIANCE
+// ==================================================================
+
+Operational Revenue Budget Variance % =
+VAR ActualRevenue =
+    [Operational Revenue]
+
+VAR BudgetRevenue =
+    SUM ( RiskTransformations[BudgetRevenue] )
+
+RETURN
+    DIVIDE (
+        ActualRevenue - BudgetRevenue,
+        ABS ( BudgetRevenue ),
+        BLANK ()
+    )
+
+
+// ==================================================================
+// 10. PROFIT BUDGET VARIANCE
+// ==================================================================
+
+Operational Profit Budget Variance % =
+VAR ActualProfit =
+    [Operational Net Profit]
+
+VAR BudgetProfit =
+    SUM ( RiskTransformations[BudgetProfit] )
+
+RETURN
+    DIVIDE (
+        ActualProfit - BudgetProfit,
+        ABS ( BudgetProfit ),
+        BLANK ()
+    )
+
+
+// ==================================================================
+// 11. REVENUE PRESSURE SCORE
+// ==================================================================
+
+Operational Revenue Risk Score =
+VAR Growth =
+    [Operational Revenue Growth %]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Growth ), BLANK (),
+        Growth <= -0.30, 100,
+        Growth <= -0.20, 90,
+        Growth <= -0.10, 75,
+        Growth <= -0.05, 50,
+        Growth < 0, 25,
+        0
+    )
+
+
+// ==================================================================
+// 12. PROFITABILITY RISK SCORE
+// ==================================================================
+
+Operational Profit Risk Score =
+VAR Growth =
+    [Operational Net Profit Growth %]
+
+VAR Margin =
+    [Operational Net Profit Margin]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Growth ) && ISBLANK ( Margin ), BLANK (),
+
+        Margin <= -0.20, 100,
+        Margin <= -0.10, 90,
+
+        Growth <= -0.50, 100,
+        Growth <= -0.30, 90,
+        Growth <= -0.15, 75,
+        Growth <= -0.05, 50,
+        Growth < 0, 25,
+
+        Margin < 0, 75,
+        Margin < 0.05, 50,
+        Margin < 0.10, 25,
+
+        0
+    )
+
+
+// ==================================================================
+// 13. GROSS MARGIN RISK SCORE
+// ==================================================================
+
+Operational Gross Margin Risk Score =
+VAR Margin =
+    [Operational Gross Margin]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), BLANK (),
+        Margin < 0, 100,
+        Margin < 0.10, 90,
+        Margin < 0.20, 75,
+        Margin < 0.30, 50,
+        Margin < 0.40, 25,
+        0
+    )
+
+
+// ==================================================================
+// 14. CASH FLOW RISK SCORE
+// ==================================================================
+
+Operational Cash Flow Risk Score =
+VAR OCF =
+    [Operational Operating Cash Flow]
+
+VAR Margin =
+    [Operational Cash Flow Margin]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( OCF ), BLANK (),
+        OCF < 0, 100,
+        Margin < 0, 90,
+        Margin < 0.05, 75,
+        Margin < 0.10, 50,
+        Margin < 0.15, 25,
+        0
+    )
+
+
+// ==================================================================
+// 15. BUDGET EXECUTION RISK SCORE
+// ==================================================================
+
+Operational Budget Risk Score =
+VAR RevenueVariance =
+    [Operational Revenue Budget Variance %]
+
+VAR ProfitVariance =
+    [Operational Profit Budget Variance %]
+
+VAR RevenueScore =
+    SWITCH (
+        TRUE (),
+        ISBLANK ( RevenueVariance ), BLANK (),
+        RevenueVariance <= -0.30, 100,
+        RevenueVariance <= -0.20, 90,
+        RevenueVariance <= -0.10, 75,
+        RevenueVariance <= -0.05, 50,
+        RevenueVariance < 0, 25,
+        0
+    )
+
+VAR ProfitScore =
+    SWITCH (
+        TRUE (),
+        ISBLANK ( ProfitVariance ), BLANK (),
+        ProfitVariance <= -0.50, 100,
+        ProfitVariance <= -0.30, 90,
+        ProfitVariance <= -0.15, 75,
+        ProfitVariance <= -0.05, 50,
+        ProfitVariance < 0, 25,
+        0
+    )
+
+VAR AvailableWeight =
+      IF ( NOT ISBLANK ( RevenueScore ), 0.50, 0 )
+    + IF ( NOT ISBLANK ( ProfitScore ), 0.50, 0 )
+
+VAR WeightedScore =
+      COALESCE ( RevenueScore, 0 ) * 0.50
+    + COALESCE ( ProfitScore, 0 ) * 0.50
+
+RETURN
+    IF (
+        AvailableWeight = 0,
+        BLANK (),
+        ROUND (
+            DIVIDE (
+                WeightedScore,
+                AvailableWeight
+            ),
+            2
+        )
+    )
+
+
+// ==================================================================
+// 16. OPERATIONAL RISK SCORE
+//
+// Weighting:
+//   Revenue pressure       = 25%
+//   Profitability          = 25%
+//   Gross margin           = 15%
+//   Cash flow              = 20%
+//   Budget execution       = 15%
+// ==================================================================
+
+Operational Risk Score =
+VAR RevenueScore =
+    [Operational Revenue Risk Score]
+
+VAR ProfitScore =
+    [Operational Profit Risk Score]
+
+VAR GrossMarginScore =
+    [Operational Gross Margin Risk Score]
+
+VAR CashFlowScore =
+    [Operational Cash Flow Risk Score]
+
+VAR BudgetScore =
+    [Operational Budget Risk Score]
+
+VAR RevenueWeight =
+    IF ( NOT ISBLANK ( RevenueScore ), 0.25, 0 )
+
+VAR ProfitWeight =
+    IF ( NOT ISBLANK ( ProfitScore ), 0.25, 0 )
+
+VAR GrossMarginWeight =
+    IF ( NOT ISBLANK ( GrossMarginScore ), 0.15, 0 )
+
+VAR CashFlowWeight =
+    IF ( NOT ISBLANK ( CashFlowScore ), 0.20, 0 )
+
+VAR BudgetWeight =
+    IF ( NOT ISBLANK ( BudgetScore ), 0.15, 0 )
+
+VAR AvailableWeight =
+      RevenueWeight
+    + ProfitWeight
+    + GrossMarginWeight
+    + CashFlowWeight
+    + BudgetWeight
+
+VAR WeightedScore =
+      COALESCE ( RevenueScore, 0 ) * 0.25
+    + COALESCE ( ProfitScore, 0 ) * 0.25
+    + COALESCE ( GrossMarginScore, 0 ) * 0.15
+    + COALESCE ( CashFlowScore, 0 ) * 0.20
+    + COALESCE ( BudgetScore, 0 ) * 0.15
+
+RETURN
+    IF (
+        AvailableWeight = 0,
+        BLANK (),
+        ROUND (
+            DIVIDE (
+                WeightedScore,
+                AvailableWeight
+            ),
+            2
+        )
+    )
+
+
+// ==================================================================
+// 17. OPERATIONAL RISK BAND
+// ==================================================================
+
+Operational Risk Band =
+VAR Score =
+    [Operational Risk Score]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "UNKNOWN",
+        Score >= 80, "CRITICAL",
+        Score >= 60, "HIGH",
+        Score >= 35, "MEDIUM",
+        Score >= 15, "LOW",
+        "INFO"
+    )
+
+
+// ==================================================================
+// 18. OPERATIONAL HEALTH SCORE
+// ==================================================================
+
+Operational Health Score =
+VAR Risk =
+    [Operational Risk Score]
+
+RETURN
+    IF (
+        ISBLANK ( Risk ),
+        BLANK (),
+        ROUND (
+            100 - Risk,
+            2
+        )
+    )
+
+
+// ==================================================================
+// 19. OPERATIONAL HEALTH BAND
+// ==================================================================
+
+Operational Health Band =
+VAR Health =
+    [Operational Health Score]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Health ), "UNKNOWN",
+        Health >= 80, "STRONG",
+        Health >= 60, "HEALTHY",
+        Health >= 40, "WATCH",
+        Health >= 20, "WEAK",
+        "CRITICAL"
+    )
+
+
+// ==================================================================
+// 20. OPERATIONAL STATUS
+// ==================================================================
+
+Operational Status =
+VAR Score =
+    [Operational Risk Score]
+
+VAR OCF =
+    [Operational Operating Cash Flow]
+
+VAR Margin =
+    [Operational Net Profit Margin]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "UNKNOWN",
+
+        OCF < 0 && Margin < 0,
+            "CRITICAL_OPERATING_STRESS",
+
+        Score >= 80,
+            "CRITICAL_OPERATIONAL_STRESS",
+
+        Score >= 60,
+            "HIGH_OPERATIONAL_PRESSURE",
+
+        Score >= 35,
+            "MODERATE_OPERATIONAL_PRESSURE",
+
+        Score >= 15,
+            "WATCH",
+
+        "STABLE"
+    )
+
+
+// ==================================================================
+// 21. OPERATIONAL RISK FLAGS
+// ==================================================================
+
+Operational Revenue Decline Flag =
+IF (
+    [Operational Revenue Growth %] < 0,
+    1,
+    0
+)
+
+
+Operational Severe Revenue Decline Flag =
+IF (
+    [Operational Revenue Growth %] <= -0.20,
+    1,
+    0
+)
+
+
+Operational Profit Decline Flag =
+IF (
+    [Operational Net Profit Growth %] < 0,
+    1,
+    0
+)
+
+
+Operational Loss Flag =
+IF (
+    [Operational Net Profit] < 0,
+    1,
+    0
+)
+
+
+Operational Negative Cash Flow Flag =
+IF (
+    [Operational Operating Cash Flow] < 0,
+    1,
+    0
+)
+
+
+Operational Negative Margin Flag =
+IF (
+    [Operational Net Profit Margin] < 0,
+    1,
+    0
+)
+
+
+Operational Low Margin Flag =
+IF (
+    [Operational Net Profit Margin] < 0.05,
+    1,
+    0
+)
+
+
+Operational Revenue Budget Miss Flag =
+IF (
+    [Operational Revenue Budget Variance %] <= -0.10,
+    1,
+    0
+)
+
+
+Operational Profit Budget Miss Flag =
+IF (
+    [Operational Profit Budget Variance %] <= -0.10,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 22. OPERATIONAL RISK FACTOR COUNT
+// ==================================================================
+
+Operational Risk Factor Count =
+    [Operational Revenue Decline Flag]
+    + [Operational Severe Revenue Decline Flag]
+    + [Operational Profit Decline Flag]
+    + [Operational Loss Flag]
+    + [Operational Negative Cash Flow Flag]
+    + [Operational Negative Margin Flag]
+    + [Operational Low Margin Flag]
+    + [Operational Revenue Budget Miss Flag]
+    + [Operational Profit Budget Miss Flag]
+
+
+// ==================================================================
+// 23. PRIMARY OPERATIONAL RISK FACTOR
+// ==================================================================
+
+Primary Operational Risk Factor =
+VAR RevenueGrowth =
+    [Operational Revenue Growth %]
+
+VAR ProfitGrowth =
+    [Operational Net Profit Growth %]
+
+VAR NetMargin =
+    [Operational Net Profit Margin]
+
+VAR GrossMargin =
+    [Operational Gross Margin]
+
+VAR OCF =
+    [Operational Operating Cash Flow]
+
+VAR RevenueBudgetVariance =
+    [Operational Revenue Budget Variance %]
+
+VAR ProfitBudgetVariance =
+    [Operational Profit Budget Variance %]
+
+RETURN
+    SWITCH (
+        TRUE (),
+
+        ISBLANK ( RevenueGrowth ),
+            "INSUFFICIENT_DATA",
+
+        OCF < 0 && NetMargin < 0,
+            "CASH_FLOW_AND_PROFITABILITY",
+
+        ProfitGrowth <= -0.50,
+            "SEVERE_PROFIT_DECLINE",
+
+        RevenueGrowth <= -0.30,
+            "SEVERE_REVENUE_DECLINE",
+
+        OCF < 0,
+            "NEGATIVE_OPERATING_CASH_FLOW",
+
+        NetMargin < 0,
+            "NEGATIVE_PROFIT_MARGIN",
+
+        NetMargin < 0.05,
+            "LOW_PROFIT_MARGIN",
+
+        GrossMargin < 0.20,
+            "GROSS_MARGIN_PRESSURE",
+
+        RevenueBudgetVariance <= -0.20,
+            "REVENUE_BUDGET_PRESSURE",
+
+        ProfitBudgetVariance <= -0.20,
+            "PROFIT_BUDGET_PRESSURE",
+
+        ProfitGrowth < 0,
+            "PROFIT_DECLINE",
+
+        RevenueGrowth < 0,
+            "REVENUE_DECLINE",
+
+        "NONE"
+    )
+
+
+// ==================================================================
+// 24. OPERATIONAL DECISION
+// ==================================================================
+
+Operational Decision =
+VAR Score =
+    [Operational Risk Score]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "INSUFFICIENT_DATA",
+        Score >= 80, "IMMEDIATE_ACTION",
+        Score >= 60, "MANAGEMENT_REVIEW",
+        Score >= 35, "MONITOR_CLOSELY",
+        Score >= 15, "WATCH",
+        "NORMAL"
+    )
+
+
+// ==================================================================
+// 25. OPERATIONAL ALERT
+// ==================================================================
+
+Operational Risk Alert =
+VAR Score =
+    [Operational Risk Score]
+
+VAR Factors =
+    [Operational Risk Factor Count]
+
+VAR Loss =
+    [Operational Loss Flag]
+
+VAR NegativeCF =
+    [Operational Negative Cash Flow Flag]
+
+RETURN
+    SWITCH (
+        TRUE (),
+
+        Loss = 1
+            && NegativeCF = 1
+            && Score >= 60,
+            "CRITICAL_OPERATIONAL_FAILURE_RISK",
+
+        Score >= 80
+            || Factors >= 6,
+            "CRITICAL_OPERATIONAL_RISK",
+
+        Score >= 60
+            || Factors >= 4,
+            "HIGH_OPERATIONAL_RISK",
+
+        Score >= 35
+            || Factors >= 2,
+            "OPERATIONAL_RISK_WATCH",
+
+        Factors = 1,
+            "OPERATIONAL_RISK_LOW",
+
+        "NO_OPERATIONAL_ALERT"
+    )
+
+
+// ==================================================================
+// 26. OPERATIONAL RECOMMENDED ACTION
+// ==================================================================
+
+Operational Recommended Action =
+VAR Score =
+    [Operational Risk Score]
+
+VAR Factor =
+    [Primary Operational Risk Factor]
+
+RETURN
+    SWITCH (
+        TRUE (),
+
+        Score >= 80
+            && Factor = "CASH_FLOW_AND_PROFITABILITY",
+            "Initiate immediate operational turnaround review covering cash preservation, costs, pricing and profitability.",
+
+        Score >= 80
+            && Factor = "SEVERE_PROFIT_DECLINE",
+            "Investigate major profit deterioration and identify cost, pricing and revenue drivers.",
+
+        Score >= 80
+            && Factor = "SEVERE_REVENUE_DECLINE",
+            "Investigate demand, customer retention, pricing and sales-pipeline deterioration.",
+
+        Score >= 80
+            && Factor = "NEGATIVE_OPERATING_CASH_FLOW",
+            "Perform immediate operating cash-flow review and implement cash-preservation measures.",
+
+        Score >= 80
+            && Factor = "NEGATIVE_PROFIT_MARGIN",
+            "Review cost structure, pricing, product profitability and operational efficiency.",
+
+        Score >= 60,
+            "Management should perform a detailed operational performance review.",
+
+        Score >= 35,
+            "Monitor revenue, margins, operating cash flow and budget performance closely.",
+
+        "No immediate operational-risk action required."
+    )
+
+
+// ==================================================================
+// 27. PREVIOUS PERIOD OPERATIONAL RISK
+// ==================================================================
+
+Previous Period Operational Risk Score =
+CALCULATE (
+    [Operational Risk Score],
+    DATEADD (
+        RiskTransformations[Period],
+        -1,
+        MONTH
+    )
+)
+
+
+// ==================================================================
+// 28. OPERATIONAL RISK CHANGE
+// ==================================================================
+
+Operational Risk Change =
+VAR CurrentScore =
+    [Operational Risk Score]
+
+VAR PreviousScore =
+    [Previous Period Operational Risk Score]
+
+RETURN
+    IF (
+        ISBLANK ( PreviousScore ),
+        BLANK (),
+        ROUND (
+            CurrentScore - PreviousScore,
+            2
+        )
+    )
+
+
+// ==================================================================
+// 29. OPERATIONAL RISK TREND
+// ==================================================================
+
+Operational Risk Trend =
+VAR Change =
+    [Operational Risk Change]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Change ), "NO_HISTORY",
+        Change >= 15, "STRONGLY_DETERIORATING",
+        Change >= 5, "DETERIORATING",
+        Change <= -15, "STRONGLY_IMPROVING",
+        Change <= -5, "IMPROVING",
+        "STABLE"
+    )
+
+
+// ==================================================================
+// 30. OPERATIONAL DETERIORATION FLAG
+// ==================================================================
+
+Operational Deterioration Flag =
+IF (
+    [Operational Risk Change] >= 5,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 31. OPERATIONAL STRESS FLAG
+// ==================================================================
+
+Operational Stress Flag =
+IF (
+    (
+        [Operational Revenue Growth %] <= -0.20
+            && [Operational Net Profit Growth %] <= -0.20
+    )
+    ||
+    (
+        [Operational Operating Cash Flow] < 0
+            && [Operational Net Profit] < 0
+    )
+    ||
+    [Operational Net Profit Margin] < -0.10,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 32. PROFITABILITY PRESSURE SCORE
+// ==================================================================
+
+Operational Profitability Pressure Score =
+VAR Margin =
+    [Operational Net Profit Margin]
+
+VAR GrossMargin =
+    [Operational Gross Margin]
+
+VAR ProfitGrowth =
+    [Operational Net Profit Growth %]
+
+VAR MarginScore =
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), BLANK (),
+        Margin < -0.10, 100,
+        Margin < 0, 90,
+        Margin < 0.05, 75,
+        Margin < 0.10, 50,
+        Margin < 0.15, 25,
+        0
+    )
+
+VAR GrossMarginScore =
+    SWITCH (
+        TRUE (),
+        ISBLANK ( GrossMargin ), BLANK (),
+        GrossMargin < 0.10, 100,
+        GrossMargin < 0.20, 90,
+        GrossMargin < 0.30, 75,
+        GrossMargin < 0.40, 50,
+        GrossMargin < 0.50, 25,
+        0
+    )
+
+VAR GrowthScore =
+    SWITCH (
+        TRUE (),
+        ISBLANK ( ProfitGrowth ), BLANK (),
+        ProfitGrowth <= -0.50, 100,
+        ProfitGrowth <= -0.30, 90,
+        ProfitGrowth <= -0.15, 75,
+        ProfitGrowth <= -0.05, 50,
+        ProfitGrowth < 0, 25,
+        0
+    )
+
+VAR AvailableWeight =
+      IF ( NOT ISBLANK ( MarginScore ), 0.40, 0 )
+    + IF ( NOT ISBLANK ( GrossMarginScore ), 0.30, 0 )
+    + IF ( NOT ISBLANK ( GrowthScore ), 0.30, 0 )
+
+VAR WeightedScore =
+      COALESCE ( MarginScore, 0 ) * 0.40
+    + COALESCE ( GrossMarginScore, 0 ) * 0.30
+    + COALESCE ( GrowthScore, 0 ) * 0.30
+
+RETURN
+    IF (
+        AvailableWeight = 0,
+        BLANK (),
+        ROUND (
+            DIVIDE (
+                WeightedScore,
+                AvailableWeight
+            ),
+            2
+        )
+    )
+
+
+// ==================================================================
+// 33. OPERATIONAL EFFICIENCY SIGNAL
+// ==================================================================
+
+Operational Efficiency Signal =
+VAR RevenueGrowth =
+    [Operational Revenue Growth %]
+
+VAR ProfitGrowth =
+    [Operational Net Profit Growth %]
+
+VAR OCFMargin =
+    [Operational Cash Flow Margin]
+
+RETURN
+    SWITCH (
+        TRUE (),
+
+        RevenueGrowth < 0
+            && ProfitGrowth < 0
+            && OCFMargin < 0,
+            "SEVERE_EFFICIENCY_DETERIORATION",
+
+        RevenueGrowth < 0
+            && ProfitGrowth < 0,
+            "OPERATING_LEVERAGE_PRESSURE",
+
+        RevenueGrowth >= 0
+            && ProfitGrowth < 0,
+            "MARGIN_COMPRESSION",
+
+        RevenueGrowth < 0
+            && ProfitGrowth >= 0,
+            "COST_ADJUSTMENT_SUPPORTING_PROFIT",
+
+        RevenueGrowth > 0
+            && ProfitGrowth > 0
+            && OCFMargin > 0,
+            "HEALTHY_OPERATING_MOMENTUM",
+
+        "MIXED_OPERATING_SIGNAL"
+    )
+
+
+// ==================================================================
+// 34. OPERATIONAL RISK SUMMARY
+// ==================================================================
+
+Operational Risk Summary =
+VAR Score =
+    [Operational Risk Score]
+
+VAR Band =
+    [Operational Risk Band]
+
+VAR Status =
+    [Operational Status]
+
+VAR Factor =
+    [Primary Operational Risk Factor]
+
+VAR Trend =
+    [Operational Risk Trend]
+
+RETURN
+    IF (
+        ISBLANK ( Score ),
+        "Operational risk cannot be assessed because sufficient operating data is unavailable.",
+        "Operational risk score is "
+            & FORMAT ( Score, "0.0" )
+            & " ("
+            & Band
+            & "). Status: "
+            & Status
+            & ". Primary factor: "
+            & Factor
+            & ". Trend: "
+            & Trend
+            & "."
+    )
+
+
+// ==================================================================
+// 35. OPERATIONAL DATA QUALITY
+// ==================================================================
+
+Operational Risk Data Quality =
+VAR HasRevenue =
+    NOT ISBLANK ( [Operational Revenue] )
+
+VAR HasPreviousRevenue =
+    NOT ISBLANK ( [Operational Previous Revenue] )
+
+VAR HasProfit =
+    NOT ISBLANK ( [Operational Net Profit] )
+
+VAR HasOCF =
+    NOT ISBLANK ( [Operational Operating Cash Flow] )
+
+VAR AvailableFields =
+    HasRevenue
+        + HasPreviousRevenue
+        + HasProfit
+        + HasOCF
+
+RETURN
+    SWITCH (
+        TRUE (),
+        AvailableFields = 4, "COMPLETE",
+        AvailableFields >= 2, "PARTIAL",
+        "INSUFFICIENT"
+    )
+
+
+// ==================================================================
+// 36. DISPLAY MEASURES
+// ==================================================================
+
+Operational Risk Score Display =
+IF (
+    ISBLANK ( [Operational Risk Score] ),
+    "N/A",
+    FORMAT (
+        [Operational Risk Score],
+        "0.0"
+    )
+)
+
+
+Operational Health Score Display =
+IF (
+    ISBLANK ( [Operational Health Score] ),
+    "N/A",
+    FORMAT (
+        [Operational Health Score],
+        "0.0"
+    )
+)
+
+
+Operational Revenue Growth Display =
+IF (
+    ISBLANK ( [Operational Revenue Growth %] ),
+    "N/A",
+    FORMAT (
+        [Operational Revenue Growth %],
+        "0.0%"
+    )
+)
+
+
+Operational Net Margin Display =
+IF (
+    ISBLANK ( [Operational Net Profit Margin] ),
+    "N/A",
+    FORMAT (
+        [Operational Net Profit Margin],
+        "0.0%"
+    )
+)
+
+
+Operational Cash Flow Margin Display =
+IF (
+    ISBLANK ( [Operational Cash Flow Margin] ),
+    "N/A",
+    FORMAT (
+        [Operational Cash Flow Margin],
+        "0.0%"
+    )
+)

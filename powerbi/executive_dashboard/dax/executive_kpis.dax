@@ -1,0 +1,1552 @@
+// ============================================================
+// FinCo AI
+// executive_kpis.dax
+//
+// Executive KPI / Management Scorecard Measures
+//
+// Primary table:
+//     ExecutiveDataModel
+//
+// Supporting dimensions:
+//     DimDate
+//     DimCompany
+//     DimBusinessUnit
+//
+// Purpose:
+//     Executive financial performance, profitability, liquidity,
+//     cash flow, leverage, risk, health, alerts and decisions.
+// ============================================================
+
+
+// ============================================================
+// 01. CORE FINANCIAL KPIs
+// ============================================================
+
+Total Revenue =
+SUM ( ExecutiveDataModel[Revenue] )
+
+
+Total Gross Profit =
+SUM ( ExecutiveDataModel[GrossProfit] )
+
+
+Total Operating Profit =
+SUM ( ExecutiveDataModel[OperatingProfit] )
+
+
+Total Net Profit =
+SUM ( ExecutiveDataModel[NetProfit] )
+
+
+Total Operating Expenses =
+SUM ( ExecutiveDataModel[OperatingExpenses] )
+
+
+Total Operating Cash Flow =
+SUM ( ExecutiveDataModel[OperatingCashFlow] )
+
+
+Total Capital Expenditure =
+SUM ( ExecutiveDataModel[CapitalExpenditure] )
+
+
+Total Free Cash Flow =
+SUM ( ExecutiveDataModel[FreeCashFlow] )
+
+
+Total Assets =
+SUM ( ExecutiveDataModel[TotalAssets] )
+
+
+Total Liabilities =
+SUM ( ExecutiveDataModel[TotalLiabilities] )
+
+
+Total Equity =
+SUM ( ExecutiveDataModel[TotalEquity] )
+
+
+Total Debt =
+SUM ( ExecutiveDataModel[Debt] )
+
+
+Total Cash =
+SUM ( ExecutiveDataModel[CashAndEquivalents] )
+
+
+// ============================================================
+// 02. BUDGET KPIs
+// ============================================================
+
+Executive Budget Revenue =
+SUM ( ExecutiveDataModel[BudgetRevenue] )
+
+
+Executive Budget Expenses =
+SUM ( ExecutiveDataModel[BudgetExpenses] )
+
+
+Executive Revenue Variance =
+[Total Revenue] - [Executive Budget Revenue]
+
+
+Executive Revenue Variance % =
+DIVIDE (
+    [Executive Revenue Variance],
+    [Executive Budget Revenue]
+)
+
+
+Executive Expense Variance =
+[Total Operating Expenses] - [Executive Budget Expenses]
+
+
+Executive Expense Variance % =
+DIVIDE (
+    [Executive Expense Variance],
+    [Executive Budget Expenses]
+)
+
+
+// ============================================================
+// 03. PROFITABILITY KPIs
+// ============================================================
+
+Executive Gross Margin =
+DIVIDE (
+    [Total Gross Profit],
+    [Total Revenue]
+)
+
+
+Executive Operating Margin =
+DIVIDE (
+    [Total Operating Profit],
+    [Total Revenue]
+)
+
+
+Executive Net Margin =
+DIVIDE (
+    [Total Net Profit],
+    [Total Revenue]
+)
+
+
+Executive Operating Expense Ratio =
+DIVIDE (
+    [Total Operating Expenses],
+    [Total Revenue]
+)
+
+
+Executive Cost of Revenue Ratio =
+DIVIDE (
+    SUM ( ExecutiveDataModel[CostOfRevenue] ),
+    [Total Revenue]
+)
+
+
+Executive ROA =
+DIVIDE (
+    [Total Net Profit],
+    [Total Assets]
+)
+
+
+Executive ROE =
+DIVIDE (
+    [Total Net Profit],
+    [Total Equity]
+)
+
+
+Executive Operating ROA =
+DIVIDE (
+    [Total Operating Profit],
+    [Total Assets]
+)
+
+
+Executive Cash Return on Assets =
+DIVIDE (
+    [Total Operating Cash Flow],
+    [Total Assets]
+)
+
+
+// ============================================================
+// 04. CASH FLOW KPIs
+// ============================================================
+
+Executive OCF Margin =
+DIVIDE (
+    [Total Operating Cash Flow],
+    [Total Revenue]
+)
+
+
+Executive FCF Margin =
+DIVIDE (
+    [Total Free Cash Flow],
+    [Total Revenue]
+)
+
+
+Executive OCF Conversion =
+DIVIDE (
+    [Total Operating Cash Flow],
+    [Total Net Profit]
+)
+
+
+Executive FCF Conversion =
+DIVIDE (
+    [Total Free Cash Flow],
+    [Total Net Profit]
+)
+
+
+Executive CapEx % Revenue =
+DIVIDE (
+    ABS ( [Total Capital Expenditure] ),
+    [Total Revenue]
+)
+
+
+Executive Cash Flow Spread =
+[Total Operating Cash Flow]
+    - [Total Free Cash Flow]
+
+
+// ============================================================
+// 05. LIQUIDITY KPIs
+// ============================================================
+
+Executive Working Capital =
+SUM ( ExecutiveDataModel[WorkingCapital] )
+
+
+Executive Current Ratio =
+DIVIDE (
+    SUM ( ExecutiveDataModel[CurrentAssets] ),
+    SUM ( ExecutiveDataModel[CurrentLiabilities] )
+)
+
+
+Executive Quick Ratio =
+DIVIDE (
+    SUM ( ExecutiveDataModel[CurrentAssets] )
+        - SUM ( ExecutiveDataModel[Inventory] ),
+    SUM ( ExecutiveDataModel[CurrentLiabilities] )
+)
+
+
+Executive Cash Ratio =
+DIVIDE (
+    [Total Cash],
+    SUM ( ExecutiveDataModel[CurrentLiabilities] )
+)
+
+
+Executive Cash Coverage =
+DIVIDE (
+    [Total Cash] + [Total Operating Cash Flow],
+    SUM ( ExecutiveDataModel[CurrentLiabilities] )
+)
+
+
+Executive Liquidity Headroom =
+SUM ( ExecutiveDataModel[CurrentAssets] )
+    - SUM ( ExecutiveDataModel[CurrentLiabilities] )
+
+
+Executive Liquidity Headroom % =
+DIVIDE (
+    [Executive Liquidity Headroom],
+    SUM ( ExecutiveDataModel[CurrentLiabilities] )
+)
+
+
+// ============================================================
+// 06. LEVERAGE KPIs
+// ============================================================
+
+Executive Debt to Assets =
+DIVIDE (
+    [Total Debt],
+    [Total Assets]
+)
+
+
+Executive Debt to Equity =
+DIVIDE (
+    [Total Debt],
+    [Total Equity]
+)
+
+
+Executive Debt to Capital =
+DIVIDE (
+    [Total Debt],
+    [Total Debt] + [Total Equity]
+)
+
+
+Executive Liabilities to Assets =
+DIVIDE (
+    [Total Liabilities],
+    [Total Assets]
+)
+
+
+Executive Equity to Assets =
+DIVIDE (
+    [Total Equity],
+    [Total Assets]
+)
+
+
+// ============================================================
+// 07. ASSET QUALITY
+// ============================================================
+
+Executive Cash to Assets =
+DIVIDE (
+    [Total Cash],
+    [Total Assets]
+)
+
+
+Executive Receivables to Assets =
+DIVIDE (
+    SUM ( ExecutiveDataModel[AccountsReceivable] ),
+    [Total Assets]
+)
+
+
+Executive Inventory to Assets =
+DIVIDE (
+    SUM ( ExecutiveDataModel[Inventory] ),
+    [Total Assets]
+)
+
+
+Executive Current Assets to Assets =
+DIVIDE (
+    SUM ( ExecutiveDataModel[CurrentAssets] ),
+    [Total Assets]
+)
+
+
+// ============================================================
+// 08. RISK KPIs
+// ============================================================
+
+Executive Risk Score =
+AVERAGE (
+    ExecutiveDataModel[ExecutiveRiskScore]
+)
+
+
+Executive Health Score =
+AVERAGE (
+    ExecutiveDataModel[ExecutiveHealthScore]
+)
+
+
+Executive Risk % =
+DIVIDE (
+    [Executive Risk Score],
+    100
+)
+
+
+Executive Health % =
+DIVIDE (
+    [Executive Health Score],
+    100
+)
+
+
+Executive Risk Level =
+VAR RiskScore =
+    [Executive Risk Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( RiskScore ), "No Data",
+        RiskScore >= 75, "CRITICAL",
+        RiskScore >= 50, "HIGH",
+        RiskScore >= 25, "MEDIUM",
+        "LOW"
+    )
+
+
+Executive Health Status =
+VAR HealthScore =
+    [Executive Health Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( HealthScore ), "No Data",
+        HealthScore >= 80, "Excellent",
+        HealthScore >= 65, "Healthy",
+        HealthScore >= 50, "Watch",
+        HealthScore >= 30, "Weak",
+        "Critical"
+    )
+
+
+// ============================================================
+// 09. RISK COMPONENTS
+// ============================================================
+
+Executive Profit Risk =
+AVERAGE (
+    ExecutiveDataModel[ExecutiveProfitRisk]
+)
+
+
+Executive Liquidity Risk =
+AVERAGE (
+    ExecutiveDataModel[ExecutiveLiquidityRisk]
+)
+
+
+Executive Cash Flow Risk =
+AVERAGE (
+    ExecutiveDataModel[ExecutiveCashFlowRisk]
+)
+
+
+Executive Leverage Risk =
+AVERAGE (
+    ExecutiveDataModel[ExecutiveLeverageRisk]
+)
+
+
+Executive Integrity Risk =
+AVERAGE (
+    ExecutiveDataModel[ExecutiveIntegrityRisk]
+)
+
+
+// ============================================================
+// 10. RISK COUNTS
+// ============================================================
+
+Executive Critical Records =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutiveRiskLevel] = "CRITICAL"
+)
+
+
+Executive High Risk Records =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutiveRiskLevel] = "HIGH"
+)
+
+
+Executive Medium Risk Records =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutiveRiskLevel] = "MEDIUM"
+)
+
+
+Executive Low Risk Records =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutiveRiskLevel] = "LOW"
+)
+
+
+Executive Total Risk Records =
+COUNTROWS (
+    ExecutiveDataModel
+)
+
+
+// ============================================================
+// 11. RISK RATES
+// ============================================================
+
+Executive Critical Risk Rate =
+DIVIDE (
+    [Executive Critical Records],
+    [Executive Total Risk Records]
+)
+
+
+Executive High Risk Rate =
+DIVIDE (
+    [Executive High Risk Records],
+    [Executive Total Risk Records]
+)
+
+
+Executive Medium Risk Rate =
+DIVIDE (
+    [Executive Medium Risk Records],
+    [Executive Total Risk Records]
+)
+
+
+Executive Alert Rate =
+DIVIDE (
+    [Executive Alert Records],
+    [Executive Total Risk Records]
+)
+
+
+// ============================================================
+// 12. ALERT KPIs
+// ============================================================
+
+Executive Alert Records =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutiveAlertFlag] = "Yes"
+)
+
+
+Executive Critical Alerts =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutiveAlertFlag] = "Yes",
+    ExecutiveDataModel[ExecutiveRiskLevel] = "CRITICAL"
+)
+
+
+Executive High Risk Alerts =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutiveAlertFlag] = "Yes",
+    ExecutiveDataModel[ExecutiveRiskLevel] = "HIGH"
+)
+
+
+Executive Profitability Alerts =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutiveAlertType] = "Profitability"
+)
+
+
+Executive Liquidity Alerts =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutiveAlertType] = "Liquidity Stress"
+)
+
+
+Executive Cash Flow Alerts =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutiveAlertType] = "Negative Cash Flow"
+)
+
+
+Executive Integrity Alerts =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutiveAlertType] = "Balance Sheet Integrity"
+)
+
+
+// ============================================================
+// 13. PERFORMANCE COUNTS
+// ============================================================
+
+Executive Loss Making Records =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutivePerformanceCategory] = "Loss Making"
+)
+
+
+Executive Excellent Records =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutivePerformanceCategory] = "Excellent"
+)
+
+
+Executive Strong Records =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutivePerformanceCategory] = "Strong"
+)
+
+
+Executive Stable Records =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutivePerformanceCategory] = "Stable"
+)
+
+
+Executive Weak Records =
+CALCULATE (
+    COUNTROWS ( ExecutiveDataModel ),
+    ExecutiveDataModel[ExecutivePerformanceCategory] = "Weak"
+)
+
+
+// ============================================================
+// 14. ENTITY COUNTS
+// ============================================================
+
+Executive Companies =
+DISTINCTCOUNT (
+    ExecutiveDataModel[Company]
+)
+
+
+Executive Business Units =
+DISTINCTCOUNT (
+    ExecutiveDataModel[BusinessUnit]
+)
+
+
+Executive Records =
+COUNTROWS (
+    ExecutiveDataModel
+)
+
+
+// ============================================================
+// 15. AVERAGE EXECUTIVE KPIs
+// ============================================================
+
+Average Executive Revenue =
+AVERAGE (
+    ExecutiveDataModel[Revenue]
+)
+
+
+Average Executive Net Profit =
+AVERAGE (
+    ExecutiveDataModel[NetProfit]
+)
+
+
+Average Executive Gross Margin =
+AVERAGE (
+    ExecutiveDataModel[GrossMargin]
+)
+
+
+Average Executive Operating Margin =
+AVERAGE (
+    ExecutiveDataModel[OperatingMargin]
+)
+
+
+Average Executive Net Margin =
+AVERAGE (
+    ExecutiveDataModel[NetMargin]
+)
+
+
+Average Executive Current Ratio =
+AVERAGE (
+    ExecutiveDataModel[CurrentRatio]
+)
+
+
+Average Executive Quick Ratio =
+AVERAGE (
+    ExecutiveDataModel[QuickRatio]
+)
+
+
+Average Executive Cash Ratio =
+AVERAGE (
+    ExecutiveDataModel[CashRatio]
+)
+
+
+Average Executive Debt to Equity =
+AVERAGE (
+    ExecutiveDataModel[DebtToEquity]
+)
+
+
+Average Executive Risk Score =
+AVERAGE (
+    ExecutiveDataModel[ExecutiveRiskScore]
+)
+
+
+Average Executive Health Score =
+AVERAGE (
+    ExecutiveDataModel[ExecutiveHealthScore]
+)
+
+
+// ============================================================
+// 16. TIME INTELLIGENCE — REVENUE
+// ============================================================
+
+Executive Revenue Previous Period =
+CALCULATE (
+    [Total Revenue],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Executive Revenue Growth =
+[Total Revenue]
+    - [Executive Revenue Previous Period]
+
+
+Executive Revenue Growth % =
+DIVIDE (
+    [Executive Revenue Growth],
+    [Executive Revenue Previous Period]
+)
+
+
+// ============================================================
+// 17. TIME INTELLIGENCE — NET PROFIT
+// ============================================================
+
+Executive Net Profit Previous Period =
+CALCULATE (
+    [Total Net Profit],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Executive Net Profit Growth =
+[Total Net Profit]
+    - [Executive Net Profit Previous Period]
+
+
+Executive Net Profit Growth % =
+DIVIDE (
+    [Executive Net Profit Growth],
+    [Executive Net Profit Previous Period]
+)
+
+
+// ============================================================
+// 18. TIME INTELLIGENCE — OPERATING CASH FLOW
+// ============================================================
+
+Executive OCF Previous Period =
+CALCULATE (
+    [Total Operating Cash Flow],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Executive OCF Growth =
+[Total Operating Cash Flow]
+    - [Executive OCF Previous Period]
+
+
+Executive OCF Growth % =
+DIVIDE (
+    [Executive OCF Growth],
+    [Executive OCF Previous Period]
+)
+
+
+// ============================================================
+// 19. TIME INTELLIGENCE — FREE CASH FLOW
+// ============================================================
+
+Executive FCF Previous Period =
+CALCULATE (
+    [Total Free Cash Flow],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Executive FCF Growth =
+[Total Free Cash Flow]
+    - [Executive FCF Previous Period]
+
+
+Executive FCF Growth % =
+DIVIDE (
+    [Executive FCF Growth],
+    [Executive FCF Previous Period]
+)
+
+
+// ============================================================
+// 20. TIME INTELLIGENCE — CASH
+// ============================================================
+
+Executive Cash Previous Period =
+CALCULATE (
+    [Total Cash],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Executive Cash Growth =
+[Total Cash]
+    - [Executive Cash Previous Period]
+
+
+Executive Cash Growth % =
+DIVIDE (
+    [Executive Cash Growth],
+    [Executive Cash Previous Period]
+)
+
+
+// ============================================================
+// 21. TIME INTELLIGENCE — DEBT
+// ============================================================
+
+Executive Debt Previous Period =
+CALCULATE (
+    [Total Debt],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Executive Debt Growth =
+[Total Debt]
+    - [Executive Debt Previous Period]
+
+
+Executive Debt Growth % =
+DIVIDE (
+    [Executive Debt Growth],
+    [Executive Debt Previous Period]
+)
+
+
+// ============================================================
+// 22. TIME INTELLIGENCE — ASSETS
+// ============================================================
+
+Executive Assets Previous Period =
+CALCULATE (
+    [Total Assets],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Executive Assets Growth =
+[Total Assets]
+    - [Executive Assets Previous Period]
+
+
+Executive Assets Growth % =
+DIVIDE (
+    [Executive Assets Growth],
+    [Executive Assets Previous Period]
+)
+
+
+// ============================================================
+// 23. TIME INTELLIGENCE — WORKING CAPITAL
+// ============================================================
+
+Executive Working Capital Previous Period =
+CALCULATE (
+    [Executive Working Capital],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Executive Working Capital Growth =
+[Executive Working Capital]
+    - [Executive Working Capital Previous Period]
+
+
+Executive Working Capital Growth % =
+DIVIDE (
+    [Executive Working Capital Growth],
+    [Executive Working Capital Previous Period]
+)
+
+
+// ============================================================
+// 24. TREND STATUS
+// ============================================================
+
+Executive Revenue Trend =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Executive Revenue Growth %] ), "No Data",
+    [Executive Revenue Growth %] >= 0.10, "Strong Growth",
+    [Executive Revenue Growth %] >= 0.03, "Growth",
+    [Executive Revenue Growth %] > -0.03, "Stable",
+    [Executive Revenue Growth %] > -0.10, "Declining",
+    "Sharp Decline"
+)
+
+
+Executive Profit Trend =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Executive Net Profit Growth %] ), "No Data",
+    [Executive Net Profit Growth %] >= 0.10, "Strong Growth",
+    [Executive Net Profit Growth %] >= 0.03, "Growth",
+    [Executive Net Profit Growth %] > -0.03, "Stable",
+    [Executive Net Profit Growth %] > -0.10, "Declining",
+    "Sharp Decline"
+)
+
+
+Executive Cash Flow Trend =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Executive OCF Growth %] ), "No Data",
+    [Executive OCF Growth %] >= 0.10, "Strong Growth",
+    [Executive OCF Growth %] >= 0.03, "Growth",
+    [Executive OCF Growth %] > -0.03, "Stable",
+    [Executive OCF Growth %] > -0.10, "Declining",
+    "Sharp Decline"
+)
+
+
+Executive Cash Trend =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Executive Cash Growth %] ), "No Data",
+    [Executive Cash Growth %] >= 0.10, "Strong Growth",
+    [Executive Cash Growth %] >= 0.03, "Growth",
+    [Executive Cash Growth %] > -0.03, "Stable",
+    [Executive Cash Growth %] > -0.10, "Declining",
+    "Sharp Decline"
+)
+
+
+// ============================================================
+// 25. LIQUIDITY STATUS
+// ============================================================
+
+Executive Liquidity Status =
+VAR CurrentRatio =
+    [Executive Current Ratio]
+VAR QuickRatio =
+    [Executive Quick Ratio]
+VAR CashRatio =
+    [Executive Cash Ratio]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( CurrentRatio ), "No Data",
+        CurrentRatio < 0.75
+            || QuickRatio < 0.50
+            || CashRatio < 0.25,
+            "Critical",
+        CurrentRatio < 1
+            || QuickRatio < 0.75
+            || CashRatio < 0.50,
+            "Weak",
+        CurrentRatio < 1.50
+            || QuickRatio < 1
+            || CashRatio < 0.75,
+            "Watch",
+        "Healthy"
+    )
+
+
+// ============================================================
+// 26. PROFITABILITY STATUS
+// ============================================================
+
+Executive Profitability Status =
+VAR NetMargin =
+    [Executive Net Margin]
+VAR OperatingMargin =
+    [Executive Operating Margin]
+VAR GrossMargin =
+    [Executive Gross Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( NetMargin ), "No Data",
+        NetMargin < 0
+            || OperatingMargin < 0
+            || GrossMargin < 0,
+            "Critical",
+        NetMargin < 0.05
+            || OperatingMargin < 0.05,
+            "Weak",
+        NetMargin < 0.10
+            || OperatingMargin < 0.10,
+            "Watch",
+        "Healthy"
+    )
+
+
+// ============================================================
+// 27. CASH FLOW STATUS
+// ============================================================
+
+Executive Cash Flow Status =
+VAR OCF =
+    [Total Operating Cash Flow]
+VAR FCF =
+    [Total Free Cash Flow]
+VAR OCFMargin =
+    [Executive OCF Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( OCF ), "No Data",
+        OCF < 0 || FCF < 0, "Critical",
+        OCFMargin < 0.05, "Weak",
+        OCFMargin < 0.10, "Watch",
+        "Healthy"
+    )
+
+
+// ============================================================
+// 28. LEVERAGE STATUS
+// ============================================================
+
+Executive Leverage Status =
+VAR DebtAssets =
+    [Executive Debt to Assets]
+VAR DebtEquity =
+    [Executive Debt to Equity]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( DebtAssets ), "No Data",
+        DebtAssets >= 0.75
+            || DebtEquity >= 3,
+            "Critical",
+        DebtAssets >= 0.60
+            || DebtEquity >= 2,
+            "Weak",
+        DebtAssets >= 0.45
+            || DebtEquity >= 1,
+            "Watch",
+        "Healthy"
+    )
+
+
+// ============================================================
+// 29. OVERALL EXECUTIVE STATUS
+// ============================================================
+
+Executive Overall Status =
+VAR Risk =
+    [Executive Risk Score]
+VAR Profitability =
+    [Executive Profitability Status]
+VAR Liquidity =
+    [Executive Liquidity Status]
+VAR CashFlow =
+    [Executive Cash Flow Status]
+VAR Leverage =
+    [Executive Leverage Status]
+RETURN
+    SWITCH (
+        TRUE (),
+        Risk >= 75, "Critical",
+        Profitability = "Critical"
+            || Liquidity = "Critical"
+            || CashFlow = "Critical"
+            || Leverage = "Critical",
+            "Critical",
+        Risk >= 50, "High Risk",
+        Profitability = "Weak"
+            || Liquidity = "Weak"
+            || CashFlow = "Weak"
+            || Leverage = "Weak",
+            "Weak",
+        Risk >= 25, "Watch",
+        "Healthy"
+    )
+
+
+// ============================================================
+// 30. EXECUTIVE SCORECARD
+// ============================================================
+
+Executive Profitability Score =
+VAR GrossScore =
+    SWITCH (
+        TRUE (),
+        [Executive Gross Margin] >= 0.40, 100,
+        [Executive Gross Margin] >= 0.30, 85,
+        [Executive Gross Margin] >= 0.20, 70,
+        [Executive Gross Margin] >= 0.10, 50,
+        25
+    )
+VAR OperatingScore =
+    SWITCH (
+        TRUE (),
+        [Executive Operating Margin] >= 0.15, 100,
+        [Executive Operating Margin] >= 0.10, 85,
+        [Executive Operating Margin] >= 0.05, 70,
+        [Executive Operating Margin] >= 0, 50,
+        20
+    )
+VAR NetScore =
+    SWITCH (
+        TRUE (),
+        [Executive Net Margin] >= 0.15, 100,
+        [Executive Net Margin] >= 0.10, 85,
+        [Executive Net Margin] >= 0.05, 70,
+        [Executive Net Margin] >= 0, 50,
+        20
+    )
+RETURN
+    DIVIDE (
+        GrossScore
+            + OperatingScore
+            + NetScore,
+        3
+    )
+
+
+Executive Liquidity Score =
+VAR CurrentScore =
+    SWITCH (
+        TRUE (),
+        [Executive Current Ratio] >= 2, 100,
+        [Executive Current Ratio] >= 1.5, 85,
+        [Executive Current Ratio] >= 1, 70,
+        [Executive Current Ratio] >= 0.75, 50,
+        20
+    )
+VAR QuickScore =
+    SWITCH (
+        TRUE (),
+        [Executive Quick Ratio] >= 1.5, 100,
+        [Executive Quick Ratio] >= 1, 85,
+        [Executive Quick Ratio] >= 0.75, 70,
+        [Executive Quick Ratio] >= 0.50, 50,
+        20
+    )
+VAR CashScore =
+    SWITCH (
+        TRUE (),
+        [Executive Cash Ratio] >= 1, 100,
+        [Executive Cash Ratio] >= 0.75, 85,
+        [Executive Cash Ratio] >= 0.50, 70,
+        [Executive Cash Ratio] >= 0.25, 50,
+        20
+    )
+RETURN
+    DIVIDE (
+        CurrentScore
+            + QuickScore
+            + CashScore,
+        3
+    )
+
+
+Executive Cash Flow Score =
+VAR OCFScore =
+    SWITCH (
+        TRUE (),
+        [Executive OCF Margin] >= 0.15, 100,
+        [Executive OCF Margin] >= 0.10, 85,
+        [Executive OCF Margin] >= 0.05, 70,
+        [Executive OCF Margin] >= 0, 50,
+        20
+    )
+VAR FCFScore =
+    SWITCH (
+        TRUE (),
+        [Executive FCF Margin] >= 0.10, 100,
+        [Executive FCF Margin] >= 0.05, 85,
+        [Executive FCF Margin] >= 0.03, 70,
+        [Executive FCF Margin] >= 0, 50,
+        20
+    )
+RETURN
+    DIVIDE (
+        OCFScore + FCFScore,
+        2
+    )
+
+
+Executive Leverage Score =
+SWITCH (
+    TRUE (),
+    [Executive Debt to Assets] < 0.30, 100,
+    [Executive Debt to Assets] < 0.45, 85,
+    [Executive Debt to Assets] < 0.60, 70,
+    [Executive Debt to Assets] < 0.75, 50,
+    20
+)
+
+
+// ============================================================
+// 31. EXECUTIVE KPI SCORE
+// ============================================================
+
+Executive KPI Score =
+VAR ProfitabilityScore =
+    [Executive Profitability Score]
+VAR LiquidityScore =
+    [Executive Liquidity Score]
+VAR CashFlowScore =
+    [Executive Cash Flow Score]
+VAR LeverageScore =
+    [Executive Leverage Score]
+VAR HealthScore =
+    [Executive Health Score]
+RETURN
+    DIVIDE (
+        ProfitabilityScore * 0.25
+            + LiquidityScore * 0.20
+            + CashFlowScore * 0.20
+            + LeverageScore * 0.15
+            + HealthScore * 0.20,
+        1
+    )
+
+
+// ============================================================
+// 32. EXECUTIVE SCORE STATUS
+// ============================================================
+
+Executive KPI Score Status =
+VAR Score =
+    [Executive KPI Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "No Data",
+        Score >= 85, "Excellent",
+        Score >= 70, "Healthy",
+        Score >= 50, "Watch",
+        Score >= 30, "Weak",
+        "Critical"
+    )
+
+
+// ============================================================
+// 33. DECISION PRIORITY
+// ============================================================
+
+Executive Decision Priority =
+VAR Risk =
+    [Executive Risk Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Risk ), "P4 - Normal",
+        Risk >= 75, "P1 - Immediate",
+        Risk >= 50, "P2 - High",
+        Risk >= 25, "P3 - Monitor",
+        "P4 - Normal"
+    )
+
+
+// ============================================================
+// 34. MANAGEMENT STATUS
+// ============================================================
+
+Executive Management Status =
+VAR Priority =
+    [Executive Decision Priority]
+RETURN
+    SWITCH (
+        Priority,
+        "P1 - Immediate", "Executive Intervention Required",
+        "P2 - High", "Management Attention Required",
+        "P3 - Monitor", "Management Monitoring",
+        "Business as Usual"
+    )
+
+
+// ============================================================
+// 35. EXECUTIVE NARRATIVE
+// ============================================================
+
+Executive Narrative =
+VAR Revenue =
+    [Total Revenue]
+VAR RevenueGrowth =
+    [Executive Revenue Growth %]
+VAR NetProfit =
+    [Total Net Profit]
+VAR NetMargin =
+    [Executive Net Margin]
+VAR OCF =
+    [Total Operating Cash Flow]
+VAR FCF =
+    [Total Free Cash Flow]
+VAR Risk =
+    [Executive Risk Score]
+VAR Health =
+    [Executive Health Score]
+VAR Priority =
+    [Executive Decision Priority]
+RETURN
+    "Revenue "
+        & FORMAT ( Revenue, "#,##0.00" )
+        & " with growth of "
+        & FORMAT ( RevenueGrowth, "0.0%" )
+        & ". Net profit is "
+        & FORMAT ( NetProfit, "#,##0.00" )
+        & " with a "
+        & FORMAT ( NetMargin, "0.0%" )
+        & " margin. Operating cash flow is "
+        & FORMAT ( OCF, "#,##0.00" )
+        & " and free cash flow is "
+        & FORMAT ( FCF, "#,##0.00" )
+        & ". Financial risk is "
+        & FORMAT ( Risk, "0.0" )
+        & "/100 and health is "
+        & FORMAT ( Health, "0.0" )
+        & "/100. Decision priority: "
+        & Priority
+        & "."
+
+
+// ============================================================
+// 36. MANAGEMENT ACTION
+// ============================================================
+
+Executive Recommended Action =
+VAR Priority =
+    [Executive Decision Priority]
+VAR Profitability =
+    [Executive Profitability Status]
+VAR Liquidity =
+    [Executive Liquidity Status]
+VAR CashFlow =
+    [Executive Cash Flow Status]
+VAR Leverage =
+    [Executive Leverage Status]
+RETURN
+    SWITCH (
+        TRUE (),
+        Priority = "P1 - Immediate",
+            "Immediate executive intervention required.",
+        Liquidity = "Critical",
+            "Strengthen liquidity and review short-term obligations.",
+        CashFlow = "Critical",
+            "Review operating cash generation and working capital.",
+        Profitability = "Critical",
+            "Review revenue, pricing and cost structure.",
+        Leverage = "Critical",
+            "Review debt exposure and repayment capacity.",
+        Priority = "P2 - High",
+            "Escalate financial performance for management review.",
+        Priority = "P3 - Monitor",
+            "Monitor key financial indicators closely.",
+        "Continue normal business monitoring."
+    )
+
+
+// ============================================================
+// 37. EXECUTIVE KPI DISPLAY
+// ============================================================
+
+Executive Revenue Display =
+FORMAT (
+    [Total Revenue],
+    "#,##0.00"
+)
+
+
+Executive Net Profit Display =
+FORMAT (
+    [Total Net Profit],
+    "#,##0.00"
+)
+
+
+Executive Operating Cash Flow Display =
+FORMAT (
+    [Total Operating Cash Flow],
+    "#,##0.00"
+)
+
+
+Executive Free Cash Flow Display =
+FORMAT (
+    [Total Free Cash Flow],
+    "#,##0.00"
+)
+
+
+Executive Cash Display =
+FORMAT (
+    [Total Cash],
+    "#,##0.00"
+)
+
+
+Executive Debt Display =
+FORMAT (
+    [Total Debt],
+    "#,##0.00"
+)
+
+
+Executive Gross Margin Display =
+FORMAT (
+    [Executive Gross Margin],
+    "0.0%"
+)
+
+
+Executive Operating Margin Display =
+FORMAT (
+    [Executive Operating Margin],
+    "0.0%"
+)
+
+
+Executive Net Margin Display =
+FORMAT (
+    [Executive Net Margin],
+    "0.0%"
+)
+
+
+Executive Current Ratio Display =
+FORMAT (
+    [Executive Current Ratio],
+    "0.00x"
+)
+
+
+Executive Quick Ratio Display =
+FORMAT (
+    [Executive Quick Ratio],
+    "0.00x"
+)
+
+
+Executive Debt to Equity Display =
+FORMAT (
+    [Executive Debt to Equity],
+    "0.00x"
+)
+
+
+Executive Risk Display =
+FORMAT (
+    [Executive Risk Score],
+    "0.0"
+)
+
+
+Executive Health Display =
+FORMAT (
+    [Executive Health Score],
+    "0.0"
+)
+
+
+Executive KPI Score Display =
+FORMAT (
+    [Executive KPI Score],
+    "0.0"
+)
+
+
+// ============================================================
+// 38. EXECUTIVE KPI STATUS
+// ============================================================
+
+Executive KPI Status =
+VAR Status =
+    [Executive Overall Status]
+RETURN
+    SWITCH (
+        Status,
+        "Healthy", "🟢 Healthy",
+        "Watch", "🟡 Watch",
+        "Weak", "🟠 Weak",
+        "High Risk", "🔴 High Risk",
+        "Critical", "🔴 Critical",
+        "⚪ No Data"
+    )
+
+
+// ============================================================
+// 39. EXECUTIVE SUMMARY
+// ============================================================
+
+Executive Summary =
+VAR Status =
+    [Executive Overall Status]
+VAR Score =
+    [Executive KPI Score]
+VAR Risk =
+    [Executive Risk Score]
+VAR Health =
+    [Executive Health Score]
+VAR Alerts =
+    [Executive Alert Records]
+RETURN
+    "Overall status: "
+        & Status
+        & " | KPI score: "
+        & FORMAT ( Score, "0.0" )
+        & " | Risk: "
+        & FORMAT ( Risk, "0.0" )
+        & " | Health: "
+        & FORMAT ( Health, "0.0" )
+        & " | Alerts: "
+        & FORMAT ( Alerts, "#,##0" )
+
+
+// ============================================================
+// 40. EXECUTIVE SCORECARD
+// ============================================================
+
+Executive Scorecard =
+VAR Score =
+    [Executive KPI Score]
+VAR Status =
+    [Executive KPI Score Status]
+VAR Priority =
+    [Executive Decision Priority]
+RETURN
+    "Executive Score: "
+        & FORMAT ( Score, "0.0" )
+        & "/100"
+        & " | Status: "
+        & Status
+        & " | Priority: "
+        & Priority

@@ -1,0 +1,302 @@
+let
+    // ============================================================
+    // FinCo AI — Executive Dashboard Financial Data
+    // ============================================================
+
+    Source = FinancialTransformations,
+
+    SelectedColumns =
+        Table.SelectColumns(
+            Source,
+            {
+                "Date",
+                "Company",
+                "BusinessUnit",
+                "Revenue",
+                "GrossProfit",
+                "OperatingExpenses",
+                "OperatingProfit",
+                "InterestExpense",
+                "TaxExpense",
+                "NetProfit",
+                "OperatingCashFlow",
+                "CapitalExpenditure",
+                "FreeCashFlow",
+                "TotalAssets",
+                "CurrentAssets",
+                "CurrentLiabilities",
+                "TotalLiabilities",
+                "TotalEquity",
+                "CashAndEquivalents",
+                "AccountsReceivable",
+                "Inventory",
+                "AccountsPayable",
+                "Debt",
+                "BudgetRevenue",
+                "BudgetExpenses",
+                "FinancialRiskScore",
+                "FinancialRiskLevel",
+                "FinancialHealthScore",
+                "FinancialHealthStatus",
+                "AlertFlag",
+                "AlertType",
+                "RecommendedAction",
+                "DataQualityStatus",
+                "DecisionPriority"
+            },
+            MissingField.UseNull
+        ),
+
+    Typed =
+        Table.TransformColumnTypes(
+            SelectedColumns,
+            {
+                {"Date", type date},
+                {"Company", type text},
+                {"BusinessUnit", type text},
+                {"Revenue", type number},
+                {"GrossProfit", type number},
+                {"OperatingExpenses", type number},
+                {"OperatingProfit", type number},
+                {"InterestExpense", type number},
+                {"TaxExpense", type number},
+                {"NetProfit", type number},
+                {"OperatingCashFlow", type number},
+                {"CapitalExpenditure", type number},
+                {"FreeCashFlow", type number},
+                {"TotalAssets", type number},
+                {"CurrentAssets", type number},
+                {"CurrentLiabilities", type number},
+                {"TotalLiabilities", type number},
+                {"TotalEquity", type number},
+                {"CashAndEquivalents", type number},
+                {"AccountsReceivable", type number},
+                {"Inventory", type number},
+                {"AccountsPayable", type number},
+                {"Debt", type number},
+                {"BudgetRevenue", type number},
+                {"BudgetExpenses", type number},
+                {"FinancialRiskScore", type number},
+                {"FinancialRiskLevel", type text},
+                {"FinancialHealthScore", type number},
+                {"FinancialHealthStatus", type text},
+                {"AlertFlag", type text},
+                {"AlertType", type text},
+                {"RecommendedAction", type text},
+                {"DataQualityStatus", type text},
+                {"DecisionPriority", type text}
+            }
+        ),
+
+    CleanText =
+        Table.TransformColumns(
+            Typed,
+            {
+                {"Company", each if _ = null then "Unknown" else Text.Trim(_), type text},
+                {"BusinessUnit", each if _ = null then "Unknown" else Text.Trim(_), type text},
+                {"FinancialRiskLevel", each if _ = null then "UNKNOWN" else Text.Upper(Text.Trim(_)), type text},
+                {"FinancialHealthStatus", each if _ = null then "UNKNOWN" else Text.Trim(_), type text},
+                {"AlertFlag", each if _ = null then "No" else Text.Trim(_), type text},
+                {"DataQualityStatus", each if _ = null then "UNKNOWN" else Text.Trim(_), type text},
+                {"DecisionPriority", each if _ = null then "P3 - Normal" else Text.Trim(_), type text}
+            }
+        ),
+
+    AddYear =
+        Table.AddColumn(
+            CleanText,
+            "Year",
+            each Date.Year([Date]),
+            Int64.Type
+        ),
+
+    AddQuarter =
+        Table.AddColumn(
+            AddYear,
+            "Quarter",
+            each "Q" & Number.ToText(Date.QuarterOfYear([Date])),
+            type text
+        ),
+
+    AddMonth =
+        Table.AddColumn(
+            AddQuarter,
+            "Month",
+            each Date.Month([Date]),
+            Int64.Type
+        ),
+
+    AddMonthName =
+        Table.AddColumn(
+            AddMonth,
+            "MonthName",
+            each Date.MonthName([Date]),
+            type text
+        ),
+
+    AddMonthStart =
+        Table.AddColumn(
+            AddMonthName,
+            "MonthStart",
+            each Date.StartOfMonth([Date]),
+            type date
+        ),
+
+    AddYearMonth =
+        Table.AddColumn(
+            AddMonthStart,
+            "YearMonth",
+            each Date.ToText([Date], "yyyy-MM"),
+            type text
+        ),
+
+    AddProfitMargin =
+        Table.AddColumn(
+            AddYearMonth,
+            "NetMargin",
+            each
+                if [Revenue] = null or [Revenue] = 0
+                then null
+                else [NetProfit] / [Revenue],
+            type number
+        ),
+
+    AddOCFMargin =
+        Table.AddColumn(
+            AddProfitMargin,
+            "OperatingCashFlowMargin",
+            each
+                if [Revenue] = null or [Revenue] = 0
+                then null
+                else [OperatingCashFlow] / [Revenue],
+            type number
+        ),
+
+    AddFCFMargin =
+        Table.AddColumn(
+            AddOCFMargin,
+            "FreeCashFlowMargin",
+            each
+                if [Revenue] = null or [Revenue] = 0
+                then null
+                else [FreeCashFlow] / [Revenue],
+            type number
+        ),
+
+    AddWorkingCapital =
+        Table.AddColumn(
+            AddFCFMargin,
+            "WorkingCapital",
+            each
+                if [CurrentAssets] = null or [CurrentLiabilities] = null
+                then null
+                else [CurrentAssets] - [CurrentLiabilities],
+            type number
+        ),
+
+    AddCurrentRatio =
+        Table.AddColumn(
+            AddWorkingCapital,
+            "CurrentRatio",
+            each
+                if [CurrentLiabilities] = null or [CurrentLiabilities] = 0
+                then null
+                else [CurrentAssets] / [CurrentLiabilities],
+            type number
+        ),
+
+    AddQuickRatio =
+        Table.AddColumn(
+            AddCurrentRatio,
+            "QuickRatio",
+            each
+                if [CurrentLiabilities] = null or [CurrentLiabilities] = 0
+                then null
+                else ([CurrentAssets] - [Inventory]) / [CurrentLiabilities],
+            type number
+        ),
+
+    AddCashRatio =
+        Table.AddColumn(
+            AddQuickRatio,
+            "CashRatio",
+            each
+                if [CurrentLiabilities] = null or [CurrentLiabilities] = 0
+                then null
+                else [CashAndEquivalents] / [CurrentLiabilities],
+            type number
+        ),
+
+    AddDebtToEquity =
+        Table.AddColumn(
+            AddCashRatio,
+            "DebtToEquity",
+            each
+                if [TotalEquity] = null or [TotalEquity] = 0
+                then null
+                else [Debt] / [TotalEquity],
+            type number
+        ),
+
+    AddROA =
+        Table.AddColumn(
+            AddDebtToEquity,
+            "ROA",
+            each
+                if [TotalAssets] = null or [TotalAssets] = 0
+                then null
+                else [NetProfit] / [TotalAssets],
+            type number
+        ),
+
+    AddROE =
+        Table.AddColumn(
+            AddROA,
+            "ROE",
+            each
+                if [TotalEquity] = null or [TotalEquity] = 0
+                then null
+                else [NetProfit] / [TotalEquity],
+            type number
+        ),
+
+    AddExecutiveCategory =
+        Table.AddColumn(
+            AddROE,
+            "ExecutiveCategory",
+            each
+                if [FinancialRiskLevel] = "CRITICAL" then "Critical"
+                else if [FinancialRiskLevel] = "HIGH" then "High Risk"
+                else if [FinancialRiskLevel] = "MEDIUM" then "Watch"
+                else "Healthy",
+            type text
+        ),
+
+    AddExecutiveRecordID =
+        Table.AddColumn(
+            AddExecutiveCategory,
+            "ExecutiveRecordID",
+            each
+                Date.ToText([Date], "yyyy-MM-dd")
+                & "|"
+                & [Company]
+                & "|"
+                & [BusinessUnit],
+            type text
+        ),
+
+    Sorted =
+        Table.Sort(
+            AddExecutiveRecordID,
+            {
+                {"Date", Order.Ascending},
+                {"Company", Order.Ascending},
+                {"BusinessUnit", Order.Ascending}
+            }
+        ),
+
+    Buffered =
+        Table.Buffer(Sorted)
+
+in
+    Buffered

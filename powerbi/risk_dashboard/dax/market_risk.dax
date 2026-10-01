@@ -1,0 +1,897 @@
+/*
+====================================================================
+ FinCo AI — Market Risk Measures
+ File:
+   powerbi/risk_dashboard/market_risk.dax
+
+ Purpose:
+   Market exposure, concentration, volatility and deterioration
+   analytics for the FinCo AI Risk Dashboard.
+
+ Expected source:
+   RiskTransformations
+
+ Expected columns where available:
+   CompanyId
+   CompanyName
+   Period
+   Revenue
+   PreviousRevenue
+   NetProfit
+   PreviousNetProfit
+   GrossProfit
+   TotalAssets
+   TotalDebt
+   Cash
+   CurrentAssets
+   CurrentLiabilities
+   OperatingCashFlow
+   RevenueGrowthPct
+   RevenueDeclinePct
+   RevenueBudgetVariancePct
+   ProfitBudgetVariancePct
+   RiskDataQuality
+====================================================================
+*/
+
+
+// ==================================================================
+// 1. CORE MARKET METRICS
+// ==================================================================
+
+Market Total Revenue =
+SUM ( RiskTransformations[Revenue] )
+
+
+Market Previous Revenue =
+SUM ( RiskTransformations[PreviousRevenue] )
+
+
+Market Total Assets =
+SUM ( RiskTransformations[TotalAssets] )
+
+
+Market Total Debt =
+SUM ( RiskTransformations[TotalDebt] )
+
+
+Market Total Cash =
+SUM ( RiskTransformations[Cash] )
+
+
+Market Net Profit =
+SUM ( RiskTransformations[NetProfit] )
+
+
+Market Previous Net Profit =
+SUM ( RiskTransformations[PreviousNetProfit] )
+
+
+// ==================================================================
+// 2. REVENUE GROWTH
+// ==================================================================
+
+Market Revenue Growth % =
+DIVIDE (
+    [Market Total Revenue]
+        - [Market Previous Revenue],
+    ABS ( [Market Previous Revenue] ),
+    BLANK ()
+)
+
+
+// ==================================================================
+// 3. REVENUE DECLINE %
+// ==================================================================
+
+Market Revenue Decline % =
+MAX (
+    0,
+    - [Market Revenue Growth %]
+)
+
+
+// ==================================================================
+// 4. PROFIT GROWTH
+// ==================================================================
+
+Market Profit Growth % =
+DIVIDE (
+    [Market Net Profit]
+        - [Market Previous Net Profit],
+    ABS ( [Market Previous Net Profit] ),
+    BLANK ()
+)
+
+
+// ==================================================================
+// 5. REVENUE BUDGET VARIANCE
+// ==================================================================
+
+Market Revenue Budget Variance % =
+VAR ActualRevenue =
+    [Market Total Revenue]
+
+VAR BudgetRevenue =
+    SUM ( RiskTransformations[BudgetRevenue] )
+
+RETURN
+    DIVIDE (
+        ActualRevenue - BudgetRevenue,
+        ABS ( BudgetRevenue ),
+        BLANK ()
+    )
+
+
+// ==================================================================
+// 6. PROFIT BUDGET VARIANCE
+// ==================================================================
+
+Market Profit Budget Variance % =
+VAR ActualProfit =
+    [Market Net Profit]
+
+VAR BudgetProfit =
+    SUM ( RiskTransformations[BudgetProfit] )
+
+RETURN
+    DIVIDE (
+        ActualProfit - BudgetProfit,
+        ABS ( BudgetProfit ),
+        BLANK ()
+    )
+
+
+// ==================================================================
+// 7. REVENUE VOLATILITY
+//
+// Uses standard deviation of revenue across visible periods.
+// ==================================================================
+
+Market Revenue Volatility =
+VAR RevenuePeriods =
+    FILTER (
+        VALUES ( RiskTransformations[Period] ),
+        NOT ISBLANK (
+            CALCULATE (
+                SUM ( RiskTransformations[Revenue] )
+            )
+        )
+    )
+
+RETURN
+    STDEVX.P (
+        RevenuePeriods,
+        CALCULATE (
+            SUM ( RiskTransformations[Revenue] )
+        )
+    )
+
+
+// ==================================================================
+// 8. REVENUE VOLATILITY %
+// ==================================================================
+
+Market Revenue Volatility % =
+DIVIDE (
+    [Market Revenue Volatility],
+    ABS ( [Market Total Revenue] ),
+    BLANK ()
+)
+
+
+// ==================================================================
+// 9. REVENUE DOWNSIDE
+// ==================================================================
+
+Market Revenue Downside =
+IF (
+    [Market Revenue Growth %] < 0,
+    ABS ( [Market Revenue Growth %] ),
+    0
+)
+
+
+// ==================================================================
+// 10. MARKET PRESSURE SCORE — REVENUE
+//
+// 0   = healthy
+// 25  = low pressure
+// 50  = moderate
+// 75  = high
+// 90  = severe
+// 100 = critical
+// ==================================================================
+
+Market Revenue Risk Score =
+VAR Growth =
+    [Market Revenue Growth %]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Growth ), BLANK (),
+        Growth <= -0.30, 100,
+        Growth <= -0.20, 90,
+        Growth <= -0.10, 75,
+        Growth <= -0.05, 50,
+        Growth < 0, 25,
+        0
+    )
+
+
+// ==================================================================
+// 11. MARKET VOLATILITY RISK SCORE
+// ==================================================================
+
+Market Volatility Risk Score =
+VAR Volatility =
+    [Market Revenue Volatility %]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Volatility ), BLANK (),
+        Volatility >= 0.50, 100,
+        Volatility >= 0.35, 90,
+        Volatility >= 0.25, 75,
+        Volatility >= 0.15, 50,
+        Volatility >= 0.10, 25,
+        0
+    )
+
+
+// ==================================================================
+// 12. BUDGET PRESSURE RISK SCORE
+// ==================================================================
+
+Market Budget Risk Score =
+VAR RevenueVariance =
+    [Market Revenue Budget Variance %]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( RevenueVariance ), BLANK (),
+        RevenueVariance <= -0.30, 100,
+        RevenueVariance <= -0.20, 90,
+        RevenueVariance <= -0.10, 75,
+        RevenueVariance <= -0.05, 50,
+        RevenueVariance < 0, 25,
+        0
+    )
+
+
+// ==================================================================
+// 13. PROFIT MARKET RISK SCORE
+// ==================================================================
+
+Market Profit Risk Score =
+VAR Growth =
+    [Market Profit Growth %]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Growth ), BLANK (),
+        Growth <= -0.50, 100,
+        Growth <= -0.30, 90,
+        Growth <= -0.15, 75,
+        Growth <= -0.05, 50,
+        Growth < 0, 25,
+        0
+    )
+
+
+// ==================================================================
+// 14. MARKET RISK SCORE
+//
+// Weighting:
+//   Revenue deterioration = 35%
+//   Volatility             = 20%
+//   Budget pressure        = 20%
+//   Profit deterioration   = 25%
+// ==================================================================
+
+Market Risk Score =
+VAR RevenueScore =
+    [Market Revenue Risk Score]
+
+VAR VolatilityScore =
+    [Market Volatility Risk Score]
+
+VAR BudgetScore =
+    [Market Budget Risk Score]
+
+VAR ProfitScore =
+    [Market Profit Risk Score]
+
+VAR RevenueWeight =
+    IF ( NOT ISBLANK ( RevenueScore ), 0.35, 0 )
+
+VAR VolatilityWeight =
+    IF ( NOT ISBLANK ( VolatilityScore ), 0.20, 0 )
+
+VAR BudgetWeight =
+    IF ( NOT ISBLANK ( BudgetScore ), 0.20, 0 )
+
+VAR ProfitWeight =
+    IF ( NOT ISBLANK ( ProfitScore ), 0.25, 0 )
+
+VAR AvailableWeight =
+      RevenueWeight
+    + VolatilityWeight
+    + BudgetWeight
+    + ProfitWeight
+
+VAR WeightedScore =
+      COALESCE ( RevenueScore, 0 ) * 0.35
+    + COALESCE ( VolatilityScore, 0 ) * 0.20
+    + COALESCE ( BudgetScore, 0 ) * 0.20
+    + COALESCE ( ProfitScore, 0 ) * 0.25
+
+RETURN
+    IF (
+        AvailableWeight = 0,
+        BLANK (),
+        ROUND (
+            DIVIDE (
+                WeightedScore,
+                AvailableWeight
+            ),
+            2
+        )
+    )
+
+
+// ==================================================================
+// 15. MARKET RISK BAND
+// ==================================================================
+
+Market Risk Band =
+VAR Score =
+    [Market Risk Score]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "UNKNOWN",
+        Score >= 80, "CRITICAL",
+        Score >= 60, "HIGH",
+        Score >= 35, "MEDIUM",
+        Score >= 15, "LOW",
+        "INFO"
+    )
+
+
+// ==================================================================
+// 16. MARKET HEALTH SCORE
+// ==================================================================
+
+Market Health Score =
+VAR Risk =
+    [Market Risk Score]
+
+RETURN
+    IF (
+        ISBLANK ( Risk ),
+        BLANK (),
+        ROUND (
+            100 - Risk,
+            2
+        )
+    )
+
+
+// ==================================================================
+// 17. MARKET HEALTH BAND
+// ==================================================================
+
+Market Health Band =
+VAR Health =
+    [Market Health Score]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Health ), "UNKNOWN",
+        Health >= 80, "STRONG",
+        Health >= 60, "HEALTHY",
+        Health >= 40, "WATCH",
+        Health >= 20, "WEAK",
+        "CRITICAL"
+    )
+
+
+// ==================================================================
+// 18. MARKET RISK STATUS
+// ==================================================================
+
+Market Risk Status =
+VAR Score =
+    [Market Risk Score]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "UNKNOWN",
+        Score >= 80, "CRITICAL_MARKET_PRESSURE",
+        Score >= 60, "HIGH_MARKET_PRESSURE",
+        Score >= 35, "MODERATE_MARKET_PRESSURE",
+        Score >= 15, "WATCH",
+        "STABLE"
+    )
+
+
+// ==================================================================
+// 19. MARKET RISK FACTOR COUNT
+// ==================================================================
+
+Market Revenue Decline Flag =
+IF (
+    [Market Revenue Growth %] < 0,
+    1,
+    0
+)
+
+
+Market Severe Revenue Decline Flag =
+IF (
+    [Market Revenue Growth %] <= -0.20,
+    1,
+    0
+)
+
+
+Market High Volatility Flag =
+IF (
+    [Market Revenue Volatility %] >= 0.25,
+    1,
+    0
+)
+
+
+Market Budget Miss Flag =
+IF (
+    [Market Revenue Budget Variance %] <= -0.10,
+    1,
+    0
+)
+
+
+Market Profit Deterioration Flag =
+IF (
+    [Market Profit Growth %] < 0,
+    1,
+    0
+)
+
+
+Market Risk Factor Count =
+    [Market Revenue Decline Flag]
+    + [Market Severe Revenue Decline Flag]
+    + [Market High Volatility Flag]
+    + [Market Budget Miss Flag]
+    + [Market Profit Deterioration Flag]
+
+
+// ==================================================================
+// 20. PRIMARY MARKET RISK FACTOR
+// ==================================================================
+
+Primary Market Risk Factor =
+VAR RevenueGrowth =
+    [Market Revenue Growth %]
+
+VAR Volatility =
+    [Market Revenue Volatility %]
+
+VAR BudgetVariance =
+    [Market Revenue Budget Variance %]
+
+VAR ProfitGrowth =
+    [Market Profit Growth %]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( RevenueGrowth ), "INSUFFICIENT_DATA",
+
+        RevenueGrowth <= -0.30,
+            "SEVERE_REVENUE_DECLINE",
+
+        RevenueGrowth <= -0.20,
+            "MAJOR_REVENUE_DECLINE",
+
+        ProfitGrowth <= -0.50,
+            "SEVERE_PROFIT_DECLINE",
+
+        Volatility >= 0.50,
+            "EXTREME_REVENUE_VOLATILITY",
+
+        BudgetVariance <= -0.30,
+            "SEVERE_BUDGET_MISS",
+
+        RevenueGrowth < 0,
+            "REVENUE_DECLINE",
+
+        ProfitGrowth < 0,
+            "PROFIT_DECLINE",
+
+        Volatility >= 0.25,
+            "HIGH_REVENUE_VOLATILITY",
+
+        BudgetVariance < 0,
+            "BUDGET_PRESSURE",
+
+        "NONE"
+    )
+
+
+// ==================================================================
+// 21. MARKET DECISION
+// ==================================================================
+
+Market Decision =
+VAR Score =
+    [Market Risk Score]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "INSUFFICIENT_DATA",
+        Score >= 80, "IMMEDIATE_ACTION",
+        Score >= 60, "MANAGEMENT_REVIEW",
+        Score >= 35, "MONITOR_CLOSELY",
+        Score >= 15, "WATCH",
+        "NORMAL"
+    )
+
+
+// ==================================================================
+// 22. MARKET ALERT
+// ==================================================================
+
+Market Risk Alert =
+VAR Score =
+    [Market Risk Score]
+
+VAR Factors =
+    [Market Risk Factor Count]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        Score >= 80 || Factors >= 4,
+            "CRITICAL_MARKET_RISK",
+
+        Score >= 60 || Factors >= 3,
+            "HIGH_MARKET_RISK",
+
+        Score >= 35 || Factors >= 2,
+            "MARKET_RISK_WATCH",
+
+        Factors = 1,
+            "MARKET_RISK_LOW",
+
+        "NO_MARKET_ALERT"
+    )
+
+
+// ==================================================================
+// 23. MARKET RECOMMENDED ACTION
+// ==================================================================
+
+Market Recommended Action =
+VAR Score =
+    [Market Risk Score]
+
+VAR Factor =
+    [Primary Market Risk Factor]
+
+RETURN
+    SWITCH (
+        TRUE (),
+
+        Score >= 80
+            && CONTAINSSTRING ( Factor, "REVENUE" ),
+            "Immediately investigate market demand deterioration, customer retention and revenue concentration.",
+
+        Score >= 80
+            && CONTAINSSTRING ( Factor, "PROFIT" ),
+            "Review pricing, margin pressure and market-driven profitability deterioration.",
+
+        Score >= 80
+            && CONTAINSSTRING ( Factor, "VOLATILITY" ),
+            "Perform market volatility assessment and stress-test revenue assumptions.",
+
+        Score >= 80
+            && CONTAINSSTRING ( Factor, "BUDGET" ),
+            "Reassess market assumptions, revenue targets and forward operating plans.",
+
+        Score >= 60,
+            "Management should review market exposure, demand trends and downside scenarios.",
+
+        Score >= 35,
+            "Monitor market conditions, revenue trends and forecast assumptions closely.",
+
+        "No immediate market-risk action required."
+    )
+
+
+// ==================================================================
+// 24. PREVIOUS PERIOD MARKET RISK
+// ==================================================================
+
+Previous Period Market Risk Score =
+CALCULATE (
+    [Market Risk Score],
+    DATEADD (
+        RiskTransformations[Period],
+        -1,
+        MONTH
+    )
+)
+
+
+// ==================================================================
+// 25. MARKET RISK CHANGE
+// ==================================================================
+
+Market Risk Change =
+VAR CurrentScore =
+    [Market Risk Score]
+
+VAR PreviousScore =
+    [Previous Period Market Risk Score]
+
+RETURN
+    IF (
+        ISBLANK ( PreviousScore ),
+        BLANK (),
+        ROUND (
+            CurrentScore - PreviousScore,
+            2
+        )
+    )
+
+
+// ==================================================================
+// 26. MARKET RISK TREND
+// ==================================================================
+
+Market Risk Trend =
+VAR Change =
+    [Market Risk Change]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Change ), "NO_HISTORY",
+        Change >= 15, "STRONGLY_DETERIORATING",
+        Change >= 5, "DETERIORATING",
+        Change <= -15, "STRONGLY_IMPROVING",
+        Change <= -5, "IMPROVING",
+        "STABLE"
+    )
+
+
+// ==================================================================
+// 27. MARKET DETERIORATION FLAG
+// ==================================================================
+
+Market Deterioration Flag =
+IF (
+    [Market Risk Change] >= 5,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 28. MARKET STRESS FLAG
+// ==================================================================
+
+Market Stress Flag =
+IF (
+    [Market Revenue Growth %] <= -0.20
+        || [Market Revenue Volatility %] >= 0.35
+        || [Market Profit Growth %] <= -0.30,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 29. REVENUE CONCENTRATION PROXY
+//
+// If CompanyId represents an individual company/business unit,
+// this gives each visible company's share of total visible revenue.
+// ==================================================================
+
+Market Revenue Share =
+VAR CompanyRevenue =
+    [Market Total Revenue]
+
+VAR TotalVisibleRevenue =
+    CALCULATE (
+        [Market Total Revenue],
+        ALLSELECTED ( RiskTransformations[CompanyId] )
+    )
+
+RETURN
+    DIVIDE (
+        CompanyRevenue,
+        TotalVisibleRevenue,
+        BLANK ()
+    )
+
+
+// ==================================================================
+// 30. MARKET EXPOSURE SCORE
+// ==================================================================
+
+Market Exposure Score =
+VAR RevenueShare =
+    [Market Revenue Share]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( RevenueShare ), BLANK (),
+        RevenueShare >= 0.50, 100,
+        RevenueShare >= 0.35, 90,
+        RevenueShare >= 0.25, 75,
+        RevenueShare >= 0.15, 50,
+        RevenueShare >= 0.10, 25,
+        0
+    )
+
+
+// ==================================================================
+// 31. MARKET EXPOSURE BAND
+// ==================================================================
+
+Market Exposure Band =
+VAR Score =
+    [Market Exposure Score]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "UNKNOWN",
+        Score >= 80, "CRITICAL",
+        Score >= 60, "HIGH",
+        Score >= 35, "MEDIUM",
+        Score >= 15, "LOW",
+        "DIVERSIFIED"
+    )
+
+
+// ==================================================================
+// 32. MARKET RISK SUMMARY
+// ==================================================================
+
+Market Risk Summary =
+VAR Score =
+    [Market Risk Score]
+
+VAR Band =
+    [Market Risk Band]
+
+VAR Trend =
+    [Market Risk Trend]
+
+VAR Factor =
+    [Primary Market Risk Factor]
+
+VAR Growth =
+    [Market Revenue Growth %]
+
+RETURN
+    IF (
+        ISBLANK ( Score ),
+        "Market risk cannot be assessed because sufficient market-performance data is unavailable.",
+        "Market risk score is "
+            & FORMAT ( Score, "0.0" )
+            & " ("
+            & Band
+            & "). Revenue growth is "
+            & FORMAT ( Growth, "0.0%" )
+            & ". Primary factor: "
+            & Factor
+            & ". Trend: "
+            & Trend
+            & "."
+    )
+
+
+// ==================================================================
+// 33. MARKET RISK DATA QUALITY
+// ==================================================================
+
+Market Risk Data Quality =
+VAR HasRevenue =
+    NOT ISBLANK ( [Market Total Revenue] )
+
+VAR HasPreviousRevenue =
+    NOT ISBLANK ( [Market Previous Revenue] )
+
+VAR HasProfit =
+    NOT ISBLANK ( [Market Net Profit] )
+
+VAR HasPreviousProfit =
+    NOT ISBLANK ( [Market Previous Net Profit] )
+
+VAR AvailableFields =
+    HasRevenue
+        + HasPreviousRevenue
+        + HasProfit
+        + HasPreviousProfit
+
+RETURN
+    SWITCH (
+        TRUE (),
+        AvailableFields = 4, "COMPLETE",
+        AvailableFields >= 2, "PARTIAL",
+        "INSUFFICIENT"
+    )
+
+
+// ==================================================================
+// 34. DISPLAY MEASURES
+// ==================================================================
+
+Market Risk Score Display =
+IF (
+    ISBLANK ( [Market Risk Score] ),
+    "N/A",
+    FORMAT (
+        [Market Risk Score],
+        "0.0"
+    )
+)
+
+
+Market Revenue Growth Display =
+IF (
+    ISBLANK ( [Market Revenue Growth %] ),
+    "N/A",
+    FORMAT (
+        [Market Revenue Growth %],
+        "0.0%"
+    )
+)
+
+
+Market Volatility Display =
+IF (
+    ISBLANK ( [Market Revenue Volatility %] ),
+    "N/A",
+    FORMAT (
+        [Market Revenue Volatility %],
+        "0.0%"
+    )
+)
+
+
+Market Revenue Share Display =
+IF (
+    ISBLANK ( [Market Revenue Share] ),
+    "N/A",
+    FORMAT (
+        [Market Revenue Share],
+        "0.0%"
+    )
+)
+
+
+Market Health Score Display =
+IF (
+    ISBLANK ( [Market Health Score] ),
+    "N/A",
+    FORMAT (
+        [Market Health Score],
+        "0.0"
+    )
+)

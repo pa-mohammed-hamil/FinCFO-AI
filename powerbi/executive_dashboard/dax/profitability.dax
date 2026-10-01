@@ -1,0 +1,1617 @@
+// ============================================================
+// FinCo AI
+// profitability.dax
+//
+// Profitability Analytics & Executive KPI Framework
+//
+// Primary financial tables:
+//     IncomeStatement
+//     BalanceSheet
+//     CashFlow
+//
+// Date dimension:
+//     DimDate[Date]
+//
+// Covers:
+//     Revenue
+//     Gross Profit
+//     Operating Profit
+//     Net Profit
+//     Margins
+//     ROA / ROE
+//     Cash profitability
+//     Profit conversion
+//     Profitability risk
+//     Profitability trends
+//     Executive scorecard
+// ============================================================
+
+
+// ============================================================
+// 01. CORE PROFITABILITY MEASURES
+// ============================================================
+
+Profitability Revenue =
+SUM (
+    IncomeStatement[Revenue]
+)
+
+
+Profitability Cost of Revenue =
+SUM (
+    IncomeStatement[CostOfRevenue]
+)
+
+
+Profitability Gross Profit =
+SUM (
+    IncomeStatement[GrossProfit]
+)
+
+
+Profitability Operating Expenses =
+SUM (
+    IncomeStatement[OperatingExpenses]
+)
+
+
+Profitability Operating Profit =
+SUM (
+    IncomeStatement[OperatingProfit]
+)
+
+
+Profitability Interest Expense =
+SUM (
+    IncomeStatement[InterestExpense]
+)
+
+
+Profitability Tax Expense =
+SUM (
+    IncomeStatement[TaxExpense]
+)
+
+
+Profitability Net Profit =
+SUM (
+    IncomeStatement[NetProfit]
+)
+
+
+// ============================================================
+// 02. BALANCE SHEET PROFITABILITY BASE
+// ============================================================
+
+Profitability Total Assets =
+SUM (
+    BalanceSheet[TotalAssets]
+)
+
+
+Profitability Total Equity =
+SUM (
+    BalanceSheet[TotalEquity]
+)
+
+
+Profitability Total Liabilities =
+SUM (
+    BalanceSheet[TotalLiabilities]
+)
+
+
+Profitability Total Debt =
+SUM (
+    BalanceSheet[Debt]
+)
+
+
+// ============================================================
+// 03. CASH PROFITABILITY BASE
+// ============================================================
+
+Profitability Operating Cash Flow =
+SUM (
+    CashFlow[OperatingCashFlow]
+)
+
+
+Profitability Free Cash Flow =
+SUM (
+    CashFlow[FreeCashFlow]
+)
+
+
+// ============================================================
+// 04. PROFITABILITY MARGINS
+// ============================================================
+
+Profitability Gross Margin =
+DIVIDE (
+    [Profitability Gross Profit],
+    [Profitability Revenue]
+)
+
+
+Profitability Operating Margin =
+DIVIDE (
+    [Profitability Operating Profit],
+    [Profitability Revenue]
+)
+
+
+Profitability Net Margin =
+DIVIDE (
+    [Profitability Net Profit],
+    [Profitability Revenue]
+)
+
+
+Profitability Cost of Revenue Ratio =
+DIVIDE (
+    [Profitability Cost of Revenue],
+    [Profitability Revenue]
+)
+
+
+Profitability Operating Expense Ratio =
+DIVIDE (
+    [Profitability Operating Expenses],
+    [Profitability Revenue]
+)
+
+
+Profitability Interest Burden =
+DIVIDE (
+    [Profitability Interest Expense],
+    [Profitability Revenue]
+)
+
+
+Profitability Tax Burden =
+DIVIDE (
+    [Profitability Tax Expense],
+    [Profitability Revenue]
+)
+
+
+// ============================================================
+// 05. RETURN METRICS
+// ============================================================
+
+Profitability ROA =
+DIVIDE (
+    [Profitability Net Profit],
+    [Profitability Total Assets]
+)
+
+
+Profitability ROE =
+DIVIDE (
+    [Profitability Net Profit],
+    [Profitability Total Equity]
+)
+
+
+Profitability Operating ROA =
+DIVIDE (
+    [Profitability Operating Profit],
+    [Profitability Total Assets]
+)
+
+
+Profitability Operating ROE =
+DIVIDE (
+    [Profitability Operating Profit],
+    [Profitability Total Equity]
+)
+
+
+// ============================================================
+// 06. CASH RETURNS
+// ============================================================
+
+Profitability Cash ROA =
+DIVIDE (
+    [Profitability Operating Cash Flow],
+    [Profitability Total Assets]
+)
+
+
+Profitability Cash ROE =
+DIVIDE (
+    [Profitability Operating Cash Flow],
+    [Profitability Total Equity]
+)
+
+
+// ============================================================
+// 07. CASH PROFITABILITY
+// ============================================================
+
+Profitability Operating Cash Flow Margin =
+DIVIDE (
+    [Profitability Operating Cash Flow],
+    [Profitability Revenue]
+)
+
+
+Profitability Free Cash Flow Margin =
+DIVIDE (
+    [Profitability Free Cash Flow],
+    [Profitability Revenue]
+)
+
+
+Profitability Operating Cash Flow Conversion =
+DIVIDE (
+    [Profitability Operating Cash Flow],
+    [Profitability Net Profit]
+)
+
+
+Profitability Free Cash Flow Conversion =
+DIVIDE (
+    [Profitability Free Cash Flow],
+    [Profitability Net Profit]
+)
+
+
+// ============================================================
+// 08. PROFITABILITY GAPS
+// ============================================================
+
+Profitability Cash Profitability Gap =
+[Profitability Operating Cash Flow Margin]
+    - [Profitability Net Margin]
+
+
+Profitability Accrual Profitability Gap =
+[Profitability Net Profit]
+    - [Profitability Operating Cash Flow]
+
+
+Profitability Gross to Operating Gap =
+[Profitability Gross Margin]
+    - [Profitability Operating Margin]
+
+
+Profitability Operating to Net Gap =
+[Profitability Operating Margin]
+    - [Profitability Net Margin]
+
+
+// ============================================================
+// 09. PROFIT CONVERSION
+// ============================================================
+
+Profitability Gross Profit Conversion =
+DIVIDE (
+    [Profitability Gross Profit],
+    [Profitability Revenue]
+)
+
+
+Profitability Operating Profit Conversion =
+DIVIDE (
+    [Profitability Operating Profit],
+    [Profitability Gross Profit]
+)
+
+
+Profitability Net Profit Conversion =
+DIVIDE (
+    [Profitability Net Profit],
+    [Profitability Operating Profit]
+)
+
+
+Profitability Revenue to Net Profit Conversion =
+DIVIDE (
+    [Profitability Net Profit],
+    [Profitability Revenue]
+)
+
+
+// ============================================================
+// 10. PROFIT EFFICIENCY
+// ============================================================
+
+Profitability Gross Profit per Revenue =
+DIVIDE (
+    [Profitability Gross Profit],
+    [Profitability Revenue]
+)
+
+
+Profitability Operating Profit per Revenue =
+DIVIDE (
+    [Profitability Operating Profit],
+    [Profitability Revenue]
+)
+
+
+Profitability Net Profit per Revenue =
+DIVIDE (
+    [Profitability Net Profit],
+    [Profitability Revenue]
+)
+
+
+Profitability Operating Expense Efficiency =
+DIVIDE (
+    [Profitability Operating Profit],
+    [Profitability Operating Expenses]
+)
+
+
+Profitability Cost Efficiency =
+DIVIDE (
+    [Profitability Gross Profit],
+    [Profitability Cost of Revenue]
+)
+
+
+Profitability Profit Retention Rate =
+DIVIDE (
+    [Profitability Net Profit],
+    [Profitability Operating Profit]
+)
+
+
+// ============================================================
+// 11. PROFIT BRIDGE
+// ============================================================
+
+Profitability Gross Profit After Operating Expenses =
+[Profitability Gross Profit]
+    - [Profitability Operating Expenses]
+
+
+Profitability Operating Profit After Interest =
+[Profitability Operating Profit]
+    - [Profitability Interest Expense]
+
+
+Profitability Pre Tax Profit =
+[Profitability Operating Profit]
+    - [Profitability Interest Expense]
+
+
+Profitability Calculated Net Profit =
+[Profitability Pre Tax Profit]
+    - [Profitability Tax Expense]
+
+
+Profitability Net Profit Reconciliation Difference =
+[Profitability Net Profit]
+    - [Profitability Calculated Net Profit]
+
+
+// ============================================================
+// 12. PROFITABILITY STATUS
+// ============================================================
+
+Profitability Revenue Status =
+VAR Revenue =
+    [Profitability Revenue]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Revenue ), "No Data",
+        Revenue <= 0, "Critical",
+        "Healthy"
+    )
+
+
+Profitability Gross Margin Status =
+VAR Margin =
+    [Profitability Gross Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), "No Data",
+        Margin < 0, "Critical",
+        Margin < 0.20, "Weak",
+        Margin < 0.30, "Watch",
+        "Healthy"
+    )
+
+
+Profitability Operating Margin Status =
+VAR Margin =
+    [Profitability Operating Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), "No Data",
+        Margin < 0, "Critical",
+        Margin < 0.05, "Weak",
+        Margin < 0.10, "Watch",
+        "Healthy"
+    )
+
+
+Profitability Net Margin Status =
+VAR Margin =
+    [Profitability Net Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), "No Data",
+        Margin < 0, "Critical",
+        Margin < 0.05, "Weak",
+        Margin < 0.10, "Watch",
+        "Healthy"
+    )
+
+
+Profitability ROA Status =
+VAR ROA =
+    [Profitability ROA]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( ROA ), "No Data",
+        ROA < 0, "Critical",
+        ROA < 0.05, "Weak",
+        ROA < 0.10, "Watch",
+        "Healthy"
+    )
+
+
+Profitability ROE Status =
+VAR ROE =
+    [Profitability ROE]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( ROE ), "No Data",
+        ROE < 0, "Critical",
+        ROE < 0.08, "Weak",
+        ROE < 0.15, "Watch",
+        "Healthy"
+    )
+
+
+// ============================================================
+// 13. OVERALL PROFITABILITY STATUS
+// ============================================================
+
+Profitability Overall Status =
+VAR NetMargin =
+    [Profitability Net Margin]
+
+VAR OperatingMargin =
+    [Profitability Operating Margin]
+
+VAR ROA =
+    [Profitability ROA]
+
+VAR ROE =
+    [Profitability ROE]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( NetMargin ), "No Data",
+
+        NetMargin < 0
+            || OperatingMargin < 0,
+            "Critical",
+
+        NetMargin < 0.05
+            || OperatingMargin < 0.05,
+            "Weak",
+
+        NetMargin < 0.10
+            || ROA < 0.05
+            || ROE < 0.08,
+            "Watch",
+
+        "Healthy"
+    )
+
+
+// ============================================================
+// 14. PROFITABILITY RISK COMPONENTS
+// ============================================================
+
+Profitability Net Profit Risk =
+VAR NetProfit =
+    [Profitability Net Profit]
+
+VAR Margin =
+    [Profitability Net Margin]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( NetProfit ), 25,
+        NetProfit < 0, 40,
+        Margin < 0.05, 20,
+        0
+    )
+
+
+Profitability Gross Margin Risk =
+VAR Margin =
+    [Profitability Gross Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), 15,
+        Margin < 0, 30,
+        Margin < 0.20, 20,
+        Margin < 0.30, 10,
+        0
+    )
+
+
+Profitability Operating Margin Risk =
+VAR Margin =
+    [Profitability Operating Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), 15,
+        Margin < 0, 30,
+        Margin < 0.05, 20,
+        Margin < 0.10, 10,
+        0
+    )
+
+
+Profitability ROA Risk =
+VAR ROA =
+    [Profitability ROA]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( ROA ), 15,
+        ROA < 0, 30,
+        ROA < 0.05, 20,
+        ROA < 0.10, 10,
+        0
+    )
+
+
+Profitability ROE Risk =
+VAR ROE =
+    [Profitability ROE]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( ROE ), 15,
+        ROE < 0, 30,
+        ROE < 0.08, 20,
+        ROE < 0.15, 10,
+        0
+    )
+
+
+Profitability Cash Conversion Risk =
+VAR Conversion =
+    [Profitability Operating Cash Flow Conversion]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Conversion ), 20,
+        Conversion < 0, 30,
+        Conversion < 0.50, 20,
+        Conversion < 0.80, 10,
+        0
+    )
+
+
+// ============================================================
+// 15. COMPOSITE PROFITABILITY RISK
+// ============================================================
+
+Profitability Risk Score =
+VAR NetProfitRisk =
+    [Profitability Net Profit Risk]
+
+VAR GrossMarginRisk =
+    [Profitability Gross Margin Risk]
+
+VAR OperatingMarginRisk =
+    [Profitability Operating Margin Risk]
+
+VAR ROARisk =
+    [Profitability ROA Risk]
+
+VAR ROERisk =
+    [Profitability ROE Risk]
+
+VAR CashConversionRisk =
+    [Profitability Cash Conversion Risk]
+
+RETURN
+    MIN (
+        100,
+        DIVIDE (
+            NetProfitRisk
+                + GrossMarginRisk
+                + OperatingMarginRisk
+                + ROARisk
+                + ROERisk
+                + CashConversionRisk,
+            2
+        )
+    )
+
+
+// ============================================================
+// 16. PROFITABILITY RISK LEVEL
+// ============================================================
+
+Profitability Risk Level =
+VAR Score =
+    [Profitability Risk Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "No Data",
+        Score >= 75, "CRITICAL",
+        Score >= 50, "HIGH",
+        Score >= 25, "MEDIUM",
+        "LOW"
+    )
+
+
+// ============================================================
+// 17. PROFITABILITY HEALTH SCORE
+// ============================================================
+
+Profitability Health Score =
+MAX (
+    0,
+    100 - [Profitability Risk Score]
+)
+
+
+Profitability Health Status =
+VAR Health =
+    [Profitability Health Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Health ), "No Data",
+        Health >= 80, "Excellent",
+        Health >= 65, "Healthy",
+        Health >= 50, "Watch",
+        Health >= 30, "Weak",
+        "Critical"
+    )
+
+
+// ============================================================
+// 18. PROFITABILITY ALERT FLAGS
+// ============================================================
+
+Profitability Loss Flag =
+IF (
+    [Profitability Net Profit] < 0,
+    1,
+    0
+)
+
+
+Profitability Operating Loss Flag =
+IF (
+    [Profitability Operating Profit] < 0,
+    1,
+    0
+)
+
+
+Profitability Gross Loss Flag =
+IF (
+    [Profitability Gross Profit] < 0,
+    1,
+    0
+)
+
+
+Profitability Low Gross Margin Flag =
+IF (
+    [Profitability Gross Margin] < 0.20,
+    1,
+    0
+)
+
+
+Profitability Low Operating Margin Flag =
+IF (
+    [Profitability Operating Margin] < 0.05,
+    1,
+    0
+)
+
+
+Profitability Low Net Margin Flag =
+IF (
+    [Profitability Net Margin] < 0.05,
+    1,
+    0
+)
+
+
+Profitability Negative Cash Conversion Flag =
+IF (
+    [Profitability Operating Cash Flow Conversion] < 0,
+    1,
+    0
+)
+
+
+Profitability Alert Flag =
+IF (
+    [Profitability Risk Score] >= 25
+        || [Profitability Loss Flag] = 1
+        || [Profitability Operating Loss Flag] = 1,
+    1,
+    0
+)
+
+
+// ============================================================
+// 19. PROFITABILITY ALERT TYPE
+// ============================================================
+
+Profitability Alert Type =
+VAR Risk =
+    [Profitability Risk Level]
+
+VAR NetProfit =
+    [Profitability Net Profit]
+
+VAR GrossMargin =
+    [Profitability Gross Margin]
+
+VAR OperatingMargin =
+    [Profitability Operating Margin]
+
+VAR CashConversion =
+    [Profitability Operating Cash Flow Conversion]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        NetProfit < 0,
+            "Net Loss",
+
+        OperatingMargin < 0,
+            "Operating Loss",
+
+        GrossMargin < 0.20,
+            "Low Gross Margin",
+
+        OperatingMargin < 0.05,
+            "Low Operating Margin",
+
+        [Profitability Low Net Margin Flag] = 1,
+            "Low Net Margin",
+
+        CashConversion < 0,
+            "Negative Cash Conversion",
+
+        Risk = "CRITICAL",
+            "Critical Profitability Risk",
+
+        Risk = "HIGH",
+            "High Profitability Risk",
+
+        Risk = "MEDIUM",
+            "Profitability Watch",
+
+        "Normal"
+    )
+
+
+// ============================================================
+// 20. PROFITABILITY RECOMMENDED ACTION
+// ============================================================
+
+Profitability Recommended Action =
+VAR NetProfit =
+    [Profitability Net Profit]
+
+VAR GrossMargin =
+    [Profitability Gross Margin]
+
+VAR OperatingMargin =
+    [Profitability Operating Margin]
+
+VAR CashConversion =
+    [Profitability Operating Cash Flow Conversion]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        NetProfit < 0,
+            "Launch profitability recovery plan and review revenue, pricing and cost drivers.",
+
+        OperatingMargin < 0,
+            "Review operating cost structure and business-unit profitability.",
+
+        GrossMargin < 0.20,
+            "Review pricing, product mix and cost of revenue.",
+
+        OperatingMargin < 0.05,
+            "Reduce operating-cost pressure and improve operating efficiency.",
+
+        [Profitability Net Margin] < 0.05,
+            "Improve net profitability through pricing, cost and financing actions.",
+
+        CashConversion < 0,
+            "Investigate divergence between accounting profit and operating cash generation.",
+
+        "Maintain profitability performance and monitor key drivers."
+    )
+
+
+// ============================================================
+// 21. COUNTS
+// ============================================================
+
+Profitability Records =
+COUNTROWS (
+    IncomeStatement
+)
+
+
+Profitability Companies =
+DISTINCTCOUNT (
+    IncomeStatement[Company]
+)
+
+
+Profitability Business Units =
+DISTINCTCOUNT (
+    IncomeStatement[BusinessUnit]
+)
+
+
+Profitability Alert Records =
+CALCULATE (
+    COUNTROWS ( IncomeStatement ),
+    FILTER (
+        IncomeStatement,
+        IncomeStatement[FinancialRiskScore] >= 25
+    )
+)
+
+
+Profitability Critical Records =
+CALCULATE (
+    COUNTROWS ( IncomeStatement ),
+    FILTER (
+        IncomeStatement,
+        IncomeStatement[FinancialRiskLevel] = "CRITICAL"
+    )
+)
+
+
+Profitability High Risk Records =
+CALCULATE (
+    COUNTROWS ( IncomeStatement ),
+    FILTER (
+        IncomeStatement,
+        IncomeStatement[FinancialRiskLevel] = "HIGH"
+    )
+)
+
+
+Profitability Medium Risk Records =
+CALCULATE (
+    COUNTROWS ( IncomeStatement ),
+    FILTER (
+        IncomeStatement,
+        IncomeStatement[FinancialRiskLevel] = "MEDIUM"
+    )
+)
+
+
+Profitability Low Risk Records =
+CALCULATE (
+    COUNTROWS ( IncomeStatement ),
+    FILTER (
+        IncomeStatement,
+        IncomeStatement[FinancialRiskLevel] = "LOW"
+    )
+)
+
+
+// ============================================================
+// 22. RISK RATES
+// ============================================================
+
+Profitability Critical Rate =
+DIVIDE (
+    [Profitability Critical Records],
+    [Profitability Records]
+)
+
+
+Profitability High Risk Rate =
+DIVIDE (
+    [Profitability High Risk Records],
+    [Profitability Records]
+)
+
+
+Profitability Medium Risk Rate =
+DIVIDE (
+    [Profitability Medium Risk Records],
+    [Profitability Records]
+)
+
+
+Profitability Alert Rate =
+DIVIDE (
+    [Profitability Alert Records],
+    [Profitability Records]
+)
+
+
+// ============================================================
+// 23. AVERAGE PROFITABILITY METRICS
+// ============================================================
+
+Average Profitability Risk Score =
+AVERAGE (
+    IncomeStatement[FinancialRiskScore]
+)
+
+
+Average Profitability Health Score =
+AVERAGEX (
+    IncomeStatement,
+    100 - IncomeStatement[FinancialRiskScore]
+)
+
+
+Average Gross Margin =
+AVERAGEX (
+    IncomeStatement,
+    DIVIDE (
+        IncomeStatement[GrossProfit],
+        IncomeStatement[Revenue]
+    )
+)
+
+
+Average Operating Margin =
+AVERAGEX (
+    IncomeStatement,
+    DIVIDE (
+        IncomeStatement[OperatingProfit],
+        IncomeStatement[Revenue]
+    )
+)
+
+
+Average Net Margin =
+AVERAGEX (
+    IncomeStatement,
+    DIVIDE (
+        IncomeStatement[NetProfit],
+        IncomeStatement[Revenue]
+    )
+)
+
+
+// ============================================================
+// 24. PROFITABILITY TREND
+// ============================================================
+
+Profitability Revenue Previous Period =
+CALCULATE (
+    [Profitability Revenue],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Profitability Revenue Growth =
+[Profitability Revenue]
+    - [Profitability Revenue Previous Period]
+
+
+Profitability Revenue Growth % =
+DIVIDE (
+    [Profitability Revenue Growth],
+    [Profitability Revenue Previous Period]
+)
+
+
+Profitability Gross Profit Previous Period =
+CALCULATE (
+    [Profitability Gross Profit],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Profitability Gross Profit Growth =
+[Profitability Gross Profit]
+    - [Profitability Gross Profit Previous Period]
+
+
+Profitability Gross Profit Growth % =
+DIVIDE (
+    [Profitability Gross Profit Growth],
+    [Profitability Gross Profit Previous Period]
+)
+
+
+Profitability Operating Profit Previous Period =
+CALCULATE (
+    [Profitability Operating Profit],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Profitability Operating Profit Growth =
+[Profitability Operating Profit]
+    - [Profitability Operating Profit Previous Period]
+
+
+Profitability Operating Profit Growth % =
+DIVIDE (
+    [Profitability Operating Profit Growth],
+    [Profitability Operating Profit Previous Period]
+)
+
+
+Profitability Net Profit Previous Period =
+CALCULATE (
+    [Profitability Net Profit],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Profitability Net Profit Growth =
+[Profitability Net Profit]
+    - [Profitability Net Profit Previous Period]
+
+
+Profitability Net Profit Growth % =
+DIVIDE (
+    [Profitability Net Profit Growth],
+    [Profitability Net Profit Previous Period]
+)
+
+
+// ============================================================
+// 25. MARGIN TREND
+// ============================================================
+
+Profitability Gross Margin Previous Period =
+CALCULATE (
+    [Profitability Gross Margin],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Profitability Gross Margin Change =
+[Profitability Gross Margin]
+    - [Profitability Gross Margin Previous Period]
+
+
+Profitability Operating Margin Previous Period =
+CALCULATE (
+    [Profitability Operating Margin],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Profitability Operating Margin Change =
+[Profitability Operating Margin]
+    - [Profitability Operating Margin Previous Period]
+
+
+Profitability Net Margin Previous Period =
+CALCULATE (
+    [Profitability Net Margin],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Profitability Net Margin Change =
+[Profitability Net Margin]
+    - [Profitability Net Margin Previous Period]
+
+
+// ============================================================
+// 26. PROFITABILITY TRENDS
+// ============================================================
+
+Profitability Revenue Trend =
+VAR Growth =
+    [Profitability Revenue Growth %]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Growth ), "No Data",
+        Growth >= 0.10, "Strong Growth",
+        Growth >= 0.03, "Growth",
+        Growth >= -0.03, "Stable",
+        Growth >= -0.10, "Decline",
+        "Severe Decline"
+    )
+
+
+Profitability Gross Profit Trend =
+VAR Change =
+    [Profitability Gross Margin Change]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Change ), "No Data",
+        Change >= 0.03, "Improving",
+        Change >= -0.03, "Stable",
+        "Deteriorating"
+    )
+
+
+Profitability Operating Profit Trend =
+VAR Growth =
+    [Profitability Operating Profit Growth %]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Growth ), "No Data",
+        Growth >= 0.10, "Strong Growth",
+        Growth >= 0.03, "Growth",
+        Growth >= -0.03, "Stable",
+        Growth >= -0.10, "Decline",
+        "Severe Decline"
+    )
+
+
+Profitability Net Profit Trend =
+VAR Growth =
+    [Profitability Net Profit Growth %]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Growth ), "No Data",
+        Growth >= 0.10, "Strong Growth",
+        Growth >= 0.03, "Growth",
+        Growth >= -0.03, "Stable",
+        Growth >= -0.10, "Decline",
+        "Severe Decline"
+    )
+
+
+// ============================================================
+// 27. PROFITABILITY COMPONENT SCORES
+// ============================================================
+
+Profitability Revenue Performance Score =
+VAR Growth =
+    [Profitability Revenue Growth %]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Growth ), 50,
+        Growth >= 0.20, 100,
+        Growth >= 0.10, 90,
+        Growth >= 0.05, 80,
+        Growth >= 0, 70,
+        Growth > -0.05, 50,
+        Growth > -0.10, 30,
+        10
+    )
+
+
+Profitability Gross Margin Score =
+VAR Margin =
+    [Profitability Gross Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), 50,
+        Margin >= 0.50, 100,
+        Margin >= 0.40, 90,
+        Margin >= 0.30, 80,
+        Margin >= 0.20, 70,
+        Margin >= 0.10, 50,
+        Margin >= 0, 30,
+        0
+    )
+
+
+Profitability Operating Margin Score =
+VAR Margin =
+    [Profitability Operating Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), 50,
+        Margin >= 0.20, 100,
+        Margin >= 0.15, 90,
+        Margin >= 0.10, 80,
+        Margin >= 0.05, 70,
+        Margin >= 0, 50,
+        0
+    )
+
+
+Profitability Net Margin Score =
+VAR Margin =
+    [Profitability Net Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), 50,
+        Margin >= 0.20, 100,
+        Margin >= 0.15, 90,
+        Margin >= 0.10, 80,
+        Margin >= 0.05, 70,
+        Margin >= 0, 50,
+        0
+    )
+
+
+Profitability ROA Score =
+VAR ROA =
+    [Profitability ROA]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( ROA ), 50,
+        ROA >= 0.15, 100,
+        ROA >= 0.10, 90,
+        ROA >= 0.05, 75,
+        ROA >= 0, 50,
+        0
+    )
+
+
+Profitability ROE Score =
+VAR ROE =
+    [Profitability ROE]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( ROE ), 50,
+        ROE >= 0.20, 100,
+        ROE >= 0.15, 90,
+        ROE >= 0.10, 80,
+        ROE >= 0.08, 70,
+        ROE >= 0, 50,
+        0
+    )
+
+
+// ============================================================
+// 28. EXECUTIVE PROFITABILITY SCORE
+// ============================================================
+
+Profitability Executive Score =
+VAR RevenueScore =
+    [Profitability Revenue Performance Score]
+
+VAR GrossMarginScore =
+    [Profitability Gross Margin Score]
+
+VAR OperatingMarginScore =
+    [Profitability Operating Margin Score]
+
+VAR NetMarginScore =
+    [Profitability Net Margin Score]
+
+VAR ROAScore =
+    [Profitability ROA Score]
+
+VAR ROEScore =
+    [Profitability ROE Score]
+
+VAR CashConversionScore =
+    SWITCH (
+        TRUE (),
+        [Profitability Operating Cash Flow Conversion] >= 1.20, 100,
+        [Profitability Operating Cash Flow Conversion] >= 1.00, 90,
+        [Profitability Operating Cash Flow Conversion] >= 0.80, 80,
+        [Profitability Operating Cash Flow Conversion] >= 0.50, 70,
+        [Profitability Operating Cash Flow Conversion] >= 0, 50,
+        0
+    )
+
+RETURN
+    DIVIDE (
+          RevenueScore * 0.15
+        + GrossMarginScore * 0.15
+        + OperatingMarginScore * 0.15
+        + NetMarginScore * 0.20
+        + ROAScore * 0.10
+        + ROEScore * 0.10
+        + CashConversionScore * 0.15,
+        1
+    )
+
+
+// ============================================================
+// 29. EXECUTIVE PROFITABILITY STATUS
+// ============================================================
+
+Profitability Executive Status =
+VAR Score =
+    [Profitability Executive Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "No Data",
+        Score >= 80, "Excellent",
+        Score >= 65, "Healthy",
+        Score >= 50, "Watch",
+        Score >= 30, "Weak",
+        "Critical"
+    )
+
+
+// ============================================================
+// 30. DECISION PRIORITY
+// ============================================================
+
+Profitability Decision Priority =
+VAR Risk =
+    [Profitability Risk Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        Risk >= 75, "P1 - Immediate",
+        Risk >= 50, "P2 - High",
+        Risk >= 25, "P3 - Monitor",
+        "P4 - Normal"
+    )
+
+
+// ============================================================
+// 31. MANAGEMENT STATUS
+// ============================================================
+
+Profitability Management Status =
+VAR Risk =
+    [Profitability Risk Level]
+
+VAR Trend =
+    [Profitability Net Profit Trend]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        Risk = "CRITICAL",
+            "Immediate Management Intervention",
+
+        Risk = "HIGH",
+            "Management Review Required",
+
+        Risk = "MEDIUM"
+            && Trend = "Deteriorating",
+            "Close Monitoring Required",
+
+        Risk = "MEDIUM",
+            "Management Monitoring",
+
+        "Normal Management Oversight"
+    )
+
+
+// ============================================================
+// 32. EXECUTIVE NARRATIVE
+// ============================================================
+
+Profitability Executive Narrative =
+VAR Revenue =
+    [Profitability Revenue]
+
+VAR NetProfit =
+    [Profitability Net Profit]
+
+VAR GrossMargin =
+    [Profitability Gross Margin]
+
+VAR OperatingMargin =
+    [Profitability Operating Margin]
+
+VAR NetMargin =
+    [Profitability Net Margin]
+
+VAR ROA =
+    [Profitability ROA]
+
+VAR ROE =
+    [Profitability ROE]
+
+VAR Risk =
+    [Profitability Risk Level]
+
+RETURN
+    "Revenue is "
+        & FORMAT ( Revenue, "#,##0" )
+        & ", generating net profit of "
+        & FORMAT ( NetProfit, "#,##0" )
+        & ". Gross margin is "
+        & FORMAT ( GrossMargin, "0.0%" )
+        & ", operating margin is "
+        & FORMAT ( OperatingMargin, "0.0%" )
+        & ", and net margin is "
+        & FORMAT ( NetMargin, "0.0%" )
+        & ". ROA is "
+        & FORMAT ( ROA, "0.0%" )
+        & " and ROE is "
+        & FORMAT ( ROE, "0.0%" )
+        & ". Overall profitability risk is "
+        & Risk
+        & "."
+
+
+// ============================================================
+// 33. PROFITABILITY SCORECARD
+// ============================================================
+
+Profitability Scorecard =
+VAR Score =
+    [Profitability Executive Score]
+
+VAR Risk =
+    [Profitability Risk Score]
+
+VAR Status =
+    [Profitability Executive Status]
+
+VAR Priority =
+    [Profitability Decision Priority]
+
+RETURN
+    "Profitability Score: "
+        & FORMAT ( Score, "0.0" )
+        & "/100"
+        & " | Risk: "
+        & FORMAT ( Risk, "0.0" )
+        & "/100"
+        & " | Status: "
+        & Status
+        & " | Priority: "
+        & Priority
+
+
+// ============================================================
+// 34. DISPLAY MEASURES
+// ============================================================
+
+Profitability Revenue Display =
+FORMAT (
+    [Profitability Revenue],
+    "#,##0"
+)
+
+
+Profitability Gross Profit Display =
+FORMAT (
+    [Profitability Gross Profit],
+    "#,##0"
+)
+
+
+Profitability Operating Profit Display =
+FORMAT (
+    [Profitability Operating Profit],
+    "#,##0"
+)
+
+
+Profitability Net Profit Display =
+FORMAT (
+    [Profitability Net Profit],
+    "#,##0"
+)
+
+
+Profitability Gross Margin Display =
+FORMAT (
+    [Profitability Gross Margin],
+    "0.0%"
+)
+
+
+Profitability Operating Margin Display =
+FORMAT (
+    [Profitability Operating Margin],
+    "0.0%"
+)
+
+
+Profitability Net Margin Display =
+FORMAT (
+    [Profitability Net Margin],
+    "0.0%"
+)
+
+
+Profitability ROA Display =
+FORMAT (
+    [Profitability ROA],
+    "0.0%"
+)
+
+
+Profitability ROE Display =
+FORMAT (
+    [Profitability ROE],
+    "0.0%"
+)
+
+
+Profitability Risk Display =
+FORMAT (
+    [Profitability Risk Score],
+    "0.0"
+)
+    & "/100"
+
+
+Profitability Health Display =
+FORMAT (
+    [Profitability Health Score],
+    "0.0"
+)
+    & "/100"
+
+
+Profitability Executive Score Display =
+FORMAT (
+    [Profitability Executive Score],
+    "0.0"
+)
+    & "/100"
+
+
+// ============================================================
+// 35. KPI STATUS
+// ============================================================
+
+Profitability KPI Status =
+VAR Status =
+    [Profitability Overall Status]
+RETURN
+    SWITCH (
+        Status,
+        "Healthy", "🟢 Healthy",
+        "Watch", "🟡 Watch",
+        "Weak", "🟠 Weak",
+        "Critical", "🔴 Critical",
+        "⚪ No Data"
+    )

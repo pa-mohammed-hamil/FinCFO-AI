@@ -1,0 +1,1229 @@
+// ============================================================
+// FinCo AI — Forecast Accuracy Measures
+// File: forecast_accuracy.dax
+//
+// Primary table:
+//     ForecastResults
+//
+// Purpose:
+//     Forecast performance, accuracy, error, bias,
+//     confidence, model quality, and executive monitoring.
+//
+// Supported metrics:
+//     Revenue
+//     Profit
+//     Expense / Expenses
+//     Operating Expenses
+//     Cash Flow
+//     Operating Cash Flow
+//     Free Cash Flow
+// ============================================================
+
+
+// ============================================================
+// 1. FORECAST RECORDS
+// ============================================================
+
+Forecast Accuracy Records =
+CALCULATE(
+    COUNTROWS(ForecastResults),
+    NOT ISBLANK(ForecastResults[Forecast])
+)
+
+
+// ============================================================
+// 2. EVALUATED FORECAST RECORDS
+// ============================================================
+
+Evaluated Forecast Records =
+CALCULATE(
+    COUNTROWS(ForecastResults),
+    NOT ISBLANK(ForecastResults[Actual]),
+    NOT ISBLANK(ForecastResults[Forecast])
+)
+
+
+// ============================================================
+// 3. FUTURE FORECAST RECORDS
+// ============================================================
+
+Future Forecast Records =
+CALCULATE(
+    COUNTROWS(ForecastResults),
+    ISBLANK(ForecastResults[Actual]),
+    NOT ISBLANK(ForecastResults[Forecast])
+)
+
+
+// ============================================================
+// 4. FORECAST COVERAGE
+// ============================================================
+
+Forecast Coverage % =
+DIVIDE(
+    [Forecast Accuracy Records],
+    COUNTROWS(ForecastResults)
+)
+
+
+// ============================================================
+// 5. FORECAST ERROR
+// ============================================================
+
+Total Forecast Error =
+SUMX(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    ForecastResults[Forecast]
+        - ForecastResults[Actual]
+)
+
+
+// ============================================================
+// 6. ABSOLUTE FORECAST ERROR
+// ============================================================
+
+Total Absolute Forecast Error =
+SUMX(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    ABS(
+        ForecastResults[Forecast]
+            - ForecastResults[Actual]
+    )
+)
+
+
+// ============================================================
+// 7. MAE
+// ============================================================
+
+Forecast MAE =
+AVERAGEX(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    ABS(
+        ForecastResults[Actual]
+            - ForecastResults[Forecast]
+    )
+)
+
+
+// ============================================================
+// 8. MSE
+// ============================================================
+
+Forecast MSE =
+AVERAGEX(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    POWER(
+        ForecastResults[Actual]
+            - ForecastResults[Forecast],
+        2
+    )
+)
+
+
+// ============================================================
+// 9. RMSE
+// ============================================================
+
+Forecast RMSE =
+VAR MSEValue =
+    [Forecast MSE]
+
+RETURN
+    IF(
+        ISBLANK(MSEValue),
+        BLANK(),
+        SQRT(MSEValue)
+    )
+
+
+// ============================================================
+// 10. MAPE
+// ============================================================
+
+Forecast MAPE =
+AVERAGEX(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        ForecastResults[Actual] <> 0
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    DIVIDE(
+        ABS(
+            ForecastResults[Actual]
+                - ForecastResults[Forecast]
+        ),
+        ABS(ForecastResults[Actual])
+    )
+)
+
+
+// ============================================================
+// 11. SMAPE
+// ============================================================
+
+Forecast SMAPE =
+AVERAGEX(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+            &&
+        (
+            ABS(ForecastResults[Actual])
+                + ABS(ForecastResults[Forecast])
+        ) <> 0
+    ),
+    DIVIDE(
+        2
+            * ABS(
+                ForecastResults[Actual]
+                    - ForecastResults[Forecast]
+            ),
+        ABS(ForecastResults[Actual])
+            + ABS(ForecastResults[Forecast])
+    )
+)
+
+
+// ============================================================
+// 12. FORECAST ACCURACY
+// ============================================================
+
+Forecast Accuracy =
+VAR MAPEValue =
+    [Forecast MAPE]
+
+RETURN
+    IF(
+        ISBLANK(MAPEValue),
+        BLANK(),
+        MAX(
+            0,
+            1 - MAPEValue
+        )
+    )
+
+
+// ============================================================
+// 13. FORECAST ACCURACY %
+// ============================================================
+
+Forecast Accuracy % =
+[Forecast Accuracy]
+
+
+// ============================================================
+// 14. FORECAST BIAS
+// ============================================================
+
+Forecast Bias =
+VAR ActualValue =
+    CALCULATE(
+        SUM(ForecastResults[Actual]),
+        NOT ISBLANK(ForecastResults[Actual])
+    )
+
+VAR ForecastValue =
+    CALCULATE(
+        SUM(ForecastResults[Forecast]),
+        NOT ISBLANK(ForecastResults[Actual])
+    )
+
+RETURN
+    ForecastValue - ActualValue
+
+
+// ============================================================
+// 15. FORECAST BIAS %
+// ============================================================
+
+Forecast Bias % =
+VAR ActualValue =
+    CALCULATE(
+        SUM(ForecastResults[Actual]),
+        NOT ISBLANK(ForecastResults[Actual])
+    )
+
+RETURN
+    DIVIDE(
+        [Forecast Bias],
+        ABS(ActualValue)
+    )
+
+
+// ============================================================
+// 16. MEAN FORECAST ERROR
+// ============================================================
+
+Mean Forecast Error =
+AVERAGEX(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    ForecastResults[Forecast]
+        - ForecastResults[Actual]
+)
+
+
+// ============================================================
+// 17. MEAN ABSOLUTE PERCENTAGE ERROR
+// ============================================================
+
+Mean Absolute Percentage Error =
+[Forecast MAPE]
+
+
+// ============================================================
+// 18. MEDIAN ABSOLUTE ERROR
+// ============================================================
+
+Median Absolute Forecast Error =
+MEDIANX(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    ABS(
+        ForecastResults[Actual]
+            - ForecastResults[Forecast]
+    )
+)
+
+
+// ============================================================
+// 19. MAXIMUM FORECAST ERROR
+// ============================================================
+
+Maximum Forecast Error =
+MAXX(
+    FILTER(
+        ForecastResults,
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+    ),
+    ABS(
+        ForecastResults[Actual]
+            - ForecastResults[Forecast]
+    )
+)
+
+
+// ============================================================
+// 20. AVERAGE CONFIDENCE
+// ============================================================
+
+Average Forecast Confidence =
+AVERAGE(
+    ForecastResults[Confidence]
+)
+
+
+// ============================================================
+// 21. CONFIDENCE %
+// ============================================================
+
+Average Forecast Confidence % =
+[Average Forecast Confidence]
+
+
+// ============================================================
+// 22. CONFIDENCE-ADJUSTED ACCURACY
+// ============================================================
+
+Confidence Adjusted Forecast Accuracy =
+VAR AccuracyValue =
+    [Forecast Accuracy]
+
+VAR ConfidenceValue =
+    [Average Forecast Confidence]
+
+RETURN
+    IF(
+        ISBLANK(AccuracyValue)
+            || ISBLANK(ConfidenceValue),
+        BLANK(),
+        AccuracyValue * ConfidenceValue
+    )
+
+
+// ============================================================
+// 23. HIGH ACCURACY FORECASTS
+// ============================================================
+
+High Accuracy Forecasts =
+CALCULATE(
+    COUNTROWS(ForecastResults),
+    NOT ISBLANK(ForecastResults[Actual]),
+    NOT ISBLANK(ForecastResults[Forecast]),
+    ForecastResults[ForecastAccuracy] >= 0.90
+)
+
+
+// ============================================================
+// 24. ACCEPTABLE ACCURACY FORECASTS
+// ============================================================
+
+Acceptable Accuracy Forecasts =
+CALCULATE(
+    COUNTROWS(ForecastResults),
+    NOT ISBLANK(ForecastResults[Actual]),
+    NOT ISBLANK(ForecastResults[Forecast]),
+    ForecastResults[ForecastAccuracy] >= 0.75,
+    ForecastResults[ForecastAccuracy] < 0.90
+)
+
+
+// ============================================================
+// 25. LOW ACCURACY FORECASTS
+// ============================================================
+
+Low Accuracy Forecasts =
+CALCULATE(
+    COUNTROWS(ForecastResults),
+    NOT ISBLANK(ForecastResults[Actual]),
+    NOT ISBLANK(ForecastResults[Forecast]),
+    ForecastResults[ForecastAccuracy] < 0.75
+)
+
+
+// ============================================================
+// 26. EXCELLENT FORECAST RATE
+// ============================================================
+
+Excellent Forecast Rate % =
+DIVIDE(
+    CALCULATE(
+        COUNTROWS(ForecastResults),
+        ForecastResults[ModelQuality] = "Excellent"
+    ),
+    [Evaluated Forecast Records]
+)
+
+
+// ============================================================
+// 27. GOOD FORECAST RATE
+// ============================================================
+
+Good Forecast Rate % =
+DIVIDE(
+    CALCULATE(
+        COUNTROWS(ForecastResults),
+        ForecastResults[ModelQuality] = "Good"
+    ),
+    [Evaluated Forecast Records]
+)
+
+
+// ============================================================
+// 28. NEEDS IMPROVEMENT RATE
+// ============================================================
+
+Forecast Needs Improvement Rate % =
+DIVIDE(
+    CALCULATE(
+        COUNTROWS(ForecastResults),
+        ForecastResults[ModelQuality] = "Needs Improvement"
+    ),
+    [Evaluated Forecast Records]
+)
+
+
+// ============================================================
+// 29. FORECAST ACCURACY STATUS
+// ============================================================
+
+Forecast Accuracy Status =
+VAR AccuracyValue =
+    [Forecast Accuracy]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(AccuracyValue),
+            "Not Evaluated",
+
+        AccuracyValue >= 0.90,
+            "Excellent",
+
+        AccuracyValue >= 0.80,
+            "Good",
+
+        AccuracyValue >= 0.70,
+            "Acceptable",
+
+        "Needs Improvement"
+    )
+
+
+// ============================================================
+// 30. FORECAST QUALITY SCORE
+// ============================================================
+
+Forecast Quality Score =
+VAR AccuracyScore =
+    COALESCE(
+        [Forecast Accuracy],
+        0
+    ) * 60
+
+VAR ConfidenceScore =
+    COALESCE(
+        [Average Forecast Confidence],
+        0
+    ) * 25
+
+VAR CoverageScore =
+    COALESCE(
+        [Forecast Coverage %],
+        0
+    ) * 15
+
+RETURN
+    ROUND(
+        AccuracyScore
+            + ConfidenceScore
+            + CoverageScore,
+        1
+    )
+
+
+// ============================================================
+// 31. FORECAST QUALITY LEVEL
+// ============================================================
+
+Forecast Quality Level =
+VAR Score =
+    [Forecast Quality Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        Score >= 90,
+            "EXCELLENT",
+
+        Score >= 80,
+            "GOOD",
+
+        Score >= 70,
+            "ACCEPTABLE",
+
+        Score >= 50,
+            "WEAK",
+
+        "POOR"
+    )
+
+
+// ============================================================
+// 32. FORECAST RISK FROM ACCURACY
+// ============================================================
+
+Forecast Accuracy Risk Score =
+VAR AccuracyValue =
+    [Forecast Accuracy]
+
+VAR MAPEValue =
+    [Forecast MAPE]
+
+VAR ConfidenceValue =
+    [Average Forecast Confidence]
+
+VAR AccuracyRisk =
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(AccuracyValue),
+            40,
+
+        AccuracyValue < 0.60,
+            40,
+
+        AccuracyValue < 0.70,
+            30,
+
+        AccuracyValue < 0.80,
+            20,
+
+        AccuracyValue < 0.90,
+            10,
+
+        0
+    )
+
+VAR ErrorRisk =
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(MAPEValue),
+            0,
+
+        MAPEValue >= 0.40,
+            40,
+
+        MAPEValue >= 0.30,
+            30,
+
+        MAPEValue >= 0.20,
+            20,
+
+        MAPEValue >= 0.10,
+            10,
+
+        0
+    )
+
+VAR ConfidenceRisk =
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(ConfidenceValue),
+            20,
+
+        ConfidenceValue < 0.40,
+            20,
+
+        ConfidenceValue < 0.60,
+            15,
+
+        ConfidenceValue < 0.75,
+            10,
+
+        ConfidenceValue < 0.90,
+            5,
+
+        0
+    )
+
+RETURN
+    MIN(
+        100,
+        AccuracyRisk
+            + ErrorRisk
+            + ConfidenceRisk
+    )
+
+
+// ============================================================
+// 33. FORECAST ACCURACY RISK LEVEL
+// ============================================================
+
+Forecast Accuracy Risk Level =
+VAR RiskScore =
+    [Forecast Accuracy Risk Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        RiskScore >= 75,
+            "CRITICAL",
+
+        RiskScore >= 50,
+            "HIGH",
+
+        RiskScore >= 25,
+            "MEDIUM",
+
+        "LOW"
+    )
+
+
+// ============================================================
+// 34. FORECAST ACCURACY HEALTH SCORE
+// ============================================================
+
+Forecast Accuracy Health Score =
+MAX(
+    0,
+    100 - [Forecast Accuracy Risk Score]
+)
+
+
+// ============================================================
+// 35. FORECAST ACCURACY HEALTH STATUS
+// ============================================================
+
+Forecast Accuracy Health Status =
+VAR HealthScore =
+    [Forecast Accuracy Health Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        HealthScore >= 80,
+            "Excellent",
+
+        HealthScore >= 65,
+            "Healthy",
+
+        HealthScore >= 50,
+            "Watch",
+
+        HealthScore >= 30,
+            "Weak",
+
+        "Critical"
+    )
+
+
+// ============================================================
+// 36. FORECAST ACCURACY ALERT
+// ============================================================
+
+Forecast Accuracy Alert Flag =
+VAR RiskLevel =
+    [Forecast Accuracy Risk Level]
+
+VAR AccuracyValue =
+    [Forecast Accuracy]
+
+RETURN
+    IF(
+        RiskLevel IN {
+            "CRITICAL",
+            "HIGH"
+        }
+            ||
+        (
+            NOT ISBLANK(AccuracyValue)
+                && AccuracyValue < 0.70
+        ),
+        "YES",
+        "NO"
+    )
+
+
+// ============================================================
+// 37. FORECAST ACCURACY ALERT TYPE
+// ============================================================
+
+Forecast Accuracy Alert Type =
+VAR RiskLevel =
+    [Forecast Accuracy Risk Level]
+
+VAR AccuracyValue =
+    [Forecast Accuracy]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        RiskLevel = "CRITICAL",
+            "Critical Forecast Accuracy Risk",
+
+        RiskLevel = "HIGH",
+            "High Forecast Accuracy Risk",
+
+        NOT ISBLANK(AccuracyValue)
+            && AccuracyValue < 0.60,
+            "Severe Forecast Error",
+
+        NOT ISBLANK(AccuracyValue)
+            && AccuracyValue < 0.70,
+            "Low Forecast Accuracy",
+
+        RiskLevel = "MEDIUM",
+            "Forecast Accuracy Monitoring",
+
+        BLANK()
+    )
+
+
+// ============================================================
+// 38. FORECAST ACCURACY RECOMMENDED ACTION
+// ============================================================
+
+Forecast Accuracy Recommended Action =
+VAR RiskLevel =
+    [Forecast Accuracy Risk Level]
+
+VAR AccuracyValue =
+    [Forecast Accuracy]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        RiskLevel = "CRITICAL",
+            "Recalibrate model, investigate data quality, and perform immediate model review",
+
+        RiskLevel = "HIGH",
+            "Investigate forecast drivers, retrain model, and validate assumptions",
+
+        NOT ISBLANK(AccuracyValue)
+            && AccuracyValue < 0.70,
+            "Review model features, outliers, data quality, and forecast assumptions",
+
+        RiskLevel = "MEDIUM",
+            "Monitor forecast performance and validate model assumptions",
+
+        "Continue normal forecast performance monitoring"
+    )
+
+
+// ============================================================
+// 39. MODEL PERFORMANCE SCORE
+// ============================================================
+
+Forecast Model Performance Score =
+VAR AccuracyScore =
+    COALESCE(
+        [Forecast Accuracy],
+        0
+    ) * 50
+
+VAR ConfidenceScore =
+    COALESCE(
+        [Average Forecast Confidence],
+        0
+    ) * 20
+
+VAR RiskScore =
+    (
+        100
+            - [Forecast Accuracy Risk Score]
+    ) * 30 / 100
+
+RETURN
+    ROUND(
+        AccuracyScore
+            + ConfidenceScore
+            + RiskScore,
+        1
+    )
+
+
+// ============================================================
+// 40. MODEL PERFORMANCE STATUS
+// ============================================================
+
+Forecast Model Performance Status =
+VAR Score =
+    [Forecast Model Performance Score]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        Score >= 90,
+            "Excellent",
+
+        Score >= 80,
+            "Good",
+
+        Score >= 70,
+            "Acceptable",
+
+        Score >= 50,
+            "Needs Review",
+
+        "Poor"
+    )
+
+
+// ============================================================
+// 41. FORECAST ERROR RATE
+// ============================================================
+
+Forecast Error Rate % =
+DIVIDE(
+    [Total Absolute Forecast Error],
+    CALCULATE(
+        SUM(ForecastResults[Actual]),
+        NOT ISBLANK(ForecastResults[Actual])
+    )
+)
+
+
+// ============================================================
+// 42. FORECAST DIRECTIONAL ACCURACY
+// ============================================================
+//
+// Measures whether forecast movement agrees with
+// actual movement versus the previous period.
+//
+
+Forecast Directional Accuracy % =
+VAR EvaluatedTable =
+    FILTER(
+        ADDCOLUMNS(
+            ForecastResults,
+            "__PreviousActual",
+                CALCULATE(
+                    MAX(ForecastResults[Actual]),
+                    DATEADD(
+                        ForecastResults[ForecastDate],
+                        -1,
+                        MONTH
+                    )
+                )
+        ),
+        NOT ISBLANK(ForecastResults[Actual])
+            &&
+        NOT ISBLANK(ForecastResults[Forecast])
+            &&
+        NOT ISBLANK([__PreviousActual])
+    )
+
+VAR CorrectDirections =
+    COUNTROWS(
+        FILTER(
+            EvaluatedTable,
+            SIGN(
+                ForecastResults[Forecast]
+                    - [__PreviousActual]
+            )
+            =
+            SIGN(
+                ForecastResults[Actual]
+                    - [__PreviousActual]
+            )
+        )
+    )
+
+RETURN
+    DIVIDE(
+        CorrectDirections,
+        COUNTROWS(EvaluatedTable)
+    )
+
+
+// ============================================================
+// 43. FORECAST ACCURACY TREND
+// ============================================================
+
+Forecast Accuracy Trend =
+VAR CurrentAccuracy =
+    [Forecast Accuracy]
+
+VAR PreviousAccuracy =
+    CALCULATE(
+        [Forecast Accuracy],
+        DATEADD(
+            ForecastResults[ForecastDate],
+            -1,
+            MONTH
+        )
+    )
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        ISBLANK(CurrentAccuracy),
+            "No Data",
+
+        ISBLANK(PreviousAccuracy),
+            "No Prior Period",
+
+        CurrentAccuracy > PreviousAccuracy + 0.02,
+            "Improving",
+
+        CurrentAccuracy < PreviousAccuracy - 0.02,
+            "Declining",
+
+        "Stable"
+    )
+
+
+// ============================================================
+// 44. FORECAST ACCURACY MOMENTUM
+// ============================================================
+
+Forecast Accuracy Momentum =
+VAR CurrentAccuracy =
+    [Forecast Accuracy]
+
+VAR PreviousAccuracy =
+    CALCULATE(
+        [Forecast Accuracy],
+        DATEADD(
+            ForecastResults[ForecastDate],
+            -1,
+            MONTH
+        )
+    )
+
+RETURN
+    CurrentAccuracy - PreviousAccuracy
+
+
+// ============================================================
+// 45. BEST FORECAST MODEL
+// ============================================================
+
+Best Forecast Model =
+VAR ModelTable =
+    ADDCOLUMNS(
+        VALUES(ForecastResults[Model]),
+        "__Accuracy",
+            CALCULATE(
+                [Forecast Accuracy]
+            )
+    )
+
+RETURN
+    MAXX(
+        TOPN(
+            1,
+            ModelTable,
+            [__Accuracy],
+            DESC
+        ),
+        ForecastResults[Model]
+    )
+
+
+// ============================================================
+// 46. BEST MODEL ACCURACY
+// ============================================================
+
+Best Forecast Model Accuracy =
+VAR ModelTable =
+    ADDCOLUMNS(
+        VALUES(ForecastResults[Model]),
+        "__Accuracy",
+            CALCULATE(
+                [Forecast Accuracy]
+            )
+    )
+
+RETURN
+    MAXX(
+        ModelTable,
+        [__Accuracy]
+    )
+
+
+// ============================================================
+// 47. WORST FORECAST MODEL
+// ============================================================
+
+Worst Forecast Model =
+VAR ModelTable =
+    ADDCOLUMNS(
+        VALUES(ForecastResults[Model]),
+        "__Accuracy",
+            CALCULATE(
+                [Forecast Accuracy]
+            )
+    )
+
+RETURN
+    MINX(
+        TOPN(
+            1,
+            ModelTable,
+            [__Accuracy],
+            ASC
+        ),
+        ForecastResults[Model]
+    )
+
+
+// ============================================================
+// 48. WORST MODEL ACCURACY
+// ============================================================
+
+Worst Forecast Model Accuracy =
+VAR ModelTable =
+    ADDCOLUMNS(
+        VALUES(ForecastResults[Model]),
+        "__Accuracy",
+            CALCULATE(
+                [Forecast Accuracy]
+            )
+    )
+
+RETURN
+    MINX(
+        ModelTable,
+        [__Accuracy]
+    )
+
+
+// ============================================================
+// 49. FORECAST MODEL COUNT
+// ============================================================
+
+Forecast Model Count =
+DISTINCTCOUNT(
+    ForecastResults[Model]
+)
+
+
+// ============================================================
+// 50. FORECAST VERSION COUNT
+// ============================================================
+
+Forecast Model Version Count =
+DISTINCTCOUNT(
+    ForecastResults[ModelVersion]
+)
+
+
+// ============================================================
+// 51. EXECUTIVE FORECAST ACCURACY STATUS
+// ============================================================
+
+Executive Forecast Accuracy Status =
+VAR AccuracyValue =
+    [Forecast Accuracy]
+
+VAR RiskLevel =
+    [Forecast Accuracy Risk Level]
+
+VAR Trend =
+    [Forecast Accuracy Trend]
+
+RETURN
+    SWITCH(
+        TRUE(),
+
+        RiskLevel = "CRITICAL",
+            "CRITICAL — Forecast accuracy requires immediate model review",
+
+        RiskLevel = "HIGH",
+            "HIGH RISK — Forecast accuracy requires management attention",
+
+        Trend = "Declining",
+            "WARNING — Forecast accuracy is declining",
+
+        AccuracyValue >= 0.90,
+            "HEALTHY — Forecast accuracy is excellent",
+
+        AccuracyValue >= 0.80,
+            "GOOD — Forecast accuracy is performing well",
+
+        AccuracyValue >= 0.70,
+            "WATCH — Forecast accuracy requires monitoring",
+
+        "ACTION REQUIRED — Forecast accuracy needs improvement"
+    )
+
+
+// ============================================================
+// 52. FORECAST ACCURACY SCORECARD
+// ============================================================
+
+Forecast Accuracy Scorecard =
+VAR AccuracyScore =
+    COALESCE(
+        [Forecast Accuracy],
+        0
+    ) * 40
+
+VAR ConfidenceScore =
+    COALESCE(
+        [Average Forecast Confidence],
+        0
+    ) * 25
+
+VAR CoverageScore =
+    COALESCE(
+        [Forecast Coverage %],
+        0
+    ) * 15
+
+VAR HealthScore =
+    [Forecast Accuracy Health Score] * 0.20
+
+RETURN
+    ROUND(
+        AccuracyScore
+            + ConfidenceScore
+            + CoverageScore
+            + HealthScore,
+        1
+    )
+
+
+// ============================================================
+// 53. FORECAST ACCURACY DISPLAY
+// ============================================================
+
+Forecast Accuracy Display =
+VAR AccuracyValue =
+    [Forecast Accuracy]
+
+RETURN
+    IF(
+        ISBLANK(AccuracyValue),
+        "N/A",
+        FORMAT(
+            AccuracyValue,
+            "0.0%"
+        )
+    )
+
+
+// ============================================================
+// 54. FORECAST MAPE DISPLAY
+// ============================================================
+
+Forecast MAPE Display =
+VAR MAPEValue =
+    [Forecast MAPE]
+
+RETURN
+    IF(
+        ISBLANK(MAPEValue),
+        "N/A",
+        FORMAT(
+            MAPEValue,
+            "0.0%"
+        )
+    )
+
+
+// ============================================================
+// 55. FORECAST CONFIDENCE DISPLAY
+// ============================================================
+
+Forecast Confidence Display =
+VAR ConfidenceValue =
+    [Average Forecast Confidence]
+
+RETURN
+    IF(
+        ISBLANK(ConfidenceValue),
+        "N/A",
+        FORMAT(
+            ConfidenceValue,
+            "0.0%"
+        )
+    )

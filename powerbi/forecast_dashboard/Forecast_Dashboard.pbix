@@ -1,0 +1,645 @@
+let
+    // ============================================================
+    // FINCO AI
+    // FORECAST DASHBOARD
+    // COMPLETE POWER QUERY / M QUERY
+    // ============================================================
+
+    // ============================================================
+    // 1. PARAMETERS
+    // ============================================================
+
+    StartDate =
+        #date(2022, 1, 1),
+
+    EndDate =
+        Date.EndOfMonth(Date.From(DateTime.LocalNow())),
+
+    // ============================================================
+    // 2. SOURCE
+    // ============================================================
+    //
+    // Expected source columns:
+    //
+    // Date
+    // Company
+    // BusinessUnit
+    // Revenue
+    // Expenses
+    // GrossProfit
+    // OperatingProfit
+    // NetProfit
+    // OperatingCashFlow
+    // FreeCashFlow
+    // BudgetRevenue
+    // BudgetExpenses
+    //
+    // Replace this section with SQL/API/Data Lake source
+    // in production.
+    // ============================================================
+
+    Source =
+        try
+            Excel.CurrentWorkbook(){[Name="FinancialForecastData"]}[Content]
+        otherwise
+            #table(
+                {
+                    "Date",
+                    "Company",
+                    "BusinessUnit",
+                    "Revenue",
+                    "Expenses",
+                    "GrossProfit",
+                    "OperatingProfit",
+                    "NetProfit",
+                    "OperatingCashFlow",
+                    "FreeCashFlow",
+                    "BudgetRevenue",
+                    "BudgetExpenses"
+                },
+                {}
+            ),
+
+    // ============================================================
+    // 3. STANDARDIZE COLUMN NAMES
+    // ============================================================
+
+    StandardizedColumns =
+        Table.TransformColumnNames(
+            Source,
+            each Text.Trim(_)
+        ),
+
+    // ============================================================
+    // 4. DATA TYPES
+    // ============================================================
+
+    Typed =
+        Table.TransformColumnTypes(
+            StandardizedColumns,
+            {
+                {"Date", type date},
+                {"Company", type text},
+                {"BusinessUnit", type text},
+                {"Revenue", type number},
+                {"Expenses", type number},
+                {"GrossProfit", type number},
+                {"OperatingProfit", type number},
+                {"NetProfit", type number},
+                {"OperatingCashFlow", type number},
+                {"FreeCashFlow", type number},
+                {"BudgetRevenue", type number},
+                {"BudgetExpenses", type number}
+            },
+            "en-US"
+        ),
+
+    // ============================================================
+    // 5. FILTER VALID DATES
+    // ============================================================
+
+    ValidDates =
+        Table.SelectRows(
+            Typed,
+            each
+                [Date] <> null
+                and [Date] >= StartDate
+                and [Date] <= EndDate
+        ),
+
+    // ============================================================
+    // 6. REMOVE INVALID COMPANY / BUSINESS UNIT RECORDS
+    // ============================================================
+
+    ValidBusinessRecords =
+        Table.SelectRows(
+            ValidDates,
+            each
+                [Company] <> null
+                and Text.Trim([Company]) <> ""
+                and [BusinessUnit] <> null
+                and Text.Trim([BusinessUnit]) <> ""
+        ),
+
+    // ============================================================
+    // 7. CLEAN TEXT FIELDS
+    // ============================================================
+
+    CleanText =
+        Table.TransformColumns(
+            ValidBusinessRecords,
+            {
+                {
+                    "Company",
+                    each Text.Trim(_),
+                    type text
+                },
+                {
+                    "BusinessUnit",
+                    each Text.Trim(_),
+                    type text
+                }
+            }
+        ),
+
+    // ============================================================
+    // 8. REPLACE NULL FINANCIAL VALUES WITH ZERO
+    // ============================================================
+
+    CleanNumbers =
+        Table.ReplaceValue(
+            CleanText,
+            null,
+            0,
+            Replacer.ReplaceValue,
+            {
+                "Revenue",
+                "Expenses",
+                "GrossProfit",
+                "OperatingProfit",
+                "NetProfit",
+                "OperatingCashFlow",
+                "FreeCashFlow",
+                "BudgetRevenue",
+                "BudgetExpenses"
+            }
+        ),
+
+    // ============================================================
+    // 9. YEAR
+    // ============================================================
+
+    AddYear =
+        Table.AddColumn(
+            CleanNumbers,
+            "Year",
+            each Date.Year([Date]),
+            Int64.Type
+        ),
+
+    // ============================================================
+    // 10. QUARTER NUMBER
+    // ============================================================
+
+    AddQuarterNumber =
+        Table.AddColumn(
+            AddYear,
+            "QuarterNumber",
+            each Date.QuarterOfYear([Date]),
+            Int64.Type
+        ),
+
+    // ============================================================
+    // 11. QUARTER
+    // ============================================================
+
+    AddQuarter =
+        Table.AddColumn(
+            AddQuarterNumber,
+            "Quarter",
+            each
+                "Q" &
+                Number.ToText([QuarterNumber]),
+            type text
+        ),
+
+    // ============================================================
+    // 12. MONTH NUMBER
+    // ============================================================
+
+    AddMonthNumber =
+        Table.AddColumn(
+            AddQuarter,
+            "MonthNumber",
+            each Date.Month([Date]),
+            Int64.Type
+        ),
+
+    // ============================================================
+    // 13. MONTH
+    // ============================================================
+
+    AddMonth =
+        Table.AddColumn(
+            AddMonthNumber,
+            "Month",
+            each Date.ToText([Date], "MMM"),
+            type text
+        ),
+
+    // ============================================================
+    // 14. FULL MONTH NAME
+    // ============================================================
+
+    AddMonthName =
+        Table.AddColumn(
+            AddMonth,
+            "MonthName",
+            each Date.ToText([Date], "MMMM"),
+            type text
+        ),
+
+    // ============================================================
+    // 15. MONTH YEAR
+    // ============================================================
+
+    AddMonthYear =
+        Table.AddColumn(
+            AddMonthName,
+            "MonthYear",
+            each
+                Date.ToText(
+                    [Date],
+                    "MMM yyyy"
+                ),
+            type text
+        ),
+
+    // ============================================================
+    // 16. PERIOD KEY
+    // ============================================================
+
+    AddPeriodKey =
+        Table.AddColumn(
+            AddMonthYear,
+            "PeriodKey",
+            each
+                [Year] * 100 + [MonthNumber],
+            Int64.Type
+        ),
+
+    // ============================================================
+    // 17. YEAR-MONTH DATE
+    // ============================================================
+
+    AddMonthStart =
+        Table.AddColumn(
+            AddPeriodKey,
+            "MonthStart",
+            each
+                Date.StartOfMonth([Date]),
+            type date
+        ),
+
+    // ============================================================
+    // 18. YEAR START
+    // ============================================================
+
+    AddYearStart =
+        Table.AddColumn(
+            AddMonthStart,
+            "YearStart",
+            each
+                Date.StartOfYear([Date]),
+            type date
+        ),
+
+    // ============================================================
+    // 19. REVENUE VARIANCE
+    // ============================================================
+
+    AddRevenueVariance =
+        Table.AddColumn(
+            AddYearStart,
+            "RevenueVariance",
+            each
+                [Revenue] -
+                [BudgetRevenue],
+            type number
+        ),
+
+    // ============================================================
+    // 20. REVENUE VARIANCE %
+    // ============================================================
+
+    AddRevenueVariancePct =
+        Table.AddColumn(
+            AddRevenueVariance,
+            "RevenueVariancePct",
+            each
+                if [BudgetRevenue] = 0
+                then null
+                else
+                    ([Revenue] - [BudgetRevenue])
+                    /
+                    [BudgetRevenue],
+            Percentage.Type
+        ),
+
+    // ============================================================
+    // 21. EXPENSE VARIANCE
+    // ============================================================
+
+    AddExpenseVariance =
+        Table.AddColumn(
+            AddRevenueVariancePct,
+            "ExpenseVariance",
+            each
+                [Expenses] -
+                [BudgetExpenses],
+            type number
+        ),
+
+    // ============================================================
+    // 22. EXPENSE VARIANCE %
+    // ============================================================
+
+    AddExpenseVariancePct =
+        Table.AddColumn(
+            AddExpenseVariance,
+            "ExpenseVariancePct",
+            each
+                if [BudgetExpenses] = 0
+                then null
+                else
+                    ([Expenses] - [BudgetExpenses])
+                    /
+                    [BudgetExpenses],
+            Percentage.Type
+        ),
+
+    // ============================================================
+    // 23. GROSS MARGIN
+    // ============================================================
+
+    AddGrossMargin =
+        Table.AddColumn(
+            AddExpenseVariancePct,
+            "GrossMargin",
+            each
+                if [Revenue] = 0
+                then null
+                else
+                    [GrossProfit] /
+                    [Revenue],
+            Percentage.Type
+        ),
+
+    // ============================================================
+    // 24. OPERATING MARGIN
+    // ============================================================
+
+    AddOperatingMargin =
+        Table.AddColumn(
+            AddGrossMargin,
+            "OperatingMargin",
+            each
+                if [Revenue] = 0
+                then null
+                else
+                    [OperatingProfit] /
+                    [Revenue],
+            Percentage.Type
+        ),
+
+    // ============================================================
+    // 25. NET MARGIN
+    // ============================================================
+
+    AddNetMargin =
+        Table.AddColumn(
+            AddOperatingMargin,
+            "NetMargin",
+            each
+                if [Revenue] = 0
+                then null
+                else
+                    [NetProfit] /
+                    [Revenue],
+            Percentage.Type
+        ),
+
+    // ============================================================
+    // 26. OPERATING CASH FLOW MARGIN
+    // ============================================================
+
+    AddCashFlowMargin =
+        Table.AddColumn(
+            AddNetMargin,
+            "CashFlowMargin",
+            each
+                if [Revenue] = 0
+                then null
+                else
+                    [OperatingCashFlow] /
+                    [Revenue],
+            Percentage.Type
+        ),
+
+    // ============================================================
+    // 27. FREE CASH FLOW MARGIN
+    // ============================================================
+
+    AddFreeCashFlowMargin =
+        Table.AddColumn(
+            AddCashFlowMargin,
+            "FreeCashFlowMargin",
+            each
+                if [Revenue] = 0
+                then null
+                else
+                    [FreeCashFlow] /
+                    [Revenue],
+            Percentage.Type
+        ),
+
+    // ============================================================
+    // 28. PROFITABILITY STATUS
+    // ============================================================
+
+    AddProfitabilityStatus =
+        Table.AddColumn(
+            AddFreeCashFlowMargin,
+            "ProfitabilityStatus",
+            each
+                if [NetProfit] < 0
+                then "Loss"
+                else if [NetMargin] < 0.05
+                then "Low Margin"
+                else if [NetMargin] < 0.15
+                then "Moderate"
+                else
+                    "Healthy",
+            type text
+        ),
+
+    // ============================================================
+    // 29. CASH FLOW STATUS
+    // ============================================================
+
+    AddCashFlowStatus =
+        Table.AddColumn(
+            AddProfitabilityStatus,
+            "CashFlowStatus",
+            each
+                if [OperatingCashFlow] < 0
+                then "Critical"
+                else if [FreeCashFlow] < 0
+                then "Watch"
+                else
+                    "Healthy",
+            type text
+        ),
+
+    // ============================================================
+    // 30. REVENUE STATUS
+    // ============================================================
+
+    AddRevenueStatus =
+        Table.AddColumn(
+            AddCashFlowStatus,
+            "RevenueStatus",
+            each
+                if [BudgetRevenue] = 0
+                then "No Budget"
+                else if [Revenue] < [BudgetRevenue] * 0.80
+                then "Severe Decline"
+                else if [Revenue] < [BudgetRevenue] * 0.95
+                then "Below Budget"
+                else if [Revenue] <= [BudgetRevenue] * 1.05
+                then "On Target"
+                else
+                    "Above Target",
+            type text
+        ),
+
+    // ============================================================
+    // 31. FORECAST ELIGIBILITY
+    // ============================================================
+
+    AddForecastEligibility =
+        Table.AddColumn(
+            AddRevenueStatus,
+            "ForecastEligible",
+            each
+                [Revenue] <> null
+                and [Date] <> null,
+            type logical
+        ),
+
+    // ============================================================
+    // 32. FINANCIAL RISK SCORE
+    // ============================================================
+
+    AddFinancialRiskScore =
+        Table.AddColumn(
+            AddForecastEligibility,
+            "FinancialRiskScore",
+            each
+                let
+                    RevenueRisk =
+                        if [RevenueStatus] = "Severe Decline"
+                        then 35
+                        else if [RevenueStatus] = "Below Budget"
+                        then 20
+                        else 0,
+
+                    ProfitRisk =
+                        if [NetProfit] < 0
+                        then 30
+                        else if [NetMargin] < 0.05
+                        then 15
+                        else 0,
+
+                    CashRisk =
+                        if [CashFlowStatus] = "Critical"
+                        then 30
+                        else if [CashFlowStatus] = "Watch"
+                        then 15
+                        else 0
+                in
+                    Number.Min(
+                        100,
+                        RevenueRisk +
+                        ProfitRisk +
+                        CashRisk
+                    ),
+            Int64.Type
+        ),
+
+    // ============================================================
+    // 33. FORECAST RISK LEVEL
+    // ============================================================
+
+    AddRiskLevel =
+        Table.AddColumn(
+            AddFinancialRiskScore,
+            "ForecastRiskLevel",
+            each
+                if [FinancialRiskScore] >= 75
+                then "CRITICAL"
+                else if [FinancialRiskScore] >= 50
+                then "HIGH"
+                else if [FinancialRiskScore] >= 25
+                then "MEDIUM"
+                else
+                    "LOW",
+            type text
+        ),
+
+    // ============================================================
+    // 34. FORECAST ALERT
+    // ============================================================
+
+    AddForecastAlert =
+        Table.AddColumn(
+            AddRiskLevel,
+            "ForecastAlert",
+            each
+                if [ForecastRiskLevel] = "CRITICAL"
+                then "Severe financial loss risk"
+                else if [ForecastRiskLevel] = "HIGH"
+                then "Financial deterioration detected"
+                else if [ForecastRiskLevel] = "MEDIUM"
+                then "Financial performance requires monitoring"
+                else
+                    "No immediate forecast risk",
+            type text
+        ),
+
+    // ============================================================
+    // 35. MANAGEMENT ACTION
+    // ============================================================
+
+    AddRecommendedAction =
+        Table.AddColumn(
+            AddForecastAlert,
+            "RecommendedAction",
+            each
+                if [ForecastRiskLevel] = "CRITICAL"
+                then
+                    "Immediate liquidity and cost-control review"
+                else if [ForecastRiskLevel] = "HIGH"
+                then
+                    "Review revenue, expenses and cash-flow drivers"
+                else if [ForecastRiskLevel] = "MEDIUM"
+                then
+                    "Monitor KPIs and investigate adverse variance"
+                else
+                    "Continue normal monitoring",
+            type text
+        ),
+
+    // ============================================================
+    // 36. SORT
+    // ============================================================
+
+    Sorted =
+        Table.Sort(
+            AddRecommendedAction,
+            {
+                {"Date", Order.Ascending},
+                {"Company", Order.Ascending},
+                {"BusinessUnit", Order.Ascending}
+            }
+        ),
+
+    // ============================================================
+    // 37. BUFFER FINAL TABLE
+    // ============================================================
+
+    Final =
+        Table.Buffer(Sorted)
+
+in
+    Final

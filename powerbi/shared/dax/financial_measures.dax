@@ -1,0 +1,1674 @@
+-- Add shared financial measures here
+/*
+====================================================================
+ FinCo AI — Financial Measures
+ File: powerbi/shared/dax/financial_measures.dax
+
+ Purpose:
+   Enterprise financial KPI and analytical measure layer.
+
+ Covers:
+   - Revenue
+   - Expenses
+   - Gross Profit
+   - Operating Profit
+   - Net Profit
+   - Margins
+   - Cash Flow
+   - Balance Sheet
+   - Liquidity
+   - Leverage
+   - Working Capital
+   - Budget Variance
+   - Growth
+   - Period Comparison
+   - Profitability
+   - Financial Health
+   - Executive KPI display
+
+ Expected fact/source table:
+   RiskTransformations
+
+ Expected columns:
+   CompanyId
+   CompanyName
+   Period
+   Revenue
+   PreviousRevenue
+   NetProfit
+   PreviousNetProfit
+   GrossProfit
+   PreviousGrossProfit
+   OperatingCashFlow
+   Cash
+   CurrentAssets
+   CurrentLiabilities
+   TotalDebt
+   TotalAssets
+   TotalEquity
+   BudgetRevenue
+   BudgetProfit
+
+ Related:
+   DateTable
+   RiskFactors
+   RiskScores
+
+ Currency:
+   INR / ₹
+
+ IMPORTANT:
+   Backend calculations remain authoritative.
+   DAX is the Power BI analytical/presentation layer.
+====================================================================
+*/
+
+
+// ==================================================================
+// 1. CORE FINANCIAL MEASURES
+// ==================================================================
+
+Total Revenue =
+SUM (
+    RiskTransformations[Revenue]
+)
+
+
+Total Previous Revenue =
+SUM (
+    RiskTransformations[PreviousRevenue]
+)
+
+
+Total Gross Profit =
+SUM (
+    RiskTransformations[GrossProfit]
+)
+
+
+Total Previous Gross Profit =
+SUM (
+    RiskTransformations[PreviousGrossProfit]
+)
+
+
+Total Net Profit =
+SUM (
+    RiskTransformations[NetProfit]
+)
+
+
+Total Previous Net Profit =
+SUM (
+    RiskTransformations[PreviousNetProfit]
+)
+
+
+Total Operating Cash Flow =
+SUM (
+    RiskTransformations[OperatingCashFlow]
+)
+
+
+Total Cash =
+SUM (
+    RiskTransformations[Cash]
+)
+
+
+Total Current Assets =
+SUM (
+    RiskTransformations[CurrentAssets]
+)
+
+
+Total Current Liabilities =
+SUM (
+    RiskTransformations[CurrentLiabilities]
+)
+
+
+Total Debt =
+SUM (
+    RiskTransformations[TotalDebt]
+)
+
+
+Total Assets =
+SUM (
+    RiskTransformations[TotalAssets]
+)
+
+
+Total Equity =
+SUM (
+    RiskTransformations[TotalEquity]
+)
+
+
+// ==================================================================
+// 2. EXPENSE / COST PROXIES
+// ==================================================================
+//
+// If explicit expense columns are available, replace these with:
+//
+// SUM ( RiskTransformations[TotalExpenses] )
+//
+// These proxy calculations preserve compatibility with the current
+// financial schema.
+// ==================================================================
+
+Gross Profit Cost =
+[Total Revenue] - [Total Gross Profit]
+
+
+Net Profit Cost =
+[Total Revenue] - [Total Net Profit]
+
+
+Operating Cost Proxy =
+[Total Gross Profit] - [Total Net Profit]
+
+
+Total Cost Proxy =
+[Total Revenue] - [Total Net Profit]
+
+
+// ==================================================================
+// 3. PROFITABILITY
+// ==================================================================
+
+Gross Profit Margin =
+DIVIDE (
+    [Total Gross Profit],
+    [Total Revenue]
+)
+
+
+Net Profit Margin =
+DIVIDE (
+    [Total Net Profit],
+    [Total Revenue]
+)
+
+
+Operating Profit Proxy =
+[Total Gross Profit] - [Operating Cost Proxy]
+
+
+Operating Profit Margin =
+DIVIDE (
+    [Operating Profit Proxy],
+    [Total Revenue]
+)
+
+
+Gross Margin % =
+[Gross Profit Margin]
+
+
+Net Margin % =
+[Net Profit Margin]
+
+
+Operating Margin % =
+[Operating Profit Margin]
+
+
+Return on Assets =
+DIVIDE (
+    [Total Net Profit],
+    [Total Assets]
+)
+
+
+Return on Equity =
+DIVIDE (
+    [Total Net Profit],
+    [Total Equity]
+)
+
+
+// ==================================================================
+// 4. REVENUE GROWTH
+// ==================================================================
+
+Revenue Growth =
+[Total Revenue]
+    - [Total Previous Revenue]
+
+
+Revenue Growth % =
+DIVIDE (
+    [Revenue Growth],
+    ABS ( [Total Previous Revenue] )
+)
+
+
+Revenue Decline % =
+IF (
+    [Revenue Growth %] < 0,
+    ABS ( [Revenue Growth %] ),
+    0
+)
+
+
+Revenue Growth Status =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Revenue Growth %] ), "NO_DATA",
+    [Revenue Growth %] >= 0.20, "STRONG_GROWTH",
+    [Revenue Growth %] >= 0.10, "HEALTHY_GROWTH",
+    [Revenue Growth %] >= 0.00, "STABLE",
+    [Revenue Growth %] >= -0.10, "MILD_DECLINE",
+    [Revenue Growth %] >= -0.20, "SIGNIFICANT_DECLINE",
+    "SEVERE_DECLINE"
+)
+
+
+// ==================================================================
+// 5. GROSS PROFIT GROWTH
+// ==================================================================
+
+Gross Profit Growth =
+[Total Gross Profit]
+    - [Total Previous Gross Profit]
+
+
+Gross Profit Growth % =
+DIVIDE (
+    [Gross Profit Growth],
+    ABS ( [Total Previous Gross Profit] )
+)
+
+
+Gross Profit Decline % =
+IF (
+    [Gross Profit Growth %] < 0,
+    ABS ( [Gross Profit Growth %] ),
+    0
+)
+
+
+// ==================================================================
+// 6. NET PROFIT GROWTH
+// ==================================================================
+
+Net Profit Growth =
+[Total Net Profit]
+    - [Total Previous Net Profit]
+
+
+Net Profit Growth % =
+DIVIDE (
+    [Net Profit Growth],
+    ABS ( [Total Previous Net Profit] )
+)
+
+
+Net Profit Decline % =
+IF (
+    [Net Profit Growth %] < 0,
+    ABS ( [Net Profit Growth %] ),
+    0
+)
+
+
+// ==================================================================
+// 7. CASH FLOW ANALYSIS
+// ==================================================================
+
+Operating Cash Flow Margin =
+DIVIDE (
+    [Total Operating Cash Flow],
+    [Total Revenue]
+)
+
+
+Operating Cash Flow Growth =
+VAR CurrentOCF =
+    [Total Operating Cash Flow]
+
+VAR PreviousOCF =
+    CALCULATE (
+        [Total Operating Cash Flow],
+        DATEADD (
+            'DateTable'[Date],
+            -1,
+            MONTH
+        )
+    )
+
+RETURN
+DIVIDE (
+    CurrentOCF - PreviousOCF,
+    ABS ( PreviousOCF )
+)
+
+
+Cash Flow Conversion =
+DIVIDE (
+    [Total Operating Cash Flow],
+    [Total Net Profit]
+)
+
+
+Cash Flow to Revenue =
+DIVIDE (
+    [Total Operating Cash Flow],
+    [Total Revenue]
+)
+
+
+// ==================================================================
+// 8. WORKING CAPITAL
+// ==================================================================
+
+Working Capital =
+[Total Current Assets]
+    - [Total Current Liabilities]
+
+
+Working Capital Ratio =
+DIVIDE (
+    [Working Capital],
+    [Total Current Liabilities]
+)
+
+
+Current Ratio =
+DIVIDE (
+    [Total Current Assets],
+    [Total Current Liabilities]
+)
+
+
+Cash Ratio =
+DIVIDE (
+    [Total Cash],
+    [Total Current Liabilities]
+)
+
+
+Cash to Current Liabilities =
+DIVIDE (
+    [Total Cash],
+    [Total Current Liabilities]
+)
+
+
+// ==================================================================
+// 9. LEVERAGE
+// ==================================================================
+
+Debt to Equity =
+DIVIDE (
+    [Total Debt],
+    [Total Equity]
+)
+
+
+Debt to Assets =
+DIVIDE (
+    [Total Debt],
+    [Total Assets]
+)
+
+
+Equity Ratio =
+DIVIDE (
+    [Total Equity],
+    [Total Assets]
+)
+
+
+Cash to Debt =
+DIVIDE (
+    [Total Cash],
+    [Total Debt]
+)
+
+
+Operating Cash Flow to Debt =
+DIVIDE (
+    [Total Operating Cash Flow],
+    [Total Debt]
+)
+
+
+Debt Coverage Ratio =
+DIVIDE (
+    [Total Operating Cash Flow],
+    [Total Debt]
+)
+
+
+// ==================================================================
+// 10. BUDGET ANALYSIS
+// ==================================================================
+
+Budget Revenue =
+SUM (
+    RiskTransformations[BudgetRevenue]
+)
+
+
+Budget Profit =
+SUM (
+    RiskTransformations[BudgetProfit]
+)
+
+
+Revenue Budget Variance =
+[Total Revenue]
+    - [Budget Revenue]
+
+
+Revenue Budget Variance % =
+DIVIDE (
+    [Revenue Budget Variance],
+    ABS ( [Budget Revenue] )
+)
+
+
+Profit Budget Variance =
+[Total Net Profit]
+    - [Budget Profit]
+
+
+Profit Budget Variance % =
+DIVIDE (
+    [Profit Budget Variance],
+    ABS ( [Budget Profit] )
+)
+
+
+Revenue Budget Achievement % =
+DIVIDE (
+    [Total Revenue],
+    [Budget Revenue]
+)
+
+
+Profit Budget Achievement % =
+DIVIDE (
+    [Total Net Profit],
+    [Budget Profit]
+)
+
+
+// ==================================================================
+// 11. BUDGET STATUS
+// ==================================================================
+
+Revenue Budget Status =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Budget Revenue] ), "NO_BUDGET",
+    [Revenue Budget Variance %] >= 0.10, "ABOVE_BUDGET",
+    [Revenue Budget Variance %] >= 0, "ON_TARGET",
+    [Revenue Budget Variance %] >= -0.10, "BELOW_BUDGET",
+    "SIGNIFICANTLY_BELOW_BUDGET"
+)
+
+
+Profit Budget Status =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Budget Profit] ), "NO_BUDGET",
+    [Profit Budget Variance %] >= 0.10, "ABOVE_BUDGET",
+    [Profit Budget Variance %] >= 0, "ON_TARGET",
+    [Profit Budget Variance %] >= -0.10, "BELOW_BUDGET",
+    "SIGNIFICANTLY_BELOW_BUDGET"
+)
+
+
+// ==================================================================
+// 12. LOSS / FINANCIAL PRESSURE FLAGS
+// ==================================================================
+
+Loss Flag =
+IF (
+    [Total Net Profit] < 0,
+    1,
+    0
+)
+
+
+Negative Cash Flow Flag =
+IF (
+    [Total Operating Cash Flow] < 0,
+    1,
+    0
+)
+
+
+Negative Margin Flag =
+IF (
+    [Net Profit Margin] < 0,
+    1,
+    0
+)
+
+
+Revenue Decline Flag =
+IF (
+    [Revenue Growth %] < 0,
+    1,
+    0
+)
+
+
+Profit Decline Flag =
+IF (
+    [Net Profit Growth %] < 0,
+    1,
+    0
+)
+
+
+Liquidity Pressure Flag =
+IF (
+    [Current Ratio] < 1,
+    1,
+    0
+)
+
+
+Critical Liquidity Flag =
+IF (
+    [Current Ratio] < 0.75,
+    1,
+    0
+)
+
+
+High Leverage Flag =
+IF (
+    [Debt to Equity] >= 2,
+    1,
+    0
+)
+
+
+Critical Leverage Flag =
+IF (
+    [Debt to Equity] >= 3,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 13. FINANCIAL RISK SCORE
+// ==================================================================
+//
+// Financial score:
+// Revenue       20%
+// Profit        20%
+// Liquidity     20%
+// Debt          15%
+// Margin        10%
+// Cash Flow     15%
+//
+// Score range: 0–100
+// ==================================================================
+
+Financial Revenue Risk Score =
+SWITCH (
+    TRUE (),
+    [Revenue Growth %] <= -0.30, 100,
+    [Revenue Growth %] <= -0.20, 90,
+    [Revenue Growth %] <= -0.10, 75,
+    [Revenue Growth %] <= -0.05, 50,
+    [Revenue Growth %] < 0, 25,
+    0
+)
+
+
+Financial Profit Risk Score =
+SWITCH (
+    TRUE (),
+    [Net Profit Growth %] <= -0.50, 100,
+    [Net Profit Growth %] <= -0.30, 90,
+    [Net Profit Growth %] <= -0.15, 75,
+    [Net Profit Growth %] <= -0.05, 50,
+    [Net Profit Growth %] < 0, 25,
+    0
+)
+
+
+Financial Liquidity Risk Score =
+SWITCH (
+    TRUE (),
+    [Current Ratio] < 0.50, 100,
+    [Current Ratio] < 0.75, 90,
+    [Current Ratio] < 1.00, 75,
+    [Current Ratio] < 1.25, 50,
+    [Current Ratio] < 1.50, 25,
+    0
+)
+
+
+Financial Debt Risk Score =
+SWITCH (
+    TRUE (),
+    [Debt to Equity] >= 4, 100,
+    [Debt to Equity] >= 3, 90,
+    [Debt to Equity] >= 2, 75,
+    [Debt to Equity] >= 1, 50,
+    [Debt to Equity] >= 0.5, 25,
+    0
+)
+
+
+Financial Margin Risk Score =
+SWITCH (
+    TRUE (),
+    [Net Profit Margin] <= -0.20, 100,
+    [Net Profit Margin] < -0.10, 90,
+    [Net Profit Margin] < 0, 75,
+    [Net Profit Margin] < 0.05, 50,
+    [Net Profit Margin] < 0.10, 25,
+    0
+)
+
+
+Financial Cash Flow Risk Score =
+SWITCH (
+    TRUE (),
+    [Total Operating Cash Flow] < 0
+        && [Cash to Current Liabilities] < 0.50, 100,
+
+    [Total Operating Cash Flow] < 0, 90,
+
+    [Cash to Current Liabilities] < 0.50, 75,
+
+    [Cash to Current Liabilities] < 1.00, 50,
+
+    [Cash to Current Liabilities] < 1.50, 25,
+
+    0
+)
+
+
+// ==================================================================
+// 14. WEIGHTED FINANCIAL RISK
+// ==================================================================
+
+Financial Risk Score =
+VAR RevenueScore =
+    [Financial Revenue Risk Score]
+
+VAR ProfitScore =
+    [Financial Profit Risk Score]
+
+VAR LiquidityScore =
+    [Financial Liquidity Risk Score]
+
+VAR DebtScore =
+    [Financial Debt Risk Score]
+
+VAR MarginScore =
+    [Financial Margin Risk Score]
+
+VAR CashFlowScore =
+    [Financial Cash Flow Risk Score]
+
+RETURN
+    RevenueScore * 0.20
+    + ProfitScore * 0.20
+    + LiquidityScore * 0.20
+    + DebtScore * 0.15
+    + MarginScore * 0.10
+    + CashFlowScore * 0.15
+
+
+// ==================================================================
+// 15. FINANCIAL HEALTH
+// ==================================================================
+
+Financial Health Score =
+MAX (
+    0,
+    MIN (
+        100,
+        100 - [Financial Risk Score]
+    )
+)
+
+
+Financial Risk Band =
+SWITCH (
+    TRUE (),
+    [Financial Risk Score] >= 80, "CRITICAL",
+    [Financial Risk Score] >= 60, "HIGH",
+    [Financial Risk Score] >= 35, "MEDIUM",
+    [Financial Risk Score] >= 15, "LOW",
+    "INFO"
+)
+
+
+Financial Health Band =
+SWITCH (
+    TRUE (),
+    [Financial Health Score] >= 80, "STRONG",
+    [Financial Health Score] >= 60, "HEALTHY",
+    [Financial Health Score] >= 40, "WATCH",
+    [Financial Health Score] >= 20, "WEAK",
+    "CRITICAL"
+)
+
+
+Financial Status =
+SWITCH (
+    TRUE (),
+    [Financial Risk Score] >= 80, "CRITICAL_RISK",
+    [Financial Risk Score] >= 60, "HIGH_RISK",
+    [Financial Risk Score] >= 35, "AT_RISK",
+    [Financial Risk Score] >= 15, "WATCH",
+    "STABLE"
+)
+
+
+// ==================================================================
+// 16. PRIMARY FINANCIAL RISK FACTOR
+// ==================================================================
+
+Primary Financial Risk Factor =
+VAR RevenueScore =
+    [Financial Revenue Risk Score]
+
+VAR ProfitScore =
+    [Financial Profit Risk Score]
+
+VAR LiquidityScore =
+    [Financial Liquidity Risk Score]
+
+VAR DebtScore =
+    [Financial Debt Risk Score]
+
+VAR MarginScore =
+    [Financial Margin Risk Score]
+
+VAR CashFlowScore =
+    [Financial Cash Flow Risk Score]
+
+VAR MaxScore =
+    MAX (
+        RevenueScore,
+        MAX (
+            ProfitScore,
+            MAX (
+                LiquidityScore,
+                MAX (
+                    DebtScore,
+                    MAX (
+                        MarginScore,
+                        CashFlowScore
+                    )
+                )
+            )
+        )
+    )
+
+RETURN
+SWITCH (
+    TRUE (),
+    MaxScore = 0, "NONE",
+    MaxScore = RevenueScore, "REVENUE",
+    MaxScore = ProfitScore, "PROFITABILITY",
+    MaxScore = LiquidityScore, "LIQUIDITY",
+    MaxScore = DebtScore, "LEVERAGE",
+    MaxScore = MarginScore, "MARGIN",
+    "CASH_FLOW"
+)
+
+
+// ==================================================================
+// 17. FINANCIAL RISK FACTOR COUNT
+// ==================================================================
+
+Financial Risk Factor Count =
+    [Loss Flag]
+    + [Negative Cash Flow Flag]
+    + [Revenue Decline Flag]
+    + [Profit Decline Flag]
+    + [Liquidity Pressure Flag]
+    + [High Leverage Flag]
+    + [Negative Margin Flag]
+
+
+// ==================================================================
+// 18. FINANCIAL ALERT LEVEL
+// ==================================================================
+
+Financial Alert Level =
+SWITCH (
+    TRUE (),
+    [Financial Risk Score] >= 80, "CRITICAL",
+    [Financial Risk Score] >= 60, "HIGH",
+    [Financial Risk Score] >= 35, "MEDIUM",
+    [Financial Risk Score] >= 15, "LOW",
+    "INFO"
+)
+
+
+// ==================================================================
+// 19. FINANCIAL DECISION
+// ==================================================================
+
+Financial Decision =
+SWITCH (
+    TRUE (),
+    [Financial Risk Score] >= 80, "ESCALATE",
+    [Financial Risk Score] >= 60, "MANAGEMENT_REVIEW",
+    [Financial Risk Score] >= 35, "MONITOR",
+    "NORMAL"
+)
+
+
+// ==================================================================
+// 20. FINANCIAL RECOMMENDATION
+// ==================================================================
+
+Financial Recommended Action =
+SWITCH (
+    TRUE (),
+
+    [Financial Risk Score] >= 80,
+        "Immediate executive review required. Stabilize liquidity, cash flow and profitability.",
+
+    [Financial Risk Score] >= 60,
+        "Management review required. Investigate major financial deterioration and reduce risk exposure.",
+
+    [Financial Risk Score] >= 35,
+        "Monitor financial performance and address emerging risk factors.",
+
+    [Revenue Growth %] > 0.10
+        && [Net Profit Margin] > 0.10,
+        "Maintain growth discipline and protect profitability.",
+
+    "Continue normal financial monitoring."
+)
+
+
+// ==================================================================
+// 21. TREND ANALYSIS
+// ==================================================================
+
+Previous Financial Risk Score =
+CALCULATE (
+    [Financial Risk Score],
+    DATEADD (
+        'DateTable'[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Financial Risk Change =
+[Financial Risk Score]
+    - [Previous Financial Risk Score]
+
+
+Financial Risk Trend =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Previous Financial Risk Score] ),
+        "NO_BASELINE",
+
+    [Financial Risk Change] >= 10,
+        "DETERIORATING",
+
+    [Financial Risk Change] >= 3,
+        "WORSENING",
+
+    [Financial Risk Change] <= -10,
+        "IMPROVING",
+
+    [Financial Risk Change] <= -3,
+        "RECOVERING",
+
+    "STABLE"
+)
+
+
+Financial Deterioration Flag =
+IF (
+    [Financial Risk Change] >= 10,
+    1,
+    0
+)
+
+
+Financial Improvement Flag =
+IF (
+    [Financial Risk Change] <= -10,
+    1,
+    0
+)
+
+
+// ==================================================================
+// 22. FINANCIAL STRESS SIGNAL
+// ==================================================================
+
+Financial Stress Signal =
+VAR StressFactors =
+    [Financial Risk Factor Count]
+
+RETURN
+SWITCH (
+    TRUE (),
+    StressFactors >= 5, "SEVERE_STRESS",
+    StressFactors >= 3, "HIGH_STRESS",
+    StressFactors >= 2, "MODERATE_STRESS",
+    StressFactors = 1, "EARLY_STRESS",
+    "NORMAL"
+)
+
+
+// ==================================================================
+// 23. PROFITABILITY PRESSURE
+// ==================================================================
+
+Profitability Pressure Score =
+VAR MarginRisk =
+    SWITCH (
+        TRUE (),
+        [Net Profit Margin] <= -0.20, 100,
+        [Net Profit Margin] < -0.10, 90,
+        [Net Profit Margin] < 0, 75,
+        [Net Profit Margin] < 0.05, 50,
+        [Net Profit Margin] < 0.10, 25,
+        0
+    )
+
+VAR ProfitGrowthRisk =
+    [Financial Profit Risk Score]
+
+VAR GrossMarginRisk =
+    SWITCH (
+        TRUE (),
+        [Gross Profit Margin] < 0, 100,
+        [Gross Profit Margin] < 0.10, 75,
+        [Gross Profit Margin] < 0.20, 50,
+        [Gross Profit Margin] < 0.30, 25,
+        0
+    )
+
+RETURN
+    MarginRisk * 0.40
+    + ProfitGrowthRisk * 0.35
+    + GrossMarginRisk * 0.25
+
+
+// ==================================================================
+// 24. FINANCIAL EFFICIENCY SIGNAL
+// ==================================================================
+
+Financial Efficiency Signal =
+SWITCH (
+    TRUE (),
+
+    [Gross Profit Margin] >= 0.40
+        && [Net Profit Margin] >= 0.15,
+        "HIGH_EFFICIENCY",
+
+    [Gross Profit Margin] >= 0.30
+        && [Net Profit Margin] >= 0.10,
+        "HEALTHY_EFFICIENCY",
+
+    [Gross Profit Margin] >= 0.20
+        && [Net Profit Margin] >= 0.05,
+        "MODERATE_EFFICIENCY",
+
+    [Net Profit Margin] >= 0,
+        "LOW_EFFICIENCY",
+
+    "NEGATIVE_EFFICIENCY"
+)
+
+
+// ==================================================================
+// 25. FINANCIAL PERFORMANCE SCORE
+// ==================================================================
+
+Financial Performance Score =
+VAR RevenueComponent =
+    MAX (
+        0,
+        MIN (
+            100,
+            50 + ( [Revenue Growth %] * 100 )
+        )
+    )
+
+VAR ProfitComponent =
+    MAX (
+        0,
+        MIN (
+            100,
+            50 + ( [Net Profit Growth %] * 100 )
+        )
+    )
+
+VAR MarginComponent =
+    MAX (
+        0,
+        MIN (
+            100,
+            [Net Profit Margin] * 500
+        )
+    )
+
+RETURN
+    RevenueComponent * 0.35
+    + ProfitComponent * 0.35
+    + MarginComponent * 0.30
+
+
+// ==================================================================
+// 26. EXECUTIVE FINANCIAL HEALTH
+// ==================================================================
+
+Executive Financial Health Score =
+VAR RiskScore =
+    [Financial Risk Score]
+
+VAR PerformanceScore =
+    [Financial Performance Score]
+
+RETURN
+MAX (
+    0,
+    MIN (
+        100,
+        (
+            ( 100 - RiskScore ) * 0.60
+            + PerformanceScore * 0.40
+        )
+    )
+)
+
+
+Executive Financial Health Band =
+SWITCH (
+    TRUE (),
+    [Executive Financial Health Score] >= 80, "STRONG",
+    [Executive Financial Health Score] >= 60, "HEALTHY",
+    [Executive Financial Health Score] >= 40, "WATCH",
+    [Executive Financial Health Score] >= 20, "WEAK",
+    "CRITICAL"
+)
+
+
+// ==================================================================
+// 27. FINANCIAL KPI STATUS
+// ==================================================================
+
+Revenue KPI Status =
+SWITCH (
+    TRUE (),
+    [Revenue Growth %] >= 0.10, "POSITIVE",
+    [Revenue Growth %] >= 0, "STABLE",
+    [Revenue Growth %] >= -0.10, "WARNING",
+    "CRITICAL"
+)
+
+
+Profit KPI Status =
+SWITCH (
+    TRUE (),
+    [Net Profit Margin] >= 0.10, "STRONG",
+    [Net Profit Margin] >= 0.05, "HEALTHY",
+    [Net Profit Margin] >= 0, "WARNING",
+    "CRITICAL"
+)
+
+
+Liquidity KPI Status =
+SWITCH (
+    TRUE (),
+    [Current Ratio] >= 1.5, "STRONG",
+    [Current Ratio] >= 1.25, "HEALTHY",
+    [Current Ratio] >= 1, "WATCH",
+    [Current Ratio] >= 0.75, "WEAK",
+    "CRITICAL"
+)
+
+
+Leverage KPI Status =
+SWITCH (
+    TRUE (),
+    [Debt to Equity] < 0.5, "STRONG",
+    [Debt to Equity] < 1, "HEALTHY",
+    [Debt to Equity] < 2, "WATCH",
+    [Debt to Equity] < 3, "WEAK",
+    "CRITICAL"
+)
+
+
+Cash Flow KPI Status =
+SWITCH (
+    TRUE (),
+    [Operating Cash Flow Margin] >= 0.15, "STRONG",
+    [Operating Cash Flow Margin] >= 0.10, "HEALTHY",
+    [Operating Cash Flow Margin] >= 0, "WATCH",
+    "CRITICAL"
+)
+
+
+// ==================================================================
+// 28. FINANCIAL SUMMARY
+// ==================================================================
+
+Financial Summary =
+VAR Revenue =
+    [Total Revenue]
+
+VAR Profit =
+    [Total Net Profit]
+
+VAR Margin =
+    [Net Profit Margin]
+
+VAR Liquidity =
+    [Current Ratio]
+
+VAR Debt =
+    [Debt to Equity]
+
+VAR Risk =
+    [Financial Risk Score]
+
+RETURN
+"Revenue "
+    & FORMAT ( Revenue, "₹#,##0.00,,.0M" )
+    & " | Net Profit "
+    & FORMAT ( Profit, "₹#,##0.00,,.0M" )
+    & " | Margin "
+    & FORMAT ( Margin, "0.0%" )
+    & " | Current Ratio "
+    & FORMAT ( Liquidity, "0.00" )
+    & " | Debt/Equity "
+    & FORMAT ( Debt, "0.00" )
+    & " | Financial Risk "
+    & FORMAT ( Risk, "0.0" )
+
+
+// ==================================================================
+// 29. MANAGEMENT ACTION PRIORITY
+// ==================================================================
+
+Financial Management Action Priority =
+SWITCH (
+    TRUE (),
+
+    [Financial Risk Score] >= 80,
+        "P0 — EXECUTIVE INTERVENTION",
+
+    [Financial Risk Score] >= 60,
+        "P1 — MANAGEMENT ACTION",
+
+    [Financial Risk Score] >= 35,
+        "P2 — CLOSE MONITORING",
+
+    [Financial Risk Score] >= 15,
+        "P3 — ROUTINE MONITORING",
+
+    "P4 — NORMAL"
+)
+
+
+// ==================================================================
+// 30. SUPERVISOR AGENT SIGNAL
+// ==================================================================
+
+Financial Supervisor Agent Signal =
+SWITCH (
+    TRUE (),
+
+    [Financial Risk Score] >= 80,
+        "SUPERVISOR_ESCALATE",
+
+    [Financial Risk Score] >= 60,
+        "SUPERVISOR_REVIEW",
+
+    [Financial Risk Score] >= 35,
+        "SUPERVISOR_MONITOR",
+
+    "SUPERVISOR_NORMAL"
+)
+
+
+// ==================================================================
+// 31. HUMAN REVIEW
+// ==================================================================
+
+Financial Human Review Required =
+IF (
+    [Financial Risk Score] >= 60
+        || [Loss Flag] = 1
+        || [Critical Liquidity Flag] = 1
+        || [Critical Leverage Flag] = 1,
+    "YES",
+    "NO"
+)
+
+
+// ==================================================================
+// 32. DATA QUALITY
+// ==================================================================
+
+Financial Data Quality =
+VAR RiskQuality =
+    SELECTEDVALUE (
+        RiskTransformations[RiskDataQuality]
+    )
+
+RETURN
+COALESCE (
+    RiskQuality,
+    "UNKNOWN"
+)
+
+
+// ==================================================================
+// 33. DISPLAY MEASURES
+// ==================================================================
+
+Revenue Display =
+FORMAT (
+    [Total Revenue],
+    "₹#,##0.00,,.0M"
+)
+
+
+Gross Profit Display =
+FORMAT (
+    [Total Gross Profit],
+    "₹#,##0.00,,.0M"
+)
+
+
+Net Profit Display =
+FORMAT (
+    [Total Net Profit],
+    "₹#,##0.00,,.0M"
+)
+
+
+Operating Cash Flow Display =
+FORMAT (
+    [Total Operating Cash Flow],
+    "₹#,##0.00,,.0M"
+)
+
+
+Net Margin Display =
+FORMAT (
+    [Net Profit Margin],
+    "0.0%"
+)
+
+
+Revenue Growth Display =
+FORMAT (
+    [Revenue Growth %],
+    "0.0%"
+)
+
+
+Current Ratio Display =
+FORMAT (
+    [Current Ratio],
+    "0.00"
+)
+
+
+Debt to Equity Display =
+FORMAT (
+    [Debt to Equity],
+    "0.00"
+)
+
+
+Financial Risk Score Display =
+FORMAT (
+    [Financial Risk Score],
+    "0.0"
+)
+    & " / 100"
+
+
+Financial Health Score Display =
+FORMAT (
+    [Financial Health Score],
+    "0.0"
+)
+    & " / 100"
+
+
+// ==================================================================
+// 34. DASHBOARD TITLES
+// ==================================================================
+
+Financial Dashboard Title =
+"FINCO AI — FINANCIAL PERFORMANCE"
+
+
+Financial Dashboard Subtitle =
+"Revenue, profitability, cash flow, liquidity and financial risk analytics"
+
+
+Financial KPI Header =
+"FINANCIAL KPIs"
+
+
+Financial Risk Header =
+"FINANCIAL RISK"
+
+
+Financial Performance Header =
+"FINANCIAL PERFORMANCE"
+
+
+Financial Health Header =
+"FINANCIAL HEALTH"
+
+
+// ==================================================================
+// 35. EXECUTIVE KPI CARD VALUES
+// ==================================================================
+
+Executive Revenue KPI =
+[Total Revenue]
+
+
+Executive Net Profit KPI =
+[Total Net Profit]
+
+
+Executive Net Margin KPI =
+[Net Profit Margin]
+
+
+Executive Operating Cash Flow KPI =
+[Total Operating Cash Flow]
+
+
+Executive Current Ratio KPI =
+[Current Ratio]
+
+
+Executive Debt to Equity KPI =
+[Debt to Equity]
+
+
+Executive Financial Risk KPI =
+[Financial Risk Score]
+
+
+Executive Financial Health KPI =
+[Financial Health Score]
+
+
+// ==================================================================
+// 36. PERIOD COMPARISON
+// ==================================================================
+
+Previous Period Revenue =
+CALCULATE (
+    [Total Revenue],
+    DATEADD (
+        'DateTable'[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Previous Period Profit =
+CALCULATE (
+    [Total Net Profit],
+    DATEADD (
+        'DateTable'[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Previous Period Margin =
+CALCULATE (
+    [Net Profit Margin],
+    DATEADD (
+        'DateTable'[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Previous Period Cash Flow =
+CALCULATE (
+    [Total Operating Cash Flow],
+    DATEADD (
+        'DateTable'[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+// ==================================================================
+// 37. PERIOD CHANGES
+// ==================================================================
+
+Revenue Period Change =
+[Total Revenue]
+    - [Previous Period Revenue]
+
+
+Revenue Period Change % =
+DIVIDE (
+    [Revenue Period Change],
+    ABS ( [Previous Period Revenue] )
+)
+
+
+Profit Period Change =
+[Total Net Profit]
+    - [Previous Period Profit]
+
+
+Profit Period Change % =
+DIVIDE (
+    [Profit Period Change],
+    ABS ( [Previous Period Profit] )
+)
+
+
+Margin Period Change =
+[Net Profit Margin]
+    - [Previous Period Margin]
+
+
+Cash Flow Period Change =
+[Total Operating Cash Flow]
+    - [Previous Period Cash Flow]
+
+
+Cash Flow Period Change % =
+DIVIDE (
+    [Cash Flow Period Change],
+    ABS ( [Previous Period Cash Flow] )
+)
+
+
+// ==================================================================
+// 38. YTD PERFORMANCE
+// ==================================================================
+
+YTD Revenue =
+TOTALYTD (
+    [Total Revenue],
+    'DateTable'[Date]
+)
+
+
+YTD Gross Profit =
+TOTALYTD (
+    [Total Gross Profit],
+    'DateTable'[Date]
+)
+
+
+YTD Net Profit =
+TOTALYTD (
+    [Total Net Profit],
+    'DateTable'[Date]
+)
+
+
+YTD Operating Cash Flow =
+TOTALYTD (
+    [Total Operating Cash Flow],
+    'DateTable'[Date]
+)
+
+
+YTD Revenue Growth % =
+VAR CurrentYTD =
+    [YTD Revenue]
+
+VAR PreviousYTD =
+    CALCULATE (
+        [YTD Revenue],
+        SAMEPERIODLASTYEAR (
+            'DateTable'[Date]
+        )
+    )
+
+RETURN
+DIVIDE (
+    CurrentYTD - PreviousYTD,
+    ABS ( PreviousYTD )
+)
+
+
+// ==================================================================
+// 39. FISCAL YEAR PERFORMANCE
+// ==================================================================
+
+Fiscal YTD Revenue =
+TOTALYTD (
+    [Total Revenue],
+    'DateTable'[Date],
+    "03/31"
+)
+
+
+Fiscal YTD Net Profit =
+TOTALYTD (
+    [Total Net Profit],
+    'DateTable'[Date],
+    "03/31"
+)
+
+
+Fiscal YTD Operating Cash Flow =
+TOTALYTD (
+    [Total Operating Cash Flow],
+    'DateTable'[Date],
+    "03/31"
+)
+
+
+// ==================================================================
+// 40. FINANCIAL DATA COMPLETENESS
+// ==================================================================
+
+Financial Record Count =
+COUNTROWS (
+    RiskTransformations
+)
+
+
+Financial Company Count =
+DISTINCTCOUNT (
+    RiskTransformations[CompanyId]
+)
+
+
+Financial Period Count =
+DISTINCTCOUNT (
+    RiskTransformations[Period]
+)
+
+
+Financial Data Completeness Score =
+VAR RevenueAvailable =
+    IF ( NOT ISBLANK ( [Total Revenue] ), 1, 0 )
+
+VAR ProfitAvailable =
+    IF ( NOT ISBLANK ( [Total Net Profit] ), 1, 0 )
+
+VAR CashAvailable =
+    IF ( NOT ISBLANK ( [Total Cash] ), 1, 0 )
+
+VAR AssetsAvailable =
+    IF ( NOT ISBLANK ( [Total Assets] ), 1, 0 )
+
+VAR DebtAvailable =
+    IF ( NOT ISBLANK ( [Total Debt] ), 1, 0 )
+
+RETURN
+DIVIDE (
+    RevenueAvailable
+        + ProfitAvailable
+        + CashAvailable
+        + AssetsAvailable
+        + DebtAvailable,
+    5
+) * 100
+
+
+// ==================================================================
+// 41. FINAL FINANCIAL DECISION SIGNAL
+// ==================================================================
+
+Financial Decision Signal =
+SWITCH (
+    TRUE (),
+
+    [Financial Risk Score] >= 80
+        && [Financial Deterioration Flag] = 1,
+        "CRITICAL_ESCALATION",
+
+    [Financial Risk Score] >= 80,
+        "CRITICAL_REVIEW",
+
+    [Financial Risk Score] >= 60
+        && [Financial Deterioration Flag] = 1,
+        "HIGH_PRIORITY_ACTION",
+
+    [Financial Risk Score] >= 60,
+        "MANAGEMENT_REVIEW",
+
+    [Financial Risk Score] >= 35,
+        "MONITOR",
+
+    [Financial Improvement Flag] = 1,
+        "IMPROVING",
+
+    "NORMAL"
+)
+
+
+// ==================================================================
+// END OF FILE
+// ==================================================================

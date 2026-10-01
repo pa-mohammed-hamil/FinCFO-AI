@@ -1,0 +1,914 @@
+// ============================================================
+// FinCo AI
+// revenue_growth.dax
+//
+// Revenue Growth & Trend Analytics
+//
+// Primary table:
+//     ExecutiveDataModel
+//
+// Date dimension:
+//     DimDate[Date]
+//
+// Supports:
+//     YoY growth
+//     MoM growth
+//     QoQ growth
+//     CAGR
+//     Rolling growth
+//     Growth acceleration
+//     Growth trend
+//     Growth status
+// ============================================================
+
+
+// ============================================================
+// 01. BASE REVENUE
+// ============================================================
+
+Revenue Growth Total Revenue =
+SUM (
+    ExecutiveDataModel[Revenue]
+)
+
+
+// ============================================================
+// 02. PREVIOUS MONTH REVENUE
+// ============================================================
+
+Revenue Previous Month =
+CALCULATE (
+    [Revenue Growth Total Revenue],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+// ============================================================
+// 03. MONTH-OVER-MONTH GROWTH
+// ============================================================
+
+Revenue MoM Growth =
+[Revenue Growth Total Revenue]
+    - [Revenue Previous Month]
+
+
+Revenue MoM Growth % =
+DIVIDE (
+    [Revenue MoM Growth],
+    [Revenue Previous Month]
+)
+
+
+// ============================================================
+// 04. PREVIOUS QUARTER REVENUE
+// ============================================================
+
+Revenue Previous Quarter =
+CALCULATE (
+    [Revenue Growth Total Revenue],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        QUARTER
+    )
+)
+
+
+// ============================================================
+// 05. QUARTER-OVER-QUARTER GROWTH
+// ============================================================
+
+Revenue QoQ Growth =
+[Revenue Growth Total Revenue]
+    - [Revenue Previous Quarter]
+
+
+Revenue QoQ Growth % =
+DIVIDE (
+    [Revenue QoQ Growth],
+    [Revenue Previous Quarter]
+)
+
+
+// ============================================================
+// 06. PREVIOUS YEAR REVENUE
+// ============================================================
+
+Revenue Previous Year =
+CALCULATE (
+    [Revenue Growth Total Revenue],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        YEAR
+    )
+)
+
+
+// ============================================================
+// 07. YEAR-OVER-YEAR GROWTH
+// ============================================================
+
+Revenue YoY Growth =
+[Revenue Growth Total Revenue]
+    - [Revenue Previous Year]
+
+
+Revenue YoY Growth % =
+DIVIDE (
+    [Revenue YoY Growth],
+    [Revenue Previous Year]
+)
+
+
+// ============================================================
+// 08. SAME PERIOD LAST YEAR
+// ============================================================
+
+Revenue Same Period Last Year =
+CALCULATE (
+    [Revenue Growth Total Revenue],
+    SAMEPERIODLASTYEAR (
+        DimDate[Date]
+    )
+)
+
+
+Revenue YoY Growth - Same Period =
+[Revenue Growth Total Revenue]
+    - [Revenue Same Period Last Year]
+
+
+Revenue YoY Growth % - Same Period =
+DIVIDE (
+    [Revenue YoY Growth - Same Period],
+    [Revenue Same Period Last Year]
+)
+
+
+// ============================================================
+// 09. YEAR-TO-DATE REVENUE
+// ============================================================
+
+Revenue YTD =
+TOTALYTD (
+    [Revenue Growth Total Revenue],
+    DimDate[Date]
+)
+
+
+Revenue Previous YTD =
+CALCULATE (
+    [Revenue YTD],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        YEAR
+    )
+)
+
+
+Revenue YTD Growth =
+[Revenue YTD]
+    - [Revenue Previous YTD]
+
+
+Revenue YTD Growth % =
+DIVIDE (
+    [Revenue YTD Growth],
+    [Revenue Previous YTD]
+)
+
+
+// ============================================================
+// 10. QUARTER-TO-DATE REVENUE
+// ============================================================
+
+Revenue QTD =
+TOTALQTD (
+    [Revenue Growth Total Revenue],
+    DimDate[Date]
+)
+
+
+Revenue Previous QTD =
+CALCULATE (
+    [Revenue QTD],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        QUARTER
+    )
+)
+
+
+Revenue QTD Growth =
+[Revenue QTD]
+    - [Revenue Previous QTD]
+
+
+Revenue QTD Growth % =
+DIVIDE (
+    [Revenue QTD Growth],
+    [Revenue Previous QTD]
+)
+
+
+// ============================================================
+// 11. MONTH-TO-DATE REVENUE
+// ============================================================
+
+Revenue MTD =
+TOTALMTD (
+    [Revenue Growth Total Revenue],
+    DimDate[Date]
+)
+
+
+Revenue Previous MTD =
+CALCULATE (
+    [Revenue MTD],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Revenue MTD Growth =
+[Revenue MTD]
+    - [Revenue Previous MTD]
+
+
+Revenue MTD Growth % =
+DIVIDE (
+    [Revenue MTD Growth],
+    [Revenue Previous MTD]
+)
+
+
+// ============================================================
+// 12. ROLLING 3-MONTH REVENUE
+// ============================================================
+
+Revenue Rolling 3M =
+CALCULATE (
+    [Revenue Growth Total Revenue],
+    DATESINPERIOD (
+        DimDate[Date],
+        MAX ( DimDate[Date] ),
+        -3,
+        MONTH
+    )
+)
+
+
+Revenue Previous Rolling 3M =
+CALCULATE (
+    [Revenue Growth Total Revenue],
+    DATESINPERIOD (
+        DimDate[Date],
+        EDATE (
+            MAX ( DimDate[Date] ),
+            -3
+        ),
+        -3,
+        MONTH
+    )
+)
+
+
+Revenue Rolling 3M Growth =
+[Revenue Rolling 3M]
+    - [Revenue Previous Rolling 3M]
+
+
+Revenue Rolling 3M Growth % =
+DIVIDE (
+    [Revenue Rolling 3M Growth],
+    [Revenue Previous Rolling 3M]
+)
+
+
+// ============================================================
+// 13. ROLLING 6-MONTH REVENUE
+// ============================================================
+
+Revenue Rolling 6M =
+CALCULATE (
+    [Revenue Growth Total Revenue],
+    DATESINPERIOD (
+        DimDate[Date],
+        MAX ( DimDate[Date] ),
+        -6,
+        MONTH
+    )
+)
+
+
+Revenue Previous Rolling 6M =
+CALCULATE (
+    [Revenue Growth Total Revenue],
+    DATESINPERIOD (
+        DimDate[Date],
+        EDATE (
+            MAX ( DimDate[Date] ),
+            -6
+        ),
+        -6,
+        MONTH
+    )
+)
+
+
+Revenue Rolling 6M Growth =
+[Revenue Rolling 6M]
+    - [Revenue Previous Rolling 6M]
+
+
+Revenue Rolling 6M Growth % =
+DIVIDE (
+    [Revenue Rolling 6M Growth],
+    [Revenue Previous Rolling 6M]
+)
+
+
+// ============================================================
+// 14. ROLLING 12-MONTH REVENUE
+// ============================================================
+
+Revenue Rolling 12M =
+CALCULATE (
+    [Revenue Growth Total Revenue],
+    DATESINPERIOD (
+        DimDate[Date],
+        MAX ( DimDate[Date] ),
+        -12,
+        MONTH
+    )
+)
+
+
+Revenue Previous Rolling 12M =
+CALCULATE (
+    [Revenue Growth Total Revenue],
+    DATESINPERIOD (
+        DimDate[Date],
+        EDATE (
+            MAX ( DimDate[Date] ),
+            -12
+        ),
+        -12,
+        MONTH
+    )
+)
+
+
+Revenue Rolling 12M Growth =
+[Revenue Rolling 12M]
+    - [Revenue Previous Rolling 12M]
+
+
+Revenue Rolling 12M Growth % =
+DIVIDE (
+    [Revenue Rolling 12M Growth],
+    [Revenue Previous Rolling 12M]
+)
+
+
+// ============================================================
+// 15. REVENUE GROWTH ACCELERATION
+// ============================================================
+
+Revenue Growth Acceleration =
+[Revenue YoY Growth %]
+    - [Revenue Previous YoY Growth %]
+
+
+Revenue Previous YoY Growth % =
+VAR CurrentRevenue =
+    [Revenue Previous Year]
+
+VAR PreviousYearRevenue =
+    CALCULATE (
+        [Revenue Growth Total Revenue],
+        DATEADD (
+            DimDate[Date],
+            -2,
+            YEAR
+        )
+    )
+RETURN
+    DIVIDE (
+        CurrentRevenue - PreviousYearRevenue,
+        PreviousYearRevenue
+    )
+
+
+// ============================================================
+// 16. GROWTH MOMENTUM
+// ============================================================
+
+Revenue Growth Momentum =
+VAR YoY =
+    [Revenue YoY Growth %]
+
+VAR QoQ =
+    [Revenue QoQ Growth %]
+
+VAR MoM =
+    [Revenue MoM Growth %]
+
+RETURN
+    DIVIDE (
+        COALESCE ( YoY, 0 )
+            + COALESCE ( QoQ, 0 )
+            + COALESCE ( MoM, 0 ),
+        3
+    )
+
+
+// ============================================================
+// 17. GROWTH TREND
+// ============================================================
+
+Revenue Growth Trend =
+VAR Growth =
+    [Revenue YoY Growth %]
+
+VAR Acceleration =
+    [Revenue Growth Acceleration]
+
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Growth ), "No Data",
+        Growth >= 0.20
+            && Acceleration >= 0, "Rapid Growth",
+        Growth >= 0.10
+            && Acceleration >= 0, "Strong Growth",
+        Growth >= 0.05, "Moderate Growth",
+        Growth >= 0, "Slow Growth",
+        Growth > -0.05, "Slight Decline",
+        Growth > -0.10, "Moderate Decline",
+        Growth > -0.20, "Strong Decline",
+        "Severe Decline"
+    )
+
+
+// ============================================================
+// 18. GROWTH STATUS
+// ============================================================
+
+Revenue Growth Status =
+VAR Growth =
+    [Revenue YoY Growth %]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Growth ), "No Data",
+        Growth >= 0.10, "Excellent",
+        Growth >= 0.05, "Healthy",
+        Growth >= 0, "Stable",
+        Growth > -0.10, "Watch",
+        Growth > -0.20, "Weak",
+        "Critical"
+    )
+
+
+// ============================================================
+// 19. GROWTH RISK
+// ============================================================
+
+Revenue Growth Risk =
+VAR Growth =
+    [Revenue YoY Growth %]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Growth ), 25,
+        Growth <= -0.30, 40,
+        Growth <= -0.20, 30,
+        Growth <= -0.10, 20,
+        Growth < 0, 10,
+        0
+    )
+
+
+// ============================================================
+// 20. GROWTH RISK LEVEL
+// ============================================================
+
+Revenue Growth Risk Level =
+VAR Risk =
+    [Revenue Growth Risk]
+RETURN
+    SWITCH (
+        TRUE (),
+        Risk >= 75, "CRITICAL",
+        Risk >= 50, "HIGH",
+        Risk >= 25, "MEDIUM",
+        "LOW"
+    )
+
+
+// ============================================================
+// 21. REVENUE DECLINE FLAG
+// ============================================================
+
+Revenue Decline Flag =
+IF (
+    [Revenue YoY Growth %] < 0,
+    1,
+    0
+)
+
+
+Revenue Severe Decline Flag =
+IF (
+    [Revenue YoY Growth %] <= -0.20,
+    1,
+    0
+)
+
+
+// ============================================================
+// 22. REVENUE GROWTH ALERT
+// ============================================================
+
+Revenue Growth Alert Flag =
+IF (
+    [Revenue Growth Risk] >= 20,
+    1,
+    0
+)
+
+
+Revenue Growth Alert Type =
+VAR Growth =
+    [Revenue YoY Growth %]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Growth ), "No Data",
+        Growth <= -0.30, "Severe Revenue Decline",
+        Growth <= -0.20, "High Revenue Decline",
+        Growth <= -0.10, "Revenue Decline",
+        Growth < 0, "Revenue Softness",
+        Growth >= 0.20, "Rapid Revenue Growth",
+        Growth >= 0.10, "Strong Revenue Growth",
+        "Normal"
+    )
+
+
+// ============================================================
+// 23. RECOMMENDED ACTION
+// ============================================================
+
+Revenue Growth Recommended Action =
+VAR Growth =
+    [Revenue YoY Growth %]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Growth ),
+            "Validate revenue data.",
+        Growth <= -0.30,
+            "Immediate revenue recovery plan required.",
+        Growth <= -0.20,
+            "Escalate revenue decline to management.",
+        Growth <= -0.10,
+            "Investigate revenue deterioration and customer demand.",
+        Growth < 0,
+            "Monitor revenue softness and underlying drivers.",
+        Growth >= 0.20,
+            "Validate sustainability of rapid revenue expansion.",
+        Growth >= 0.10,
+            "Scale high-performing revenue channels.",
+        "Continue revenue monitoring."
+    )
+
+
+// ============================================================
+// 24. CAGR — 3 YEAR
+// ============================================================
+
+Revenue CAGR 3Y =
+VAR CurrentRevenue =
+    [Revenue Growth Total Revenue]
+
+VAR Revenue3YearsAgo =
+    CALCULATE (
+        [Revenue Growth Total Revenue],
+        DATEADD (
+            DimDate[Date],
+            -3,
+            YEAR
+        )
+    )
+
+RETURN
+    IF (
+        Revenue3YearsAgo > 0,
+        POWER (
+            DIVIDE (
+                CurrentRevenue,
+                Revenue3YearsAgo
+            ),
+            DIVIDE ( 1, 3 )
+        ) - 1
+    )
+
+
+// ============================================================
+// 25. CAGR — 5 YEAR
+// ============================================================
+
+Revenue CAGR 5Y =
+VAR CurrentRevenue =
+    [Revenue Growth Total Revenue]
+
+VAR Revenue5YearsAgo =
+    CALCULATE (
+        [Revenue Growth Total Revenue],
+        DATEADD (
+            DimDate[Date],
+            -5,
+            YEAR
+        )
+    )
+
+RETURN
+    IF (
+        Revenue5YearsAgo > 0,
+        POWER (
+            DIVIDE (
+                CurrentRevenue,
+                Revenue5YearsAgo
+            ),
+            DIVIDE ( 1, 5 )
+        ) - 1
+    )
+
+
+// ============================================================
+// 26. REVENUE GROWTH SCORE
+// ============================================================
+
+Revenue Growth Score =
+VAR Growth =
+    [Revenue YoY Growth %]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Growth ), BLANK (),
+        Growth >= 0.20, 100,
+        Growth >= 0.15, 90,
+        Growth >= 0.10, 80,
+        Growth >= 0.05, 70,
+        Growth >= 0, 60,
+        Growth > -0.05, 45,
+        Growth > -0.10, 30,
+        Growth > -0.20, 15,
+        0
+    )
+
+
+// ============================================================
+// 27. EXECUTIVE REVENUE GROWTH SCORE
+// ============================================================
+
+Executive Revenue Growth Score =
+VAR YoYScore =
+    [Revenue Growth Score]
+
+VAR MomentumScore =
+    SWITCH (
+        TRUE (),
+        [Revenue Growth Momentum] >= 0.15, 100,
+        [Revenue Growth Momentum] >= 0.10, 90,
+        [Revenue Growth Momentum] >= 0.05, 80,
+        [Revenue Growth Momentum] >= 0, 70,
+        [Revenue Growth Momentum] > -0.05, 50,
+        [Revenue Growth Momentum] > -0.10, 30,
+        0
+    )
+
+VAR CAGRScore =
+    SWITCH (
+        TRUE (),
+        [Revenue CAGR 3Y] >= 0.15, 100,
+        [Revenue CAGR 3Y] >= 0.10, 90,
+        [Revenue CAGR 3Y] >= 0.05, 80,
+        [Revenue CAGR 3Y] >= 0, 70,
+        [Revenue CAGR 3Y] > -0.05, 50,
+        [Revenue CAGR 3Y] > -0.10, 30,
+        0
+    )
+
+RETURN
+    DIVIDE (
+        COALESCE ( YoYScore, 0 ) * 0.50
+            + COALESCE ( MomentumScore, 0 ) * 0.30
+            + COALESCE ( CAGRScore, 0 ) * 0.20,
+        1
+    )
+
+
+// ============================================================
+// 28. REVENUE GROWTH SCORE STATUS
+// ============================================================
+
+Executive Revenue Growth Score Status =
+VAR Score =
+    [Executive Revenue Growth Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Score ), "No Data",
+        Score >= 80, "Excellent",
+        Score >= 65, "Healthy",
+        Score >= 50, "Watch",
+        Score >= 30, "Weak",
+        "Critical"
+    )
+
+
+// ============================================================
+// 29. DISPLAY MEASURES
+// ============================================================
+
+Revenue Growth Display =
+FORMAT (
+    [Revenue Growth Total Revenue],
+    "#,##0"
+)
+
+
+Revenue YoY Growth Display =
+FORMAT (
+    [Revenue YoY Growth %],
+    "0.0%"
+)
+
+
+Revenue MoM Growth Display =
+FORMAT (
+    [Revenue MoM Growth %],
+    "0.0%"
+)
+
+
+Revenue QoQ Growth Display =
+FORMAT (
+    [Revenue QoQ Growth %],
+    "0.0%"
+)
+
+
+Revenue CAGR 3Y Display =
+FORMAT (
+    [Revenue CAGR 3Y],
+    "0.0%"
+)
+
+
+Revenue CAGR 5Y Display =
+FORMAT (
+    [Revenue CAGR 5Y],
+    "0.0%"
+)
+
+
+Revenue Growth Score Display =
+FORMAT (
+    [Executive Revenue Growth Score],
+    "0.0"
+)
+    & "/100"
+
+
+// ============================================================
+// 30. KPI STATUS
+// ============================================================
+
+Revenue Growth KPI Status =
+VAR Status =
+    [Revenue Growth Status]
+RETURN
+    SWITCH (
+        Status,
+        "Excellent", "🟢 Excellent",
+        "Healthy", "🟢 Healthy",
+        "Stable", "🟡 Stable",
+        "Watch", "🟡 Watch",
+        "Weak", "🟠 Weak",
+        "Critical", "🔴 Critical",
+        "⚪ No Data"
+    )
+
+
+// ============================================================
+// 31. EXECUTIVE REVENUE GROWTH NARRATIVE
+// ============================================================
+
+Executive Revenue Growth Narrative =
+VAR Revenue =
+    [Revenue Growth Total Revenue]
+
+VAR YoY =
+    [Revenue YoY Growth %]
+
+VAR CAGR =
+    [Revenue CAGR 3Y]
+
+VAR Trend =
+    [Revenue Growth Trend]
+
+VAR Risk =
+    [Revenue Growth Risk Level]
+
+RETURN
+    "Revenue is "
+        & FORMAT (
+            Revenue,
+            "#,##0"
+        )
+        & ", with YoY growth of "
+        & FORMAT (
+            YoY,
+            "0.0%"
+        )
+        & ". The current growth trend is "
+        & Trend
+        & ", while the 3-year CAGR is "
+        & FORMAT (
+            CAGR,
+            "0.0%"
+        )
+        & ". Revenue growth risk is "
+        & Risk
+        & "."
+
+
+// ============================================================
+// 32. REVENUE GROWTH SCORECARD
+// ============================================================
+
+Revenue Growth Scorecard =
+VAR Revenue =
+    [Revenue Growth Total Revenue]
+
+VAR YoY =
+    [Revenue YoY Growth %]
+
+VAR MoM =
+    [Revenue MoM Growth %]
+
+VAR QoQ =
+    [Revenue QoQ Growth %]
+
+VAR CAGR =
+    [Revenue CAGR 3Y]
+
+VAR Trend =
+    [Revenue Growth Trend]
+
+VAR Risk =
+    [Revenue Growth Risk Level]
+
+RETURN
+    "Revenue: "
+        & FORMAT (
+            Revenue,
+            "#,##0"
+        )
+        & " | YoY: "
+        & FORMAT (
+            YoY,
+            "0.0%"
+        )
+        & " | MoM: "
+        & FORMAT (
+            MoM,
+            "0.0%"
+        )
+        & " | QoQ: "
+        & FORMAT (
+            QoQ,
+            "0.0%"
+        )
+        & " | 3Y CAGR: "
+        & FORMAT (
+            CAGR,
+            "0.0%"
+        )
+        & " | Trend: "
+        & Trend
+        & " | Risk: "
+        & Risk

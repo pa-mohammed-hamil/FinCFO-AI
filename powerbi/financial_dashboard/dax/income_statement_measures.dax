@@ -1,0 +1,1118 @@
+// ============================================================
+// FinCo AI — Income Statement Measures
+// File: income_statement_measures.dax
+// Purpose: Revenue, profitability, margins, variance, risk,
+//          alerts, trends, scorecards and executive KPIs
+// ============================================================
+
+
+// ============================================================
+// 1. CORE INCOME STATEMENT MEASURES
+// ============================================================
+
+Total Revenue =
+SUM ( IncomeStatement[Revenue] )
+
+
+Total Cost of Revenue =
+SUM ( IncomeStatement[CostOfRevenue] )
+
+
+Total Gross Profit =
+SUM ( IncomeStatement[GrossProfit] )
+
+
+Total Operating Expenses =
+SUM ( IncomeStatement[OperatingExpenses] )
+
+
+Total Operating Profit =
+SUM ( IncomeStatement[OperatingProfit] )
+
+
+Total Interest Expense =
+SUM ( IncomeStatement[InterestExpense] )
+
+
+Total Tax Expense =
+SUM ( IncomeStatement[TaxExpense] )
+
+
+Total Net Profit =
+SUM ( IncomeStatement[NetProfit] )
+
+
+// ============================================================
+// 2. BUDGET MEASURES
+// ============================================================
+
+Budget Revenue =
+SUM ( IncomeStatement[BudgetRevenue] )
+
+
+Budget Expenses =
+SUM ( IncomeStatement[BudgetExpenses] )
+
+
+Revenue Variance =
+[Total Revenue] - [Budget Revenue]
+
+
+Revenue Variance % =
+DIVIDE (
+    [Revenue Variance],
+    ABS ( [Budget Revenue] )
+)
+
+
+Expense Variance =
+[Total Operating Expenses] - [Budget Expenses]
+
+
+Expense Variance % =
+DIVIDE (
+    [Expense Variance],
+    ABS ( [Budget Expenses] )
+)
+
+
+// ============================================================
+// 3. PROFITABILITY MARGINS
+// ============================================================
+
+Gross Margin =
+DIVIDE (
+    [Total Gross Profit],
+    [Total Revenue]
+)
+
+
+Operating Margin =
+DIVIDE (
+    [Total Operating Profit],
+    [Total Revenue]
+)
+
+
+Net Margin =
+DIVIDE (
+    [Total Net Profit],
+    [Total Revenue]
+)
+
+
+Cost of Revenue % =
+DIVIDE (
+    [Total Cost of Revenue],
+    [Total Revenue]
+)
+
+
+Operating Expense % =
+DIVIDE (
+    [Total Operating Expenses],
+    [Total Revenue]
+)
+
+
+Interest Burden =
+DIVIDE (
+    [Total Interest Expense],
+    [Total Revenue]
+)
+
+
+Tax Burden =
+DIVIDE (
+    [Total Tax Expense],
+    [Total Revenue]
+)
+
+
+// ============================================================
+// 4. PROFIT CONVERSION
+// ============================================================
+
+Gross Profit Conversion =
+DIVIDE (
+    [Total Gross Profit],
+    [Total Revenue]
+)
+
+
+Operating Profit Conversion =
+DIVIDE (
+    [Total Operating Profit],
+    [Total Gross Profit]
+)
+
+
+Net Profit Conversion =
+DIVIDE (
+    [Total Net Profit],
+    [Total Operating Profit]
+)
+
+
+Revenue to Net Profit Conversion =
+DIVIDE (
+    [Total Net Profit],
+    [Total Revenue]
+)
+
+
+// ============================================================
+// 5. PROFITABILITY STATUS
+// ============================================================
+
+Revenue Status =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Total Revenue] ), "No Data",
+    [Total Revenue] <= 0, "Critical",
+    "Healthy"
+)
+
+
+Gross Profit Status =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Total Gross Profit] ), "No Data",
+    [Total Gross Profit] < 0, "Critical",
+    [Gross Margin] < 0.20, "Weak",
+    [Gross Margin] < 0.30, "Watch",
+    "Healthy"
+)
+
+
+Operating Profit Status =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Total Operating Profit] ), "No Data",
+    [Total Operating Profit] < 0, "Critical",
+    [Operating Margin] < 0.05, "Weak",
+    [Operating Margin] < 0.10, "Watch",
+    "Healthy"
+)
+
+
+Net Profit Status =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Total Net Profit] ), "No Data",
+    [Total Net Profit] < 0, "Critical",
+    [Net Margin] < 0.05, "Weak",
+    [Net Margin] < 0.10, "Watch",
+    "Healthy"
+)
+
+
+Income Statement Overall Status =
+SWITCH (
+    TRUE (),
+    [Total Net Profit] < 0, "Critical",
+    [Total Operating Profit] < 0, "Critical",
+    [Gross Margin] < 0.20, "Weak",
+    [Operating Margin] < 0.05, "Weak",
+    [Net Margin] < 0.05, "Watch",
+    "Healthy"
+)
+
+
+// ============================================================
+// 6. PROFITABILITY RISK COMPONENTS
+// ============================================================
+
+Profitability Risk =
+VAR NetProfit = [Total Net Profit]
+VAR NetMarginValue = [Net Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( NetProfit ), 20,
+        NetProfit < 0, 40,
+        NetMarginValue < 0.05, 20,
+        0
+    )
+
+
+Gross Margin Risk =
+VAR Margin = [Gross Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), 15,
+        Margin < 0, 30,
+        Margin < 0.20, 20,
+        Margin < 0.30, 10,
+        0
+    )
+
+
+Operating Margin Risk =
+VAR Margin = [Operating Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), 15,
+        Margin < 0, 30,
+        Margin < 0.05, 20,
+        Margin < 0.10, 10,
+        0
+    )
+
+
+Revenue Risk =
+VAR VariancePct = [Revenue Variance %]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( VariancePct ), 20,
+        VariancePct <= -0.30, 40,
+        VariancePct <= -0.20, 30,
+        VariancePct <= -0.10, 20,
+        VariancePct < 0, 10,
+        0
+    )
+
+
+Expense Risk =
+VAR VariancePct = [Expense Variance %]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( VariancePct ), 20,
+        VariancePct >= 0.30, 40,
+        VariancePct >= 0.20, 30,
+        VariancePct >= 0.10, 20,
+        VariancePct > 0, 10,
+        0
+    )
+
+
+// ============================================================
+// 7. OVERALL INCOME STATEMENT RISK
+// ============================================================
+
+Income Statement Risk Score =
+MIN (
+    100,
+    [Profitability Risk]
+        + [Gross Margin Risk]
+        + [Operating Margin Risk]
+        + [Revenue Risk]
+        + [Expense Risk]
+)
+
+
+Income Statement Risk Level =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Income Statement Risk Score] ), "No Data",
+    [Income Statement Risk Score] >= 75, "CRITICAL",
+    [Income Statement Risk Score] >= 50, "HIGH",
+    [Income Statement Risk Score] >= 25, "MEDIUM",
+    "LOW"
+)
+
+
+Income Statement Health Score =
+MAX (
+    0,
+    100 - [Income Statement Risk Score]
+)
+
+
+Income Statement Health Status =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Income Statement Health Score] ), "No Data",
+    [Income Statement Health Score] >= 80, "Excellent",
+    [Income Statement Health Score] >= 65, "Healthy",
+    [Income Statement Health Score] >= 50, "Watch",
+    [Income Statement Health Score] >= 30, "Weak",
+    "Critical"
+)
+
+
+// ============================================================
+// 8. PROFITABILITY ALERTS
+// ============================================================
+
+Income Statement Alert Flag =
+IF (
+    [Income Statement Risk Score] >= 50
+        || [Total Net Profit] < 0
+        || [Total Operating Profit] < 0,
+    1,
+    0
+)
+
+
+Income Statement Alert Count =
+SUMX (
+    IncomeStatement,
+    IF (
+        IncomeStatement[AlertFlag] = "Yes"
+            || IncomeStatement[AlertFlag] = "TRUE"
+            || IncomeStatement[AlertFlag] = "1",
+        1,
+        0
+    )
+)
+
+
+Income Statement Alert Type =
+VAR RevenueVarianceValue = [Revenue Variance %]
+VAR ExpenseVarianceValue = [Expense Variance %]
+RETURN
+    SWITCH (
+        TRUE (),
+        [Total Net Profit] < 0
+            && [Total OperatingProfit] < 0,
+            "Net & Operating Loss",
+
+        [Total Net Profit] < 0,
+            "Net Loss",
+
+        [Total Operating Profit] < 0,
+            "Operating Loss",
+
+        RevenueVarianceValue <= -0.30,
+            "Severe Revenue Underperformance",
+
+        RevenueVarianceValue <= -0.20,
+            "High Revenue Underperformance",
+
+        RevenueVarianceValue <= -0.10,
+            "Revenue Underperformance",
+
+        ExpenseVarianceValue >= 0.30,
+            "Severe Expense Overrun",
+
+        ExpenseVarianceValue >= 0.20,
+            "High Expense Overrun",
+
+        ExpenseVarianceValue >= 0.10,
+            "Expense Overrun",
+
+        [Gross Margin] < 0.20,
+            "Low Gross Margin",
+
+        [Operating Margin] < 0.05,
+            "Low Operating Margin",
+
+        [Net Margin] < 0.05,
+            "Low Net Margin",
+
+        [Income Statement Risk Score] >= 75,
+            "Critical Profitability Risk",
+
+        [Income Statement Risk Score] >= 50,
+            "High Profitability Risk",
+
+        [Income Statement Risk Score] >= 25,
+            "Medium Profitability Risk",
+
+        "No Major Alert"
+    )
+
+
+Income Statement Recommended Action =
+VAR RevenueVarianceValue = [Revenue Variance %]
+VAR ExpenseVarianceValue = [Expense Variance %]
+RETURN
+    SWITCH (
+        TRUE (),
+        [Total Net Profit] < 0
+            && [Total Operating Profit] < 0,
+            "Immediate profitability recovery plan required",
+
+        [Total Net Profit] < 0,
+            "Review pricing, cost structure and non-operating expenses",
+
+        [Total Operating Profit] < 0,
+            "Reduce operating costs and improve gross profit generation",
+
+        RevenueVarianceValue <= -0.30,
+            "Immediate revenue recovery and demand analysis required",
+
+        RevenueVarianceValue <= -0.20,
+            "Investigate revenue shortfall and revise commercial strategy",
+
+        RevenueVarianceValue <= -0.10,
+            "Monitor revenue performance and improve sales conversion",
+
+        ExpenseVarianceValue >= 0.30,
+            "Immediate cost containment and expense review required",
+
+        ExpenseVarianceValue >= 0.20,
+            "Review major operating expense drivers",
+
+        ExpenseVarianceValue >= 0.10,
+            "Tighten operating expense controls",
+
+        [Gross Margin] < 0.20,
+            "Review pricing, product mix and cost of revenue",
+
+        [Operating Margin] < 0.05,
+            "Improve operating efficiency and control overhead",
+
+        [Net Margin] < 0.05,
+            "Improve profitability and review below-operating-line costs",
+
+        "Maintain current profitability discipline"
+    )
+
+
+// ============================================================
+// 9. RECORD COUNTS
+// ============================================================
+
+Income Statement Records =
+COUNTROWS ( IncomeStatement )
+
+
+Income Statement Companies =
+DISTINCTCOUNT ( IncomeStatement[Company] )
+
+
+Income Statement Business Units =
+DISTINCTCOUNT ( IncomeStatement[BusinessUnit] )
+
+
+Income Statement Alert Records =
+CALCULATE (
+    COUNTROWS ( IncomeStatement ),
+    FILTER (
+        IncomeStatement,
+        IncomeStatement[AlertFlag] = "Yes"
+            || IncomeStatement[AlertFlag] = "TRUE"
+            || IncomeStatement[AlertFlag] = "1"
+    )
+)
+
+
+Critical Income Statement Records =
+CALCULATE (
+    COUNTROWS ( IncomeStatement ),
+    IncomeStatement[FinancialRiskLevel] = "CRITICAL"
+)
+
+
+High Risk Income Statement Records =
+CALCULATE (
+    COUNTROWS ( IncomeStatement ),
+    IncomeStatement[FinancialRiskLevel] = "HIGH"
+)
+
+
+Medium Risk Income Statement Records =
+CALCULATE (
+    COUNTROWS ( IncomeStatement ),
+    IncomeStatement[FinancialRiskLevel] = "MEDIUM"
+)
+
+
+Low Risk Income Statement Records =
+CALCULATE (
+    COUNTROWS ( IncomeStatement ),
+    IncomeStatement[FinancialRiskLevel] = "LOW"
+)
+
+
+// ============================================================
+// 10. RISK RATES
+// ============================================================
+
+Critical Income Statement Rate =
+DIVIDE (
+    [Critical Income Statement Records],
+    [Income Statement Records]
+)
+
+
+High Risk Income Statement Rate =
+DIVIDE (
+    [High Risk Income Statement Records],
+    [Income Statement Records]
+)
+
+
+Income Statement Alert Rate =
+DIVIDE (
+    [Income Statement Alert Records],
+    [Income Statement Records]
+)
+
+
+// ============================================================
+// 11. AVERAGE KPIs
+// ============================================================
+
+Average Income Statement Risk Score =
+AVERAGE ( IncomeStatement[FinancialRiskScore] )
+
+
+Average Income Statement Health Score =
+AVERAGE ( IncomeStatement[FinancialHealthScore] )
+
+
+Average Gross Margin =
+AVERAGE ( IncomeStatement[GrossMargin] )
+
+
+Average Operating Margin =
+AVERAGE ( IncomeStatement[OperatingMargin] )
+
+
+Average Net Margin =
+AVERAGE ( IncomeStatement[NetMargin] )
+
+
+Average Revenue Variance % =
+AVERAGE ( IncomeStatement[RevenueVariancePct] )
+
+
+Average Expense Variance % =
+AVERAGE ( IncomeStatement[ExpenseVariancePct] )
+
+
+// ============================================================
+// 12. PERIOD COMPARISON — REVENUE
+// ============================================================
+
+Revenue Previous Period =
+CALCULATE (
+    [Total Revenue],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Revenue Growth =
+[Total Revenue] - [Revenue Previous Period]
+
+
+Revenue Growth % =
+DIVIDE (
+    [Revenue Growth],
+    ABS ( [Revenue Previous Period] )
+)
+
+
+// ============================================================
+// 13. PERIOD COMPARISON — GROSS PROFIT
+// ============================================================
+
+Gross Profit Previous Period =
+CALCULATE (
+    [Total Gross Profit],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Gross Profit Growth =
+[Total Gross Profit] - [Gross Profit Previous Period]
+
+
+Gross Profit Growth % =
+DIVIDE (
+    [Gross Profit Growth],
+    ABS ( [Gross Profit Previous Period] )
+)
+
+
+// ============================================================
+// 14. PERIOD COMPARISON — OPERATING PROFIT
+// ============================================================
+
+Operating Profit Previous Period =
+CALCULATE (
+    [Total Operating Profit],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Operating Profit Growth =
+[Total Operating Profit] - [Operating Profit Previous Period]
+
+
+Operating Profit Growth % =
+DIVIDE (
+    [Operating Profit Growth],
+    ABS ( [Operating Profit Previous Period] )
+)
+
+
+// ============================================================
+// 15. PERIOD COMPARISON — NET PROFIT
+// ============================================================
+
+Net Profit Previous Period =
+CALCULATE (
+    [Total Net Profit],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Net Profit Growth =
+[Total Net Profit] - [Net Profit Previous Period]
+
+
+Net Profit Growth % =
+DIVIDE (
+    [Net Profit Growth],
+    ABS ( [Net Profit Previous Period] )
+)
+
+
+// ============================================================
+// 16. PERIOD COMPARISON — OPERATING EXPENSES
+// ============================================================
+
+Operating Expenses Previous Period =
+CALCULATE (
+    [Total Operating Expenses],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Operating Expenses Growth =
+[Total Operating Expenses]
+    - [Operating Expenses Previous Period]
+
+
+Operating Expenses Growth % =
+DIVIDE (
+    [Operating Expenses Growth],
+    ABS ( [Operating Expenses Previous Period] )
+)
+
+
+// ============================================================
+// 17. MARGIN TREND
+// ============================================================
+
+Gross Margin Previous Period =
+CALCULATE (
+    [Gross Margin],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Gross Margin Change =
+[Gross Margin] - [Gross Margin Previous Period]
+
+
+Operating Margin Previous Period =
+CALCULATE (
+    [Operating Margin],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Operating Margin Change =
+[Operating Margin] - [Operating Margin Previous Period]
+
+
+Net Margin Previous Period =
+CALCULATE (
+    [Net Margin],
+    DATEADD (
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+
+Net Margin Change =
+[Net Margin] - [Net Margin Previous Period]
+
+
+// ============================================================
+// 18. PERFORMANCE TRENDS
+// ============================================================
+
+Revenue Trend =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Revenue Growth %] ), "No Data",
+    [Revenue Growth %] >= 0.10, "Strong Growth",
+    [Revenue Growth %] >= 0.05, "Growing",
+    [Revenue Growth %] > -0.05, "Stable",
+    [Revenue Growth %] > -0.10, "Declining",
+    "Sharp Decline"
+)
+
+
+Gross Profit Trend =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Gross Profit Growth %] ), "No Data",
+    [Gross Profit Growth %] >= 0.10, "Strong Growth",
+    [Gross Profit Growth %] >= 0.05, "Growing",
+    [Gross Profit Growth %] > -0.05, "Stable",
+    [Gross Profit Growth %] > -0.10, "Declining",
+    "Sharp Decline"
+)
+
+
+Operating Profit Trend =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Operating Profit Growth %] ), "No Data",
+    [Operating Profit Growth %] >= 0.10, "Strong Improvement",
+    [Operating Profit Growth %] >= 0.05, "Improving",
+    [Operating Profit Growth %] > -0.05, "Stable",
+    [Operating Profit Growth %] > -0.10, "Declining",
+    "Sharp Decline"
+)
+
+
+Net Profit Trend =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Net Profit Growth %] ), "No Data",
+    [Net Profit Growth %] >= 0.10, "Strong Improvement",
+    [Net Profit Growth %] >= 0.05, "Improving",
+    [Net Profit Growth %] > -0.05, "Stable",
+    [Net Profit Growth %] > -0.10, "Declining",
+    "Sharp Decline"
+)
+
+
+// ============================================================
+// 19. PROFITABILITY SCORECARD
+// ============================================================
+
+Revenue Performance Score =
+VAR Growth = [Revenue Growth %]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Growth ), 0,
+        Growth >= 0.15, 100,
+        Growth >= 0.10, 90,
+        Growth >= 0.05, 80,
+        Growth >= 0, 65,
+        Growth >= -0.10, 45,
+        20
+    )
+
+
+Gross Margin Score =
+VAR Margin = [Gross Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), 0,
+        Margin >= 0.50, 100,
+        Margin >= 0.40, 90,
+        Margin >= 0.30, 80,
+        Margin >= 0.20, 65,
+        Margin >= 0.10, 40,
+        15
+    )
+
+
+Operating Margin Score =
+VAR Margin = [Operating Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), 0,
+        Margin >= 0.20, 100,
+        Margin >= 0.15, 90,
+        Margin >= 0.10, 80,
+        Margin >= 0.05, 65,
+        Margin >= 0, 40,
+        15
+    )
+
+
+Net Margin Score =
+VAR Margin = [Net Margin]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( Margin ), 0,
+        Margin >= 0.15, 100,
+        Margin >= 0.10, 90,
+        Margin >= 0.05, 75,
+        Margin >= 0, 50,
+        15
+    )
+
+
+Cost Efficiency Score =
+VAR ExpensePct = [Operating Expense %]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( ExpensePct ), 0,
+        ExpensePct <= 0.10, 100,
+        ExpensePct <= 0.20, 90,
+        ExpensePct <= 0.30, 80,
+        ExpensePct <= 0.40, 65,
+        ExpensePct <= 0.50, 40,
+        15
+    )
+
+
+Income Statement Executive Score =
+ROUND (
+    DIVIDE (
+        [Revenue Performance Score]
+            + [Gross Margin Score]
+            + [Operating Margin Score]
+            + [Net Margin Score]
+            + [Cost Efficiency Score],
+        5
+    ),
+    1
+)
+
+
+Income Statement Executive Status =
+SWITCH (
+    TRUE (),
+    [Income Statement Executive Score] >= 80, "Excellent",
+    [Income Statement Executive Score] >= 65, "Healthy",
+    [Income Statement Executive Score] >= 50, "Watch",
+    [Income Statement Executive Score] >= 30, "Weak",
+    "Critical"
+)
+
+
+// ============================================================
+// 20. DECISION PRIORITY
+// ============================================================
+
+Income Statement Decision Priority =
+SWITCH (
+    TRUE (),
+    [Income Statement Risk Score] >= 75, "P0 - Immediate",
+    [Income Statement Risk Score] >= 50, "P1 - High",
+    [Income Statement Risk Score] >= 25, "P2 - Monitor",
+    "P3 - Normal"
+)
+
+
+// ============================================================
+// 21. MANAGEMENT STATUS
+// ============================================================
+
+Income Statement Management Status =
+SWITCH (
+    TRUE (),
+    [Income Statement Risk Score] >= 75,
+        "Executive Intervention Required",
+
+    [Income Statement Risk Score] >= 50,
+        "Management Action Required",
+
+    [Income Statement Risk Score] >= 25,
+        "Management Monitoring",
+
+    "Business as Usual"
+)
+
+
+// ============================================================
+// 22. EXECUTIVE NARRATIVE
+// ============================================================
+
+Income Statement Executive Narrative =
+VAR Revenue = [Total Revenue]
+VAR GrossProfit = [Total Gross Profit]
+VAR OperatingProfit = [Total Operating Profit]
+VAR NetProfit = [Total Net Profit]
+VAR Risk = [Income Statement Risk Level]
+VAR Trend = [Revenue Trend]
+RETURN
+    "Revenue is "
+        & FORMAT ( Revenue, "#,##0.00" )
+        & ", gross profit is "
+        & FORMAT ( GrossProfit, "#,##0.00" )
+        & ", operating profit is "
+        & FORMAT ( OperatingProfit, "#,##0.00" )
+        & ", and net profit is "
+        & FORMAT ( NetProfit, "#,##0.00" )
+        & ". Overall profitability risk is "
+        & Risk
+        & " with revenue trend "
+        & Trend
+        & "."
+
+
+// ============================================================
+// 23. PROFITABILITY SCORECARD
+// ============================================================
+
+Income Statement Scorecard =
+"Revenue Score: "
+    & FORMAT ( [Revenue Performance Score], "0" )
+    & " | Gross Margin Score: "
+    & FORMAT ( [Gross Margin Score], "0" )
+    & " | Operating Margin Score: "
+    & FORMAT ( [Operating Margin Score], "0" )
+    & " | Net Margin Score: "
+    & FORMAT ( [Net Margin Score], "0" )
+    & " | Cost Efficiency Score: "
+    & FORMAT ( [Cost Efficiency Score], "0" )
+    & " | Executive Score: "
+    & FORMAT ( [Income Statement Executive Score], "0.0" )
+
+
+// ============================================================
+// 24. DISPLAY MEASURES
+// ============================================================
+
+Revenue Display =
+FORMAT (
+    [Total Revenue],
+    "#,##0.00;(#,##0.00);-"
+)
+
+
+Gross Profit Display =
+FORMAT (
+    [Total Gross Profit],
+    "#,##0.00;(#,##0.00);-"
+)
+
+
+Operating Expenses Display =
+FORMAT (
+    [Total Operating Expenses],
+    "#,##0.00;(#,##0.00);-"
+)
+
+
+Operating Profit Display =
+FORMAT (
+    [Total Operating Profit],
+    "#,##0.00;(#,##0.00);-"
+)
+
+
+Net Profit Display =
+FORMAT (
+    [Total Net Profit],
+    "#,##0.00;(#,##0.00);-"
+)
+
+
+Gross Margin Display =
+FORMAT (
+    [Gross Margin],
+    "0.0%"
+)
+
+
+Operating Margin Display =
+FORMAT (
+    [Operating Margin],
+    "0.0%"
+)
+
+
+Net Margin Display =
+FORMAT (
+    [Net Margin],
+    "0.0%"
+)
+
+
+Revenue Variance Display =
+FORMAT (
+    [Revenue Variance],
+    "#,##0.00;(#,##0.00);-"
+)
+
+
+Revenue Variance % Display =
+FORMAT (
+    [Revenue Variance %],
+    "0.0%"
+)
+
+
+Expense Variance Display =
+FORMAT (
+    [Expense Variance],
+    "#,##0.00;(#,##0.00);-"
+)
+
+
+Expense Variance % Display =
+FORMAT (
+    [Expense Variance %],
+    "0.0%"
+)
+
+
+Income Statement Risk Display =
+FORMAT (
+    [Income Statement Risk Score],
+    "0"
+)
+
+
+Income Statement Health Display =
+FORMAT (
+    [Income Statement Health Score],
+    "0"
+)
+
+
+Income Statement Executive Score Display =
+FORMAT (
+    [Income Statement Executive Score],
+    "0.0"
+)
+
+
+// ============================================================
+// 25. KPI STATUS
+// ============================================================
+
+Income Statement KPI Status =
+VAR Risk = [Income Statement Risk Score]
+RETURN
+    SWITCH (
+        TRUE (),
+        Risk >= 75, "CRITICAL",
+        Risk >= 50, "HIGH",
+        Risk >= 25, "MEDIUM",
+        "LOW"
+    )
