@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balance Sheet Generator | FinCo AI</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg: #05060a;
+            --panel: #0b0d13;
+            --border: rgba(255,255,255,.08);
+            --border-light: rgba(255,255,255,.12);
+            --text: #f5f7fb;
+            --text-muted: #8b93a7;
+            --purple: #7c5cff;
+            --cyan: #22d3ee;
+            --green: #34d399;
+            --red: #fb7185;
+            --yellow: #fbbf24;
+            --blue: #60a5fa;
+            --orange: #f59e0b;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 20% 10%, rgba(124,92,255,.08), transparent 40%),
+                        radial-gradient(circle at 80% 80%, rgba(34,211,238,.06), transparent 40%),
+                        var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(7,8,12,.95);
+            border-right: 1px solid var(--border);
+            padding: 24px;
+            backdrop-filter: blur(20px);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+        
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--purple), var(--cyan));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 19.2px;
+        }
+        
+        .brand-name {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 21.6px;
+            font-weight: 700;
+        }
+        
+        .brand-name span {
+            color: var(--purple);
+        }
+        
+        .nav-label {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.4px;
+            margin: 24px 0 12px;
+        }
+        
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 15.6px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255,255,255,.04);
+            color: var(--text);
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(124,92,255,.15), rgba(34,211,238,.10));
+            color: var(--text);
+            border: 1px solid rgba(124,92,255,.2);
+        }
+        
+        .nav-icon {
+            font-size: 19.2px;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .nav-badge {
+            margin-left: auto;
+            background: var(--red);
+            color: white;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+        
+        /* Main Content */
+        .main {
+            margin-left: 280px;
+            flex: 1;
+            padding: 32px;
+            max-width: 1400px;
+        }
+        
+        .page-header {
+            margin-bottom: 32px;
+        }
+        
+        .page-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--purple), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .page-subtitle {
+            font-size: 16.8px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+        
+        /* Cards */
+        .card {
+            background: linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.015));
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .card-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 21.6px;
+            font-weight: 700;
+        }
+        
+        /* Form */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 14.4px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255,255,255,.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 15.6px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--purple);
+            background: rgba(255,255,255,.05);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-size: 15.6px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-family: inherit;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--purple), #5d45dd);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(124,92,255,.3);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,.08);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,.12);
+        }
+        
+        /* Balance Sheet Display */
+        .balance-sheet {
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13.2px;
+            line-height: 1.6;
+            background: rgba(0,0,0,.3);
+            padding: 24px;
+            border-radius: 10px;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        
+        .balance-sheet .header {
+            font-weight: 800;
+            font-size: 15.6px;
+            color: var(--cyan);
+            margin-bottom: 12px;
+        }
+        
+        .balance-sheet .section {
+            margin: 16px 0;
+        }
+        
+        .balance-sheet .balanced {
+            color: var(--green);
+            font-weight: 800;
+        }
+        
+        .balance-sheet .unbalanced {
+            color: var(--red);
+            font-weight: 800;
+        }
+        
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(145deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+        }
+        
+        .stat-label {
+            font-size: 13.2px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28.8px;
+            font-weight: 800;
+        }
+        
+        .stat-value.green { color: var(--green); }
+        .stat-value.red { color: var(--red); }
+        .stat-value.blue { color: var(--blue); }
+        .stat-value.purple { color: var(--purple); }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 48px;
+            color: var(--text-muted);
+        }
+        
+        .spinner {
+            border: 3px solid rgba(255,255,255,.1);
+            border-top: 3px solid var(--purple);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Alert */
+        .alert {
+            padding: 16px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .alert-success {
+            background: rgba(52,211,153,.1);
+            border: 1px solid rgba(52,211,153,.2);
+            color: var(--green);
+        }
+        
+        .alert-error {
+            background: rgba(251,113,133,.1);
+            border: 1px solid rgba(251,113,133,.2);
+            color: var(--red);
+        }
+        
+        .alert-warning {
+            background: rgba(251,191,36,.1);
+            border: 1px solid rgba(251,191,36,.2);
+            color: var(--yellow);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                z-index: 1000;
+            }
+            
+            .main {
+                margin-left: 0;
+                padding: 16px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">F</div>
+            <div class="brand-name">FinCo <span>AI</span></div>
+        </div>
+        
+        <div class="nav-label">Workspace</div>
+        <nav class="nav">
+            <a href="dashboard.html" class="nav-item">
+                <span class="nav-icon">⌂</span>
+                Dashboard
+            </a>
+            <a href="copilot.html" class="nav-item">
+                <span class="nav-icon">◈</span>
+                AI Copilot
+            </a>
+            <a href="agents.html" class="nav-item">
+                <span class="nav-icon">🤖</span>
+                AI Agents
+            </a>
+            <a href="ml-models.html" class="nav-item">
+                <span class="nav-icon">🧠</span>
+                ML Models
+            </a>
+            <a href="analysis.html" class="nav-item">
+                <span class="nav-icon">📊</span>
+                Analysis
+            </a>
+            <a href="collaboration.html" class="nav-item">
+                <span class="nav-icon">🤝</span>
+                Collaboration
+            </a>
+            <a href="financial.html" class="nav-item">
+                <span class="nav-icon">⌁</span>
+                Transactions
+            </a>
+            <a href="fraud.html" class="nav-item">
+                <span class="nav-icon">⚠</span>
+                Fraud & Risk
+                <span class="nav-badge">12</span>
+            </a>
+            <a href="forecasting.html" class="nav-item">
+                <span class="nav-icon">↗</span>
+                Forecasting
+            </a>
+            <a href="documents.html" class="nav-item">
+                <span class="nav-icon">▤</span>
+                Documents
+            </a>
+        </nav>
+        
+        <div class="nav-label">Management</div>
+        <nav class="nav">
+            <a href="balance-sheet.html" class="nav-item active">
+                <span class="nav-icon">⚖</span>
+            <a href="balance-sheet.html" class="nav-item active">
+                <span class="nav-icon">📋</span>
+                Balance Sheet
+            </a>
+            <a href="reports.html" class="nav-item">
+                <span class="nav-icon">▥</span>
+                Reports
+            </a>
+            <a href="alerts.html" class="nav-item">
+                <span class="nav-icon">⚙</span>
+                Settings
+            </a>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main">
+        <div class="page-header">
+            <h1 class="page-title">⚖️ Balance Sheet Generator</h1>
+            <p class="page-subtitle">
+                Automatically generate complete balance sheets for your financial year with all accounting tasks handled automatically. 
+                Credits and Debits are always balanced using double-entry bookkeeping.
+            </p>
+        </div>
+        
+        <!-- Input Form -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Generate Balance Sheet</h2>
+            </div>
+            
+            <form id="balanceSheetForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Company Name</label>
+                        <input type="text" class="form-input" id="companyName" value="Acme Corporation" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Financial Year</label>
+                        <input type="text" class="form-input" id="financialYear" value="2024" required>
+                    </div>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" class="checkbox" id="includeSampleData" checked>
+                    <label class="form-label" style="margin: 0;">Include sample transactions (for demonstration)</label>
+                </div>
+                
+                <div style="margin-top: 24px; display: flex; gap: 12px;">
+                    <button type="submit" class="btn btn-primary" id="generateBtn">
+                        Generate Balance Sheet
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="clearBtn">
+                        Clear Results
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+        
+        <!-- Stats -->
+        <div id="statsContainer" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Assets</div>
+                    <div class="stat-value green" id="totalAssets">$0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Liabilities</div>
+                    <div class="stat-value red" id="totalLiabilities">$0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Equity</div>
+                    <div class="stat-value blue" id="totalEquity">$0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Balance Status</div>
+                    <div class="stat-value purple" id="balanceStatus">-</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Balance Sheet Display -->
+        <div id="balanceSheetContainer"></div>
+        
+        <!-- Journal Entries -->
+        <div id="journalEntriesContainer"></div>
+    </main>
+</div>
+
+<script>
+const API_BASE = 'http://localhost:8000/api/v1';
+
+// Form submission
+document.getElementById('balanceSheetForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await generateBalanceSheet();
+});
+
+// Clear button
+document.getElementById('clearBtn').addEventListener('click', () => {
+    document.getElementById('alertContainer').innerHTML = '';
+    document.getElementById('statsContainer').style.display = 'none';
+    document.getElementById('balanceSheetContainer').innerHTML = '';
+    document.getElementById('journalEntriesContainer').innerHTML = '';
+});
+
+async function generateBalanceSheet() {
+    const companyName = document.getElementById('companyName').value;
+    const financialYear = document.getElementById('financialYear').value;
+    const includeSampleData = document.getElementById('includeSampleData').checked;
+    
+    const generateBtn = document.getElementById('generateBtn');
+    generateBtn.disabled = true;
+    generateBtn.textContent = 'Generating...';
+    
+    // Show loading
+    document.getElementById('alertContainer').innerHTML = `
+        <div class="alert alert-warning">
+            <div class="spinner"></div>
+            <div>
+                <strong>Generating balance sheet...</strong><br>
+                Please wait while we process all accounting tasks and balance the accounts.
+            </div>
+        </div>
+    `;
+    
+    try {
+        const response = await fetch(`${API_BASE}/balance-sheet/generate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                company_name: companyName,
+                financial_year: financialYear,
+                include_sample_data: includeSampleData
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        displayResults(data);
+        
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('alertContainer').innerHTML = `
+            <div class="alert alert-error">
+                <strong>❌ Error:</strong> ${error.message}
+            </div>
+        `;
+    } finally {
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate Balance Sheet';
+    }
+}
+
+function displayResults(data) {
+    const balanceSheet = data.data.balance_sheet;
+    const isBalanced = balanceSheet.totals.is_balanced;
+    
+    // Show success/warning alert
+    document.getElementById('alertContainer').innerHTML = `
+        <div class="alert ${isBalanced ? 'alert-success' : 'alert-error'}">
+            <strong>${isBalanced ? '✅ Balance Sheet Generated Successfully!' : '⚠️ Warning: Balance Sheet is Out of Balance'}</strong><br>
+            ${isBalanced ? 
+                'All accounting tasks completed. Credits and Debits are perfectly balanced!' :
+                `Difference of $${Math.abs(balanceSheet.totals.difference).toLocaleString()} detected. Please review the entries.`
+            }
+        </div>
+    `;
+    
+    // Show stats
+    document.getElementById('statsContainer').style.display = 'block';
+    document.getElementById('totalAssets').textContent = 
+        `$${balanceSheet.totals.total_assets.toLocaleString()}`;
+    document.getElementById('totalLiabilities').textContent = 
+        `$${balanceSheet.liabilities.total_liabilities.toLocaleString()}`;
+    document.getElementById('totalEquity').textContent = 
+        `$${balanceSheet.equity.total_equity.toLocaleString()}`;
+    document.getElementById('balanceStatus').textContent = 
+        isBalanced ? '✅ Balanced' : '❌ Unbalanced';
+    
+    // Display balance sheet
+    displayBalanceSheet(balanceSheet);
+    
+    // Display journal entries
+    displayJournalEntries(data.data.journal_entries);
+}
+
+function displayBalanceSheet(bs) {
+    let html = `
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📊 ${bs.company_name} - Balance Sheet</h2>
+            </div>
+            <div class="balance-sheet">
+<span class="header">=============================================================================
+${bs.company_name}
+BALANCE SHEET
+As of ${bs.as_of_date}
+Financial Year: ${bs.financial_year}
+=============================================================================</span>
+
+<span class="header">ASSETS</span>
+-----------------------------------------------------------------------------
+
+Current Assets:`;
+    
+    // Current Assets
+    for (const [name, amount] of Object.entries(bs.assets.current_assets)) {
+        html += `\n  ${name.padEnd(50)} $${amount.toLocaleString().padStart(20)}`;
+    }
+    html += `\n  ${'Total Current Assets'.padEnd(50)} $${bs.assets.total_current_assets.toLocaleString().padStart(20)}`;
+    
+    html += `\n\nNon-Current Assets:`;
+    
+    // Non-Current Assets
+    for (const [name, amount] of Object.entries(bs.assets.non_current_assets)) {
+        html += `\n  ${name.padEnd(50)} $${amount.toLocaleString().padStart(20)}`;
+    }
+    html += `\n  ${'Total Non-Current Assets'.padEnd(50)} $${bs.assets.total_non_current_assets.toLocaleString().padStart(20)}`;
+    
+    html += `\n\n${'TOTAL ASSETS'.padEnd(50)} $${bs.totals.total_assets.toLocaleString().padStart(20)}`;
+    html += `\n=============================================================================`;
+    
+    // Liabilities
+    html += `\n\n<span class="header">LIABILITIES</span>`;
+    html += `\n-----------------------------------------------------------------------------`;
+    html += `\n\nCurrent Liabilities:`;
+    
+    for (const [name, amount] of Object.entries(bs.liabilities.current_liabilities)) {
+        html += `\n  ${name.padEnd(50)} $${amount.toLocaleString().padStart(20)}`;
+    }
+    html += `\n  ${'Total Current Liabilities'.padEnd(50)} $${bs.liabilities.total_current_liabilities.toLocaleString().padStart(20)}`;
+    
+    html += `\n\nNon-Current Liabilities:`;
+    
+    for (const [name, amount] of Object.entries(bs.liabilities.non_current_liabilities)) {
+        html += `\n  ${name.padEnd(50)} $${amount.toLocaleString().padStart(20)}`;
+    }
+    html += `\n  ${'Total Non-Current Liabilities'.padEnd(50)} $${bs.liabilities.total_non_current_liabilities.toLocaleString().padStart(20)}`;
+    
+    html += `\n\n${'TOTAL LIABILITIES'.padEnd(50)} $${bs.liabilities.total_liabilities.toLocaleString().padStart(20)}`;
+    
+    // Equity
+    html += `\n\n<span class="header">SHAREHOLDERS' EQUITY</span>`;
+    html += `\n-----------------------------------------------------------------------------`;
+    
+    for (const [name, amount] of Object.entries(bs.equity.shareholders_equity)) {
+        html += `\n  ${name.padEnd(50)} $${amount.toLocaleString().padStart(20)}`;
+    }
+    
+    html += `\n\n${'TOTAL EQUITY'.padEnd(50)} $${bs.equity.total_equity.toLocaleString().padStart(20)}`;
+    
+    html += `\n\n${'TOTAL LIABILITIES AND EQUITY'.padEnd(50)} $${bs.totals.total_liabilities_and_equity.toLocaleString().padStart(20)}`;
+    html += `\n=============================================================================`;
+    
+    // Balance Check
+    if (bs.totals.is_balanced) {
+        html += `\n\n<span class="balanced">✅ BALANCE SHEET IS BALANCED!</span>`;
+        html += `\n   Assets = Liabilities + Equity`;
+        html += `\n   $${bs.totals.total_assets.toLocaleString()} = $${bs.totals.total_liabilities_and_equity.toLocaleString()}`;
+    } else {
+        html += `\n\n<span class="unbalanced">⚠️  WARNING: BALANCE SHEET IS OUT OF BALANCE!</span>`;
+        html += `\n   Difference: $${Math.abs(bs.totals.difference).toLocaleString()}`;
+    }
+    
+    html += `\n=============================================================================`;
+    html += `\n            </div>
+        </div>
+    `;
+    
+    document.getElementById('balanceSheetContainer').innerHTML = html;
+}
+
+function displayJournalEntries(entries) {
+    if (!entries || entries.length === 0) return;
+    
+    let html = `
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📝 Journal Entries (${entries.length})</h2>
+            </div>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                            <th style="padding: 12px;">Date</th>
+                            <th style="padding: 12px;">Description</th>
+                            <th style="padding: 12px;">Debit Account</th>
+                            <th style="padding: 12px;">Credit Account</th>
+                            <th style="padding: 12px; text-align: right;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    `;
+    
+    entries.forEach((entry, index) => {
+        html += `
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 12px; color: var(--text-muted); font-size: 13.2px;">${new Date(entry.date).toLocaleDateString()}</td>
+                <td style="padding: 12px;">${entry.description}</td>
+                <td style="padding: 12px; color: var(--green);">${entry.debit_account}</td>
+                <td style="padding: 12px; color: var(--cyan);">${entry.credit_account}</td>
+                <td style="padding: 12px; text-align: right; font-weight: 600;">$${entry.amount.toLocaleString()}</td>
+            </tr>
+        `;
+    });
+    
+    html += `
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('journalEntriesContainer').innerHTML = html;
+}
+
+// Load on page load if sample data checkbox is checked
+window.addEventListener('load', () => {
+    // Optional: Auto-generate on load
+    // generateBalanceSheet();
+});
+</script>
+
+</body>
+</html>

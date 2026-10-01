@@ -1,0 +1,3573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>FinCo AI — Documents</title>
+    <meta
+        name="description"
+        content="FinCo AI document intelligence and RAG workspace."
+    >
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+        :root {
+            --bg: #05060a;
+            --bg2: #080a10;
+            --panel: rgba(14,16,25,.82);
+            --panel2: rgba(18,20,30,.94);
+            --border: rgba(255,255,255,.08);
+
+            --text: #f5f7ff;
+            --muted: #8d93a7;
+            --muted2: #656b7e;
+
+            --purple: #7c5cff;
+            --purple2: #9b86ff;
+            --cyan: #22d3ee;
+            --green: #34d399;
+            --yellow: #fbbf24;
+            --red: #fb7185;
+            --blue: #60a5fa;
+
+            --sidebar: 260px;
+            --radius: 18px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            color: var(--text);
+            background:
+                radial-gradient(
+                    circle at 78% 0%,
+                    rgba(124,92,255,.14),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 10% 90%,
+                    rgba(34,211,238,.06),
+                    transparent 25%
+                ),
+                var(--bg);
+            font-family: Inter, sans-serif;
+            overflow-x: hidden;
+        }
+
+        body.dragging {
+            overflow: hidden;
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* ========================================
+           BACKGROUND
+        ======================================== */
+
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -2;
+
+            background-image:
+                linear-gradient(
+                    rgba(255,255,255,.017) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,.017) 1px,
+                    transparent 1px
+                );
+
+            background-size: 44px 44px;
+
+            mask-image:
+                linear-gradient(
+                    to bottom,
+                    black,
+                    transparent 90%
+                );
+        }
+
+        .orb {
+            position: fixed;
+            width: 390px;
+            height: 390px;
+            border-radius: 50%;
+            filter: blur(110px);
+            opacity: .11;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .orb.one {
+            top: -250px;
+            right: 100px;
+            background: var(--purple);
+        }
+
+        .orb.two {
+            left: 40px;
+            bottom: -280px;
+            background: var(--cyan);
+        }
+
+        /* ========================================
+           APP
+        ======================================== */
+
+        .app {
+            min-height: 100vh;
+        }
+
+        /* ========================================
+           SIDEBAR
+        ======================================== */
+
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+
+            width: var(--sidebar);
+
+            display: flex;
+            flex-direction: column;
+
+            padding: 22px 16px;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(8,9,15,.98),
+                    rgba(5,6,10,.95)
+                );
+
+            border-right: 1px solid var(--border);
+
+            z-index: 100;
+
+            transition: transform .3s ease;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            padding: 5px 10px 28px;
+        }
+
+        .brand-logo {
+            width: 40px;
+            height: 40px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 13px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    #4f3cc8
+                );
+
+            box-shadow:
+                0 8px 30px rgba(124,92,255,.35);
+
+            font-family: "Space Grotesk";
+            font-size: 22.8px;
+            font-weight: 800;
+        }
+
+        .brand-name strong {
+            display: block;
+
+            font-family: "Space Grotesk";
+            font-size: 21.6px;
+        }
+
+        .brand-name span {
+            display: block;
+
+            margin-top: 2px;
+
+            color: var(--muted);
+            font-size: 10.8px;
+            letter-spacing: 1.3px;
+            text-transform: uppercase;
+        }
+
+        .nav-title {
+            margin: 7px 10px 9px;
+
+            color: var(--muted2);
+
+            font-size: 10.8px;
+            font-weight: 800;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-link {
+            position: relative;
+
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            padding: 12px 13px;
+
+            color: #9197a9;
+
+            border-radius: 12px;
+
+            transition: .2s ease;
+        }
+
+        .nav-link:hover {
+            color: white;
+            background: rgba(255,255,255,.04);
+        }
+
+        .nav-link.active {
+            color: white;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(124,92,255,.19),
+                    rgba(124,92,255,.05)
+                );
+
+            box-shadow:
+                inset 0 0 0 1px rgba(124,92,255,.12);
+        }
+
+        .nav-link.active::before {
+            content: "";
+
+            position: absolute;
+            left: 0;
+            top: 9px;
+            bottom: 9px;
+
+            width: 3px;
+
+            border-radius: 4px;
+
+            background: var(--purple);
+
+            box-shadow:
+                0 0 12px var(--purple);
+        }
+
+        .nav-icon {
+            width: 19px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .nav-text {
+            font-size: 14.4px;
+            font-weight: 600;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+
+            min-width: 21px;
+            height: 20px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 20px;
+
+            color: var(--red);
+            background: rgba(251,113,133,.1);
+
+            font-size: 10.8px;
+            font-weight: 800;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+        }
+
+        .ai-status {
+            margin: 14px 2px;
+
+            padding: 13px;
+
+            border: 1px solid rgba(52,211,153,.15);
+            border-radius: 13px;
+
+            background: rgba(52,211,153,.04);
+        }
+
+        .ai-status-title {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: var(--green);
+
+            box-shadow:
+                0 0 10px var(--green);
+        }
+
+        .ai-status p {
+            margin-top: 6px;
+
+            color: var(--muted);
+
+            font-size: 9.6px;
+            line-height: 1.55;
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+
+            padding: 13px 8px;
+
+            border-top: 1px solid var(--border);
+        }
+
+        .avatar {
+            width: 35px;
+            height: 35px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 10px;
+
+            color: #ddd8ff;
+            background: rgba(124,92,255,.12);
+
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .profile-info {
+            min-width: 0;
+        }
+
+        .profile-info strong {
+            display: block;
+            font-size: 10.8px;
+        }
+
+        .profile-info span {
+            display: block;
+            margin-top: 2px;
+
+            color: var(--muted);
+            font-size: 9.6px;
+        }
+
+        /* ========================================
+           MAIN
+        ======================================== */
+
+        .main {
+            width: calc(100% - var(--sidebar));
+            margin-left: var(--sidebar);
+
+            padding: 22px 28px 50px;
+        }
+
+        .topbar {
+            min-height: 55px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 24px;
+        }
+
+        .mobile-menu {
+            display: none;
+
+            width: 39px;
+            height: 39px;
+
+            margin-right: 10px;
+
+            color: white;
+            background: rgba(255,255,255,.03);
+            border: 1px solid var(--border);
+            border-radius: 11px;
+        }
+
+        .heading h1 {
+            font-family: "Space Grotesk";
+            font-size: 30px;
+            letter-spacing: -.8px;
+        }
+
+        .heading p {
+            margin-top: 4px;
+
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .icon-btn {
+            position: relative;
+
+            width: 39px;
+            height: 39px;
+
+            display: grid;
+            place-items: center;
+
+            color: #aab0c0;
+
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.025);
+            border-radius: 11px;
+
+            transition: .2s ease;
+        }
+
+        .icon-btn:hover {
+            color: white;
+            border-color: rgba(124,92,255,.35);
+            background: rgba(124,92,255,.07);
+        }
+
+        .notification-dot {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+
+            width: 6px;
+            height: 6px;
+
+            border-radius: 50%;
+            background: var(--red);
+
+            box-shadow: 0 0 8px var(--red);
+        }
+
+        /* ========================================
+           BUTTONS
+        ======================================== */
+
+        .primary {
+            height: 39px;
+
+            padding: 0 15px;
+
+            color: white;
+
+            border: 0;
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    #6548e8
+                );
+
+            box-shadow:
+                0 8px 25px rgba(124,92,255,.24);
+
+            font-size: 12px;
+            font-weight: 700;
+
+            transition: .2s ease;
+        }
+
+        .primary:hover {
+            transform: translateY(-1px);
+
+            box-shadow:
+                0 12px 30px rgba(124,92,255,.4);
+        }
+
+        .secondary {
+            height: 39px;
+
+            padding: 0 13px;
+
+            color: #b8bdcc;
+
+            border: 1px solid var(--border);
+            border-radius: 10px;
+
+            background: rgba(255,255,255,.025);
+
+            font-size: 12px;
+            font-weight: 700;
+
+            transition: .2s ease;
+        }
+
+        .secondary:hover {
+            color: white;
+            border-color: rgba(255,255,255,.16);
+        }
+
+        /* ========================================
+           HERO
+        ======================================== */
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+
+            padding: 23px 25px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+
+            border: 1px solid rgba(124,92,255,.18);
+            border-radius: var(--radius);
+
+            background:
+                radial-gradient(
+                    circle at 80% 20%,
+                    rgba(124,92,255,.18),
+                    transparent 34%
+                ),
+                linear-gradient(
+                    135deg,
+                    rgba(124,92,255,.09),
+                    rgba(255,255,255,.025)
+                );
+
+            box-shadow:
+                0 20px 70px rgba(0,0,0,.35);
+        }
+
+        .hero::after {
+            content: "";
+
+            position: absolute;
+
+            right: -100px;
+            top: -100px;
+
+            width: 230px;
+            height: 230px;
+
+            border: 1px solid rgba(124,92,255,.15);
+            border-radius: 50%;
+
+            box-shadow:
+                0 0 0 35px rgba(124,92,255,.025),
+                0 0 0 70px rgba(124,92,255,.018);
+        }
+
+        .hero-copy {
+            position: relative;
+            z-index: 1;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+
+            padding: 5px 9px;
+
+            color: var(--purple2);
+
+            border: 1px solid rgba(124,92,255,.2);
+            border-radius: 20px;
+
+            background: rgba(124,92,255,.07);
+
+            font-size: 9.6px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .hero h2 {
+            margin-top: 9px;
+
+            font-family: "Space Grotesk";
+            font-size: 26.4px;
+            letter-spacing: -.6px;
+        }
+
+        .hero p {
+            max-width: 650px;
+
+            margin-top: 6px;
+
+            color: var(--muted);
+
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .hero-actions {
+            position: relative;
+            z-index: 2;
+
+            display: flex;
+            gap: 8px;
+
+            flex-shrink: 0;
+        }
+
+        /* ========================================
+           METRICS
+        ======================================== */
+
+        .section-title {
+            margin: 22px 2px 10px;
+
+            color: var(--muted2);
+
+            font-size: 10.8px;
+            font-weight: 800;
+            letter-spacing: 1.3px;
+            text-transform: uppercase;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 12px;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+
+            background: var(--panel);
+
+            box-shadow:
+                0 20px 70px rgba(0,0,0,.28),
+                inset 0 1px 0 rgba(255,255,255,.02);
+        }
+
+        .metric {
+            padding: 15px;
+        }
+
+        .metric-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .metric-label {
+            color: var(--muted);
+            font-size: 10.8px;
+            font-weight: 600;
+        }
+
+        .metric-icon {
+            width: 30px;
+            height: 30px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 9px;
+
+            color: var(--purple2);
+            background: rgba(124,92,255,.1);
+
+            font-size: 15.6px;
+        }
+
+        .metric-value {
+            margin-top: 10px;
+
+            font-family: "Space Grotesk";
+            font-size: 25.2px;
+            font-weight: 700;
+        }
+
+        .metric-change {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+
+            margin-top: 5px;
+
+            font-size: 9.6px;
+        }
+
+        .up {
+            color: var(--green);
+        }
+
+        .neutral {
+            color: var(--muted2);
+        }
+
+        /* ========================================
+           DOCUMENT WORKSPACE
+        ======================================== */
+
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(0,1fr) 310px;
+            gap: 14px;
+
+            margin-top: 14px;
+        }
+
+        .panel {
+            padding: 18px;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+
+            margin-bottom: 15px;
+        }
+
+        .panel-title {
+            font-family: "Space Grotesk";
+            font-size: 16.8px;
+            font-weight: 700;
+        }
+
+        .panel-subtitle {
+            margin-top: 4px;
+
+            color: var(--muted);
+            font-size: 9.6px;
+        }
+
+        /* ========================================
+           SEARCH
+        ======================================== */
+
+        .search-row {
+            display: flex;
+            gap: 8px;
+
+            margin-bottom: 15px;
+        }
+
+        .search {
+            position: relative;
+            flex: 1;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            color: var(--muted2);
+            font-size: 14.4px;
+        }
+
+        .search input {
+            width: 100%;
+            height: 38px;
+
+            padding: 0 12px 0 33px;
+
+            color: white;
+
+            border: 1px solid var(--border);
+            border-radius: 10px;
+
+            outline: none;
+
+            background: rgba(255,255,255,.025);
+
+            font-size: 10.8px;
+
+            transition: .2s ease;
+        }
+
+        .search input::placeholder {
+            color: var(--muted2);
+        }
+
+        .search input:focus {
+            border-color: rgba(124,92,255,.4);
+            box-shadow: 0 0 0 3px rgba(124,92,255,.06);
+        }
+
+        .filter {
+            height: 38px;
+
+            padding: 0 10px;
+
+            color: #aeb3c3;
+
+            border: 1px solid var(--border);
+            border-radius: 10px;
+
+            outline: none;
+
+            background: rgba(255,255,255,.025);
+
+            font-size: 10.8px;
+        }
+
+        /* ========================================
+           UPLOAD ZONE
+        ======================================== */
+
+        .upload-zone {
+            position: relative;
+
+            padding: 25px 20px;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            min-height: 160px;
+
+            text-align: center;
+
+            border: 1px dashed rgba(124,92,255,.32);
+            border-radius: 15px;
+
+            background:
+                radial-gradient(
+                    circle at 50% 0%,
+                    rgba(124,92,255,.09),
+                    transparent 55%
+                ),
+                rgba(124,92,255,.025);
+
+            transition: .25s ease;
+        }
+
+        .upload-zone.dragover {
+            border-color: var(--purple);
+            background: rgba(124,92,255,.08);
+
+            transform: scale(1.005);
+        }
+
+        .upload-icon {
+            width: 47px;
+            height: 47px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 13px;
+
+            color: var(--purple2);
+
+            background: rgba(124,92,255,.1);
+
+            box-shadow:
+                0 0 25px rgba(124,92,255,.1);
+
+            font-size: 22.8px;
+        }
+
+        .upload-zone h3 {
+            margin-top: 11px;
+
+            font-family: "Space Grotesk";
+            font-size: 14.4px;
+        }
+
+        .upload-zone p {
+            margin-top: 5px;
+
+            color: var(--muted);
+            font-size: 9.6px;
+        }
+
+        .upload-types {
+            margin-top: 9px;
+
+            color: var(--muted2);
+            font-size: 8.4px;
+        }
+
+        .upload-btn {
+            margin-top: 13px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* ========================================
+           DOCUMENT LIST
+        ======================================== */
+
+        .document-list {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+
+            margin-top: 15px;
+        }
+
+        .document {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+
+            padding: 10px;
+
+            border: 1px solid rgba(255,255,255,.055);
+            border-radius: 11px;
+
+            background: rgba(255,255,255,.018);
+
+            transition: .2s ease;
+        }
+
+        .document:hover {
+            border-color: rgba(124,92,255,.2);
+            background: rgba(124,92,255,.035);
+        }
+
+        .file-icon {
+            width: 35px;
+            height: 39px;
+
+            position: relative;
+
+            display: grid;
+            place-items: center;
+
+            flex-shrink: 0;
+
+            border-radius: 8px;
+
+            color: #ff9aaa;
+
+            background: rgba(251,113,133,.08);
+
+            font-size: 15.6px;
+        }
+
+        .file-icon.csv {
+            color: var(--green);
+            background: rgba(52,211,153,.08);
+        }
+
+        .file-icon.xlsx {
+            color: var(--green);
+            background: rgba(52,211,153,.08);
+        }
+
+        .file-icon.doc {
+            color: var(--blue);
+            background: rgba(96,165,250,.08);
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            color: #e9ebf3;
+
+            font-size: 10.8px;
+            font-weight: 700;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-meta {
+            display: flex;
+            gap: 7px;
+
+            margin-top: 4px;
+
+            color: var(--muted2);
+            font-size: 8.4px;
+        }
+
+        .file-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+
+            padding: 4px 7px;
+
+            border-radius: 20px;
+
+            font-size: 8.4px;
+            font-weight: 700;
+        }
+
+        .file-status.ready {
+            color: var(--green);
+            background: rgba(52,211,153,.07);
+        }
+
+        .file-status.indexing {
+            color: var(--cyan);
+            background: rgba(34,211,238,.07);
+        }
+
+        .file-status.review {
+            color: var(--yellow);
+            background: rgba(251,191,36,.07);
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .small-btn {
+            width: 29px;
+            height: 29px;
+
+            display: grid;
+            place-items: center;
+
+            color: #858b9d;
+
+            border: 1px solid rgba(255,255,255,.06);
+            border-radius: 8px;
+
+            background: rgba(255,255,255,.02);
+
+            font-size: 12px;
+
+            transition: .2s ease;
+        }
+
+        .small-btn:hover {
+            color: white;
+            border-color: rgba(124,92,255,.25);
+        }
+
+        /* ========================================
+           RIGHT INTELLIGENCE
+        ======================================== */
+
+        .intelligence {
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+        }
+
+        .intel-card {
+            padding: 14px;
+
+            border: 1px solid rgba(255,255,255,.06);
+            border-radius: 13px;
+
+            background: rgba(255,255,255,.018);
+        }
+
+        .intel-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 12px;
+        }
+
+        .intel-heading strong {
+            font-family: "Space Grotesk";
+            font-size: 13.2px;
+        }
+
+        .intel-heading span {
+            color: var(--muted2);
+            font-size: 9.6px;
+        }
+
+        .rag-score {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+        }
+
+        .rag-ring {
+            width: 66px;
+            height: 66px;
+
+            position: relative;
+
+            flex-shrink: 0;
+        }
+
+        .rag-ring svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .rag-bg {
+            fill: none;
+            stroke: rgba(255,255,255,.06);
+            stroke-width: 7;
+        }
+
+        .rag-progress {
+            fill: none;
+            stroke: var(--purple);
+            stroke-width: 7;
+            stroke-linecap: round;
+
+            stroke-dasharray: 170;
+            stroke-dashoffset: 13;
+        }
+
+        .rag-center {
+            position: absolute;
+            inset: 0;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-family: "Space Grotesk";
+            font-size: 15.6px;
+            font-weight: 700;
+        }
+
+        .rag-copy strong {
+            display: block;
+            font-size: 10.8px;
+        }
+
+        .rag-copy p {
+            margin-top: 4px;
+
+            color: var(--muted);
+            font-size: 8.4px;
+            line-height: 1.5;
+        }
+
+        /* ========================================
+           INDEXING
+        ======================================== */
+
+        .progress-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 6px;
+        }
+
+        .progress-row span {
+            color: var(--muted);
+            font-size: 9.6px;
+        }
+
+        .progress-row strong {
+            font-size: 9.6px;
+        }
+
+        .progress {
+            height: 5px;
+
+            overflow: hidden;
+
+            border-radius: 20px;
+
+            background: rgba(255,255,255,.05);
+        }
+
+        .progress > div {
+            height: 100%;
+
+            border-radius: inherit;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    var(--purple),
+                    var(--cyan)
+                );
+        }
+
+        .intel-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 7px;
+
+            margin-top: 10px;
+        }
+
+        .intel-stat {
+            padding: 9px;
+
+            border: 1px solid rgba(255,255,255,.045);
+            border-radius: 9px;
+
+            background: rgba(255,255,255,.015);
+        }
+
+        .intel-stat span {
+            display: block;
+
+            color: var(--muted2);
+            font-size: 8.4px;
+        }
+
+        .intel-stat strong {
+            display: block;
+
+            margin-top: 4px;
+
+            font-family: "Space Grotesk";
+            font-size: 15.6px;
+        }
+
+        /* ========================================
+           RAG SOURCES
+        ======================================== */
+
+        .source-list {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .source {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .source-icon {
+            width: 26px;
+            height: 26px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 7px;
+
+            color: var(--purple2);
+            background: rgba(124,92,255,.08);
+
+            font-size: 10.8px;
+        }
+
+        .source-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .source-info strong {
+            display: block;
+
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+
+            font-size: 8.4px;
+        }
+
+        .source-info span {
+            display: block;
+
+            margin-top: 2px;
+
+            color: var(--muted2);
+            font-size: 7.2px;
+        }
+
+        .source-score {
+            color: var(--green);
+            font-size: 8.4px;
+            font-weight: 700;
+        }
+
+        /* ========================================
+           EMPTY / SEARCH
+        ======================================== */
+
+        .no-results {
+            display: none;
+
+            padding: 25px;
+
+            text-align: center;
+
+            color: var(--muted);
+
+            font-size: 10.8px;
+        }
+
+        .no-results.show {
+            display: block;
+        }
+
+        /* ========================================
+           MODAL
+        ======================================== */
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+
+            display: none;
+            align-items: center;
+            justify-content: center;
+
+            padding: 20px;
+
+            background: rgba(0,0,0,.68);
+            backdrop-filter: blur(10px);
+
+            z-index: 300;
+        }
+
+        .modal-backdrop.show {
+            display: flex;
+        }
+
+        .modal {
+            width: min(500px,100%);
+
+            padding: 21px;
+
+            border: 1px solid rgba(124,92,255,.2);
+            border-radius: 17px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(20,22,33,.98),
+                    rgba(9,10,16,.98)
+                );
+
+            box-shadow:
+                0 30px 100px rgba(0,0,0,.65);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            font-family: "Space Grotesk";
+            font-size: 19.2px;
+        }
+
+        .modal-close {
+            width: 31px;
+            height: 31px;
+
+            color: #9da3b3;
+
+            border: 1px solid var(--border);
+            border-radius: 8px;
+
+            background: rgba(255,255,255,.03);
+        }
+
+        .modal-body {
+            margin-top: 17px;
+        }
+
+        .modal-file {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            padding: 12px;
+
+            border: 1px solid rgba(255,255,255,.06);
+            border-radius: 11px;
+
+            background: rgba(255,255,255,.025);
+        }
+
+        .modal-file strong {
+            display: block;
+            font-size: 12px;
+        }
+
+        .modal-file span {
+            display: block;
+            margin-top: 3px;
+
+            color: var(--muted);
+            font-size: 9.6px;
+        }
+
+        .modal-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+
+            margin-top: 12px;
+        }
+
+        .info-box {
+            padding: 10px;
+
+            border: 1px solid rgba(255,255,255,.05);
+            border-radius: 9px;
+
+            background: rgba(255,255,255,.018);
+        }
+
+        .info-box span {
+            display: block;
+
+            color: var(--muted2);
+            font-size: 8.4px;
+        }
+
+        .info-box strong {
+            display: block;
+
+            margin-top: 4px;
+
+            font-size: 10.8px;
+        }
+
+        /* ========================================
+           TOAST
+        ======================================== */
+
+        .toast {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+
+            min-width: 270px;
+
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            padding: 12px 14px;
+
+            border: 1px solid rgba(124,92,255,.2);
+            border-radius: 12px;
+
+            background: rgba(12,14,22,.95);
+            backdrop-filter: blur(18px);
+
+            box-shadow:
+                0 20px 60px rgba(0,0,0,.5);
+
+            transform: translateY(30px);
+            opacity: 0;
+            pointer-events: none;
+
+            transition: .3s ease;
+
+            z-index: 500;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-icon {
+            width: 28px;
+            height: 28px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 8px;
+
+            color: var(--green);
+            background: rgba(52,211,153,.1);
+        }
+
+        .toast strong {
+            display: block;
+            font-size: 10.8px;
+        }
+
+        .toast span {
+            display: block;
+
+            margin-top: 3px;
+
+            color: var(--muted);
+            font-size: 9.6px;
+        }
+
+        /* ========================================
+           RESPONSIVE
+        ======================================== */
+
+        @media (max-width: 1150px) {
+            .metric-grid {
+                grid-template-columns: repeat(2,1fr);
+            }
+
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+
+            .intelligence {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main {
+                width: 100%;
+                margin-left: 0;
+                padding: 17px;
+            }
+
+            .mobile-menu {
+                display: block;
+            }
+
+            .topbar {
+                justify-content: flex-start;
+            }
+
+            .top-actions {
+                margin-left: auto;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .hero {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .hero-actions {
+                width: 100%;
+            }
+
+            .hero-actions button {
+                flex: 1;
+            }
+
+            .intelligence {
+                grid-template-columns: 1fr;
+            }
+
+            .search-row {
+                flex-wrap: wrap;
+            }
+
+            .search {
+                flex-basis: 100%;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .heading h1 {
+                font-size: 24px;
+            }
+
+            .top-actions .icon-btn:nth-child(2) {
+                display: none;
+            }
+
+            .panel {
+                padding: 14px;
+            }
+
+            .file-actions {
+                display: none;
+            }
+
+            .file-status {
+                display: none;
+            }
+
+            .hero {
+                padding: 19px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="grid-bg"></div>
+<div class="orb one"></div>
+<div class="orb two"></div>
+
+<div class="app">
+
+    <!-- ========================================
+         SIDEBAR
+    ========================================= -->
+
+    <aside class="sidebar" id="sidebar">
+
+        <div class="brand">
+            <div class="brand-logo">F</div>
+
+            <div class="brand-name">
+                <strong>FinCo AI</strong>
+                <span>Intelligence Platform</span>
+            </div>
+        </div>
+
+        <div class="nav-title">Workspace</div>
+
+        <nav class="nav">
+
+            <a class="nav-link" href="dashboard.html">
+                <span class="nav-icon">⌂</span>
+                <span class="nav-text">Dashboard</span>
+            </a>
+
+            <a class="nav-link" href="copilot.html">
+                <span class="nav-icon">◈</span>
+                <span class="nav-text">AI Copilot</span>
+            </a>
+
+            <a class="nav-link" href="agents.html">
+                <span class="nav-icon">🤖</span>
+                <span class="nav-text">AI Agents</span>
+            </a>
+
+            <a class="nav-link" href="ml-models.html">
+                <span class="nav-icon">🧠</span>
+                <span class="nav-text">ML Models</span>
+            </a>
+
+            <a class="nav-link" href="analysis.html">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">Analysis</span>
+            </a>
+
+            <a class="nav-link" href="collaboration.html">
+                <span class="nav-icon">🤝</span>
+                <span class="nav-text">Collaboration</span>
+            </a>
+
+            <a class="nav-link" href="financial.html">
+                <span class="nav-icon">⌁</span>
+                <span class="nav-text">Transactions</span>
+            </a>
+
+            <a class="nav-link" href="fraud.html">
+                <span class="nav-icon">⚠</span>
+                <span class="nav-text">Fraud & Risk</span>
+                <span class="nav-badge">12</span>
+            </a>
+
+            <a class="nav-link" href="forecasting.html">
+                <span class="nav-icon">↗</span>
+                <span class="nav-text">Forecasting</span>
+            </a>
+
+            <a class="nav-link active" href="documents.html">
+                <span class="nav-icon">▤</span>
+                <span class="nav-text">Documents</span>
+            </a>
+
+        </nav>
+
+        <div class="nav-title">Management</div>
+
+        <nav class="nav">
+
+            <a class="nav-link" href="reports.html">
+                <span class="nav-icon">▥</span>
+                <span class="nav-text">Reports</span>
+            </a>
+
+            <a class="nav-link" href="balance-sheet.html">
+                <span class="nav-icon">📋</span>
+                <span class="nav-text">Balance Sheet</span>
+            </a>
+
+            <a class="nav-link" href="alerts.html">
+                <span class="nav-icon">⚙</span>
+                <span class="nav-text">Settings</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+
+            <div class="ai-status">
+
+                <div class="ai-status-title">
+                    <span class="status-dot"></span>
+                    RAG System Online
+                </div>
+
+                <p>
+                    Document retrieval and vector indexing
+                    services are operating normally.
+                </p>
+
+            </div>
+
+            <div class="profile">
+
+                <div class="avatar">
+                    PA
+                </div>
+
+                <div class="profile-info">
+                    <strong>Platform Admin</strong>
+                    <span>Administrator</span>
+                </div>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- ========================================
+         MAIN
+    ========================================= -->
+
+    <main class="main">
+
+        <!-- TOPBAR -->
+
+        <header class="topbar">
+
+            <div style="display:flex;align-items:center;">
+
+                <button
+                    class="mobile-menu"
+                    id="mobileMenu"
+                >
+                    ☰
+                </button>
+
+                <div class="heading">
+
+                    <h1>Document Intelligence</h1>
+
+                    <p>
+                        Manage financial knowledge, documents and RAG sources.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="top-actions">
+
+                <button
+                    class="icon-btn"
+                    onclick="window.location.href='copilot.html'"
+                    title="AI Copilot"
+                >
+                    ✦
+                </button>
+
+                <button
+                    class="icon-btn"
+                    onclick="showToast(
+                        'Notifications',
+                        '7 alerts require attention.'
+                    )"
+                >
+                    ♢
+                    <span class="notification-dot"></span>
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- ========================================
+             HERO
+        ========================================= -->
+
+        <section class="hero">
+
+            <div class="hero-copy">
+
+                <div class="eyebrow">
+                    <span>✦</span>
+                    RAG Knowledge Center
+                </div>
+
+                <h2>
+                    Turn financial documents into actionable intelligence.
+                </h2>
+
+                <p>
+                    Upload reports, statements, contracts and spreadsheets.
+                    FinCo AI extracts structured information, creates semantic
+                    chunks, indexes embeddings and makes every source available
+                    to the AI Copilot and autonomous agents.
+                </p>
+
+            </div>
+
+            <div class="hero-actions">
+
+                <button
+                    class="secondary"
+                    onclick="showToast(
+                        'Knowledge Base',
+                        'Opening knowledge-base explorer...'
+                    )"
+                >
+                    Browse Knowledge
+                </button>
+
+                <button
+                    class="primary"
+                    onclick="openFilePicker()"
+                >
+                    ＋ Upload Document
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- ========================================
+             METRICS
+        ========================================= -->
+
+        <div class="section-title">
+            Knowledge Base Overview
+        </div>
+
+        <section class="metric-grid">
+
+            <div class="card metric">
+
+                <div class="metric-top">
+
+                    <span class="metric-label">
+                        Total Documents
+                    </span>
+
+                    <div class="metric-icon">
+                        ▤
+                    </div>
+
+                </div>
+
+                <div class="metric-value">
+                    1,284
+                </div>
+
+                <div class="metric-change">
+                    <span class="up">↑ 14.2%</span>
+                    <span class="neutral">
+                        this month
+                    </span>
+                </div>
+
+            </div>
+
+
+            <div class="card metric">
+
+                <div class="metric-top">
+
+                    <span class="metric-label">
+                        Indexed Chunks
+                    </span>
+
+                    <div class="metric-icon">
+                        ◈
+                    </div>
+
+                </div>
+
+                <div class="metric-value">
+                    86.4K
+                </div>
+
+                <div class="metric-change">
+                    <span class="up">↑ 8.7%</span>
+                    <span class="neutral">
+                        indexed
+                    </span>
+                </div>
+
+            </div>
+
+
+            <div class="card metric">
+
+                <div class="metric-top">
+
+                    <span class="metric-label">
+                        Vector Embeddings
+                    </span>
+
+                    <div class="metric-icon">
+                        ◎
+                    </div>
+
+                </div>
+
+                <div class="metric-value">
+                    86.4K
+                </div>
+
+                <div class="metric-change">
+                    <span class="up">99.8%</span>
+                    <span class="neutral">
+                        healthy
+                    </span>
+                </div>
+
+            </div>
+
+
+            <div class="card metric">
+
+                <div class="metric-top">
+
+                    <span class="metric-label">
+                        RAG Retrieval
+                    </span>
+
+                    <div class="metric-icon">
+                        ✦
+                    </div>
+
+                </div>
+
+                <div class="metric-value">
+                    94.6%
+                </div>
+
+                <div class="metric-change">
+                    <span class="up">↑ 2.1%</span>
+                    <span class="neutral">
+                        relevance
+                    </span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ========================================
+             WORKSPACE
+        ========================================= -->
+
+        <section class="workspace">
+
+            <!-- LEFT -->
+
+            <div class="card panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <div class="panel-title">
+                            Document Workspace
+                        </div>
+
+                        <div class="panel-subtitle">
+                            Search, upload and manage your financial knowledge.
+                        </div>
+
+                    </div>
+
+                    <button
+                        class="secondary"
+                        onclick="showToast(
+                            'Index',
+                            'Knowledge base synchronization started.'
+                        )"
+                    >
+                        Sync Index
+                    </button>
+
+                </div>
+
+
+                <!-- SEARCH -->
+
+                <div class="search-row">
+
+                    <div class="search">
+
+                        <span class="search-icon">
+                            ⌕
+                        </span>
+
+                        <input
+                            type="text"
+                            id="searchInput"
+                            placeholder="Search documents, reports, contracts..."
+                        >
+
+                    </div>
+
+                    <select
+                        class="filter"
+                        id="typeFilter"
+                    >
+                        <option value="all">
+                            All types
+                        </option>
+
+                        <option value="pdf">
+                            PDF
+                        </option>
+
+                        <option value="csv">
+                            CSV
+                        </option>
+
+                        <option value="xlsx">
+                            Excel
+                        </option>
+
+                        <option value="doc">
+                            Documents
+                        </option>
+                    </select>
+
+                    <select
+                        class="filter"
+                        id="statusFilter"
+                    >
+                        <option value="all">
+                            All status
+                        </option>
+
+                        <option value="ready">
+                            Ready
+                        </option>
+
+                        <option value="indexing">
+                            Indexing
+                        </option>
+
+                        <option value="review">
+                            Review
+                        </option>
+                    </select>
+
+                </div>
+
+
+                <!-- UPLOAD -->
+
+                <div
+                    class="upload-zone"
+                    id="uploadZone"
+                >
+
+                    <div class="upload-icon">
+                        ↑
+                    </div>
+
+                    <h3>
+                        Drop files here or upload documents
+                    </h3>
+
+                    <p>
+                        FinCo AI will extract, chunk, embed and index them automatically.
+                    </p>
+
+                    <div class="upload-types">
+                        PDF · CSV · XLSX · DOCX · TXT · JSON
+                    </div>
+
+                    <button
+                        class="primary upload-btn"
+                        onclick="openFilePicker()"
+                    >
+                        Choose Files
+                    </button>
+
+                    <input
+                        id="fileInput"
+                        type="file"
+                        multiple
+                        accept=".pdf,.csv,.xlsx,.xls,.doc,.docx,.txt,.json"
+                    >
+
+                </div>
+
+
+                <!-- DOCUMENTS -->
+
+                <div
+                    class="document-list"
+                    id="documentList"
+                >
+
+                    <!-- DOCUMENT 1 -->
+
+                    <div
+                        class="document"
+                        data-name="annual financial report 2025"
+                        data-type="pdf"
+                        data-status="ready"
+                    >
+
+                        <div class="file-icon">
+                            PDF
+                        </div>
+
+                        <div class="file-info">
+
+                            <div class="file-name">
+                                Annual_Financial_Report_2025.pdf
+                            </div>
+
+                            <div class="file-meta">
+                                <span>18.4 MB</span>
+                                <span>•</span>
+                                <span>842 pages</span>
+                                <span>•</span>
+                                <span>Indexed 12m ago</span>
+                            </div>
+
+                        </div>
+
+                        <span class="file-status ready">
+                            ● Ready
+                        </span>
+
+                        <div class="file-actions">
+
+                            <button
+                                class="small-btn"
+                                onclick="viewDocument(
+                                    'Annual_Financial_Report_2025.pdf',
+                                    'PDF',
+                                    '18.4 MB',
+                                    '842'
+                                )"
+                                title="View"
+                            >
+                                ◉
+                            </button>
+
+                            <button
+                                class="small-btn"
+                                onclick="showToast(
+                                    'AI Analysis',
+                                    'Preparing financial report analysis...'
+                                )"
+                                title="Analyze"
+                            >
+                                ✦
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- DOCUMENT 2 -->
+
+                    <div
+                        class="document"
+                        data-name="quarterly earnings q3 2026"
+                        data-type="pdf"
+                        data-status="ready"
+                    >
+
+                        <div class="file-icon">
+                            PDF
+                        </div>
+
+                        <div class="file-info">
+
+                            <div class="file-name">
+                                Quarterly_Earnings_Q3_2026.pdf
+                            </div>
+
+                            <div class="file-meta">
+                                <span>8.7 MB</span>
+                                <span>•</span>
+                                <span>214 pages</span>
+                                <span>•</span>
+                                <span>Indexed 2h ago</span>
+                            </div>
+
+                        </div>
+
+                        <span class="file-status ready">
+                            ● Ready
+                        </span>
+
+                        <div class="file-actions">
+
+                            <button
+                                class="small-btn"
+                                onclick="viewDocument(
+                                    'Quarterly_Earnings_Q3_2026.pdf',
+                                    'PDF',
+                                    '8.7 MB',
+                                    '214'
+                                )"
+                            >
+                                ◉
+                            </button>
+
+                            <button
+                                class="small-btn"
+                                onclick="showToast(
+                                    'AI Analysis',
+                                    'Generating earnings insights...'
+                                )"
+                            >
+                                ✦
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- DOCUMENT 3 -->
+
+                    <div
+                        class="document"
+                        data-name="transaction dataset september"
+                        data-type="csv"
+                        data-status="indexing"
+                    >
+
+                        <div class="file-icon csv">
+                            CSV
+                        </div>
+
+                        <div class="file-info">
+
+                            <div class="file-name">
+                                Transaction_Dataset_September.csv
+                            </div>
+
+                            <div class="file-meta">
+                                <span>42.1 MB</span>
+                                <span>•</span>
+                                <span>1.8M rows</span>
+                                <span>•</span>
+                                <span>Processing</span>
+                            </div>
+
+                        </div>
+
+                        <span class="file-status indexing">
+                            ◌ Indexing
+                        </span>
+
+                        <div class="file-actions">
+
+                            <button
+                                class="small-btn"
+                                onclick="showToast(
+                                    'Indexing',
+                                    'Transaction dataset is still processing.'
+                                )"
+                            >
+                                ◌
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- DOCUMENT 4 -->
+
+                    <div
+                        class="document"
+                        data-name="risk policy framework"
+                        data-type="doc"
+                        data-status="ready"
+                    >
+
+                        <div class="file-icon doc">
+                            DOC
+                        </div>
+
+                        <div class="file-info">
+
+                            <div class="file-name">
+                                Risk_Policy_Framework.docx
+                            </div>
+
+                            <div class="file-meta">
+                                <span>2.8 MB</span>
+                                <span>•</span>
+                                <span>86 pages</span>
+                                <span>•</span>
+                                <span>Indexed 1d ago</span>
+                            </div>
+
+                        </div>
+
+                        <span class="file-status ready">
+                            ● Ready
+                        </span>
+
+                        <div class="file-actions">
+
+                            <button
+                                class="small-btn"
+                                onclick="viewDocument(
+                                    'Risk_Policy_Framework.docx',
+                                    'DOCX',
+                                    '2.8 MB',
+                                    '86'
+                                )"
+                            >
+                                ◉
+                            </button>
+
+                            <button
+                                class="small-btn"
+                                onclick="showToast(
+                                    'AI Analysis',
+                                    'Analyzing risk policy...'
+                                )"
+                            >
+                                ✦
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- DOCUMENT 5 -->
+
+                    <div
+                        class="document"
+                        data-name="cash flow projection 2027"
+                        data-type="xlsx"
+                        data-status="review"
+                    >
+
+                        <div class="file-icon xlsx">
+                            XLS
+                        </div>
+
+                        <div class="file-info">
+
+                            <div class="file-name">
+                                Cash_Flow_Projection_2027.xlsx
+                            </div>
+
+                            <div class="file-meta">
+                                <span>5.2 MB</span>
+                                <span>•</span>
+                                <span>34 sheets</span>
+                                <span>•</span>
+                                <span>Needs review</span>
+                            </div>
+
+                        </div>
+
+                        <span class="file-status review">
+                            ● Review
+                        </span>
+
+                        <div class="file-actions">
+
+                            <button
+                                class="small-btn"
+                                onclick="viewDocument(
+                                    'Cash_Flow_Projection_2027.xlsx',
+                                    'XLSX',
+                                    '5.2 MB',
+                                    '34'
+                                )"
+                            >
+                                ◉
+                            </button>
+
+                            <button
+                                class="small-btn"
+                                onclick="showToast(
+                                    'Review',
+                                    'Document requires metadata validation.'
+                                )"
+                            >
+                                !
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- DOCUMENT 6 -->
+
+                    <div
+                        class="document"
+                        data-name="investment strategy report"
+                        data-type="pdf"
+                        data-status="ready"
+                    >
+
+                        <div class="file-icon">
+                            PDF
+                        </div>
+
+                        <div class="file-info">
+
+                            <div class="file-name">
+                                Investment_Strategy_Report.pdf
+                            </div>
+
+                            <div class="file-meta">
+                                <span>11.6 MB</span>
+                                <span>•</span>
+                                <span>326 pages</span>
+                                <span>•</span>
+                                <span>Indexed 2d ago</span>
+                            </div>
+
+                        </div>
+
+                        <span class="file-status ready">
+                            ● Ready
+                        </span>
+
+                        <div class="file-actions">
+
+                            <button
+                                class="small-btn"
+                                onclick="viewDocument(
+                                    'Investment_Strategy_Report.pdf',
+                                    'PDF',
+                                    '11.6 MB',
+                                    '326'
+                                )"
+                            >
+                                ◉
+                            </button>
+
+                            <button
+                                class="small-btn"
+                                onclick="showToast(
+                                    'AI Analysis',
+                                    'Preparing investment strategy insights...'
+                                )"
+                            >
+                                ✦
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div
+                    class="no-results"
+                    id="noResults"
+                >
+                    No documents match your search.
+                </div>
+
+            </div>
+
+
+            <!-- RIGHT -->
+
+            <aside class="intelligence">
+
+                <!-- RAG HEALTH -->
+
+                <div class="card intel-card">
+
+                    <div class="intel-heading">
+
+                        <strong>
+                            RAG Health
+                        </strong>
+
+                        <span>
+                            Live
+                        </span>
+
+                    </div>
+
+                    <div class="rag-score">
+
+                        <div class="rag-ring">
+
+                            <svg viewBox="0 0 70 70">
+
+                                <circle
+                                    class="rag-bg"
+                                    cx="35"
+                                    cy="35"
+                                    r="27"
+                                />
+
+                                <circle
+                                    class="rag-progress"
+                                    cx="35"
+                                    cy="35"
+                                    r="27"
+                                />
+
+                            </svg>
+
+                            <div class="rag-center">
+                                92%
+                            </div>
+
+                        </div>
+
+                        <div class="rag-copy">
+
+                            <strong>
+                                Excellent retrieval quality
+                            </strong>
+
+                            <p>
+                                Semantic search and reranking
+                                are operating within target range.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- INDEXING -->
+
+                <div class="card intel-card">
+
+                    <div class="intel-heading">
+
+                        <strong>
+                            Indexing Pipeline
+                        </strong>
+
+                        <span>
+                            99.8%
+                        </span>
+
+                    </div>
+
+                    <div class="progress-row">
+                        <span>Documents processed</span>
+                        <strong>1,284 / 1,286</strong>
+                    </div>
+
+                    <div class="progress">
+                        <div style="width:99.8%;"></div>
+                    </div>
+
+                    <div class="intel-stats">
+
+                        <div class="intel-stat">
+                            <span>Chunks</span>
+                            <strong>86.4K</strong>
+                        </div>
+
+                        <div class="intel-stat">
+                            <span>Embeddings</span>
+                            <strong>86.4K</strong>
+                        </div>
+
+                        <div class="intel-stat">
+                            <span>Avg latency</span>
+                            <strong>82ms</strong>
+                        </div>
+
+                        <div class="intel-stat">
+                            <span>Failures</span>
+                            <strong style="color:var(--green);">
+                                0.2%
+                            </strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- PIPELINE -->
+
+                <div class="card intel-card">
+
+                    <div class="intel-heading">
+
+                        <strong>
+                            AI Pipeline
+                        </strong>
+
+                        <span>
+                            Operational
+                        </span>
+
+                    </div>
+
+                    <div class="source-list">
+
+                        <div class="source">
+
+                            <div class="source-icon">
+                                1
+                            </div>
+
+                            <div class="source-info">
+                                <strong>Document ingestion</strong>
+                                <span>Parser + OCR</span>
+                            </div>
+
+                            <span class="source-score">✓</span>
+
+                        </div>
+
+                        <div class="source">
+
+                            <div class="source-icon">
+                                2
+                            </div>
+
+                            <div class="source-info">
+                                <strong>Semantic chunking</strong>
+                                <span>Context-aware splitting</span>
+                            </div>
+
+                            <span class="source-score">✓</span>
+
+                        </div>
+
+                        <div class="source">
+
+                            <div class="source-icon">
+                                3
+                            </div>
+
+                            <div class="source-info">
+                                <strong>Embedding generation</strong>
+                                <span>Vector representation</span>
+                            </div>
+
+                            <span class="source-score">✓</span>
+
+                        </div>
+
+                        <div class="source">
+
+                            <div class="source-icon">
+                                4
+                            </div>
+
+                            <div class="source-info">
+                                <strong>Hybrid retrieval</strong>
+                                <span>BM25 + vector search</span>
+                            </div>
+
+                            <span class="source-score">✓</span>
+
+                        </div>
+
+                        <div class="source">
+
+                            <div class="source-icon">
+                                5
+                            </div>
+
+                            <div class="source-info">
+                                <strong>Reranking</strong>
+                                <span>Cross-encoder scoring</span>
+                            </div>
+
+                            <span class="source-score">✓</span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- TOP SOURCES -->
+
+                <div class="card intel-card">
+
+                    <div class="intel-heading">
+
+                        <strong>
+                            Top RAG Sources
+                        </strong>
+
+                        <span>
+                            Relevance
+                        </span>
+
+                    </div>
+
+                    <div class="source-list">
+
+                        <div class="source">
+
+                            <div class="source-icon">
+                                PDF
+                            </div>
+
+                            <div class="source-info">
+                                <strong>
+                                    Annual Financial Report
+                                </strong>
+
+                                <span>
+                                    12 chunks retrieved
+                                </span>
+                            </div>
+
+                            <span class="source-score">
+                                98%
+                            </span>
+
+                        </div>
+
+                        <div class="source">
+
+                            <div class="source-icon">
+                                PDF
+                            </div>
+
+                            <div class="source-info">
+                                <strong>
+                                    Risk Policy Framework
+                                </strong>
+
+                                <span>
+                                    8 chunks retrieved
+                                </span>
+                            </div>
+
+                            <span class="source-score">
+                                96%
+                            </span>
+
+                        </div>
+
+                        <div class="source">
+
+                            <div class="source-icon">
+                                XLS
+                            </div>
+
+                            <div class="source-info">
+                                <strong>
+                                    Cash Flow Projection
+                                </strong>
+
+                                <span>
+                                    6 chunks retrieved
+                                </span>
+                            </div>
+
+                            <span class="source-score">
+                                93%
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </aside>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- ========================================
+     FILE DETAILS MODAL
+========================================= -->
+
+<div
+    class="modal-backdrop"
+    id="modalBackdrop"
+>
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <h3>
+                Document Details
+            </h3>
+
+            <button
+                class="modal-close"
+                onclick="closeModal()"
+            >
+                ×
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <div class="modal-file">
+
+                <div
+                    class="file-icon"
+                    id="modalIcon"
+                >
+                    PDF
+                </div>
+
+                <div>
+
+                    <strong id="modalName">
+                        Document.pdf
+                    </strong>
+
+                    <span id="modalType">
+                        PDF document
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="modal-info">
+
+                <div class="info-box">
+
+                    <span>File Size</span>
+
+                    <strong id="modalSize">
+                        0 MB
+                    </strong>
+
+                </div>
+
+                <div class="info-box">
+
+                    <span>Pages / Sheets</span>
+
+                    <strong id="modalPages">
+                        0
+                    </strong>
+
+                </div>
+
+                <div class="info-box">
+
+                    <span>RAG Status</span>
+
+                    <strong style="color:var(--green);">
+                        Indexed
+                    </strong>
+
+                </div>
+
+                <div class="info-box">
+
+                    <span>Security</span>
+
+                    <strong style="color:var(--green);">
+                        Verified
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div
+            style="
+                display:flex;
+                gap:8px;
+                margin-top:15px;
+            "
+        >
+
+            <button
+                class="secondary"
+                style="flex:1;"
+                onclick="closeModal()"
+            >
+                Close
+            </button>
+
+            <button
+                class="primary"
+                style="flex:1;"
+                onclick="analyzeCurrentDocument()"
+            >
+                ✦ Analyze with AI
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================
+     TOAST
+========================================= -->
+
+<div
+    class="toast"
+    id="toast"
+>
+
+    <div class="toast-icon">
+        ✓
+    </div>
+
+    <div>
+
+        <strong id="toastTitle">
+            Success
+        </strong>
+
+        <span id="toastMessage">
+            Operation completed.
+        </span>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    /* ========================================
+       MOBILE SIDEBAR
+    ========================================= */
+
+    const sidebar =
+        document.getElementById("sidebar");
+
+    const mobileMenu =
+        document.getElementById("mobileMenu");
+
+    mobileMenu.addEventListener("click", () => {
+        sidebar.classList.toggle("open");
+    });
+
+
+    document.addEventListener("click", event => {
+
+        if (
+            window.innerWidth <= 900 &&
+            sidebar.classList.contains("open") &&
+            !sidebar.contains(event.target) &&
+            !mobileMenu.contains(event.target)
+        ) {
+            sidebar.classList.remove("open");
+        }
+
+    });
+
+
+    /* ========================================
+       TOAST
+    ========================================= */
+
+    let toastTimer;
+
+    function showToast(title, message) {
+
+        const toast =
+            document.getElementById("toast");
+
+        document.getElementById(
+            "toastTitle"
+        ).textContent = title;
+
+        document.getElementById(
+            "toastMessage"
+        ).textContent = message;
+
+        toast.classList.add("show");
+
+        clearTimeout(toastTimer);
+
+        toastTimer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 3200);
+    }
+
+
+    /* ========================================
+       FILE PICKER
+    ========================================= */
+
+    const fileInput =
+        document.getElementById("fileInput");
+
+    const uploadZone =
+        document.getElementById("uploadZone");
+
+    function openFilePicker() {
+        fileInput.click();
+    }
+
+
+    fileInput.addEventListener("change", event => {
+
+        const files = [...event.target.files];
+
+        if (!files.length) {
+            return;
+        }
+
+        processFiles(files);
+    });
+
+
+    /* ========================================
+       DRAG & DROP
+    ========================================= */
+
+    [
+        "dragenter",
+        "dragover"
+    ].forEach(eventName => {
+
+        uploadZone.addEventListener(
+            eventName,
+            event => {
+
+                event.preventDefault();
+
+                uploadZone.classList.add(
+                    "dragover"
+                );
+
+            }
+        );
+
+    });
+
+
+    [
+        "dragleave",
+        "drop"
+    ].forEach(eventName => {
+
+        uploadZone.addEventListener(
+            eventName,
+            event => {
+
+                event.preventDefault();
+
+                uploadZone.classList.remove(
+                    "dragover"
+                );
+
+            }
+        );
+
+    });
+
+
+    uploadZone.addEventListener(
+        "drop",
+        event => {
+
+            const files =
+                [...event.dataTransfer.files];
+
+            if (files.length) {
+                processFiles(files);
+            }
+
+        }
+    );
+
+
+    /* ========================================
+       PROCESS UPLOADED FILES
+    ========================================= */
+
+    function processFiles(files) {
+
+        files.forEach(file => {
+
+            showToast(
+                "Document received",
+                `${file.name} is ready for ingestion.`
+            );
+
+            /*
+                Production integration:
+
+                const formData = new FormData();
+
+                formData.append(
+                    "file",
+                    file
+                );
+
+                fetch("/api/documents/upload", {
+                    method: "POST",
+                    headers: {
+                        Authorization:
+                            `Bearer ${
+                                localStorage.getItem(
+                                    "access_token"
+                                )
+                            }`
+                    },
+                    body: formData
+                });
+
+            */
+
+        });
+
+        /*
+            Demo behavior:
+            simulate indexing.
+        */
+
+        setTimeout(() => {
+
+            showToast(
+                "RAG indexing",
+                `${files.length} document(s) queued for indexing.`
+            );
+
+        }, 900);
+
+    }
+
+
+    /* ========================================
+       SEARCH + FILTER
+    ========================================= */
+
+    const searchInput =
+        document.getElementById("searchInput");
+
+    const typeFilter =
+        document.getElementById("typeFilter");
+
+    const statusFilter =
+        document.getElementById("statusFilter");
+
+    const documents =
+        [...document.querySelectorAll(".document")];
+
+    const noResults =
+        document.getElementById("noResults");
+
+
+    function filterDocuments() {
+
+        const query =
+            searchInput.value
+                .trim()
+                .toLowerCase();
+
+        const type =
+            typeFilter.value;
+
+        const status =
+            statusFilter.value;
+
+        let visible = 0;
+
+        documents.forEach(document => {
+
+            const name =
+                document.dataset.name || "";
+
+            const documentType =
+                document.dataset.type || "";
+
+            const documentStatus =
+                document.dataset.status || "";
+
+            const matchesSearch =
+                !query ||
+                name.includes(query);
+
+            const matchesType =
+                type === "all" ||
+                documentType === type;
+
+            const matchesStatus =
+                status === "all" ||
+                documentStatus === status;
+
+            const show =
+                matchesSearch &&
+                matchesType &&
+                matchesStatus;
+
+            document.style.display =
+                show ? "flex" : "none";
+
+            if (show) {
+                visible++;
+            }
+
+        });
+
+        noResults.classList.toggle(
+            "show",
+            visible === 0
+        );
+
+    }
+
+
+    searchInput.addEventListener(
+        "input",
+        filterDocuments
+    );
+
+    typeFilter.addEventListener(
+        "change",
+        filterDocuments
+    );
+
+    statusFilter.addEventListener(
+        "change",
+        filterDocuments
+    );
+
+
+    /* ========================================
+       DOCUMENT MODAL
+    ========================================= */
+
+    let currentDocument = "";
+
+    function viewDocument(
+        name,
+        type,
+        size,
+        pages
+    ) {
+
+        currentDocument = name;
+
+        document.getElementById(
+            "modalName"
+        ).textContent = name;
+
+        document.getElementById(
+            "modalType"
+        ).textContent =
+            `${type} document`;
+
+        document.getElementById(
+            "modalSize"
+        ).textContent = size;
+
+        document.getElementById(
+            "modalPages"
+        ).textContent = pages;
+
+        document.getElementById(
+            "modalIcon"
+        ).textContent =
+            type === "XLSX"
+                ? "XLS"
+                : type;
+
+        document
+            .getElementById("modalBackdrop")
+            .classList.add("show");
+
+    }
+
+
+    function closeModal() {
+
+        document
+            .getElementById("modalBackdrop")
+            .classList.remove("show");
+
+    }
+
+
+    document
+        .getElementById("modalBackdrop")
+        .addEventListener(
+            "click",
+            event => {
+
+                if (
+                    event.target.id ===
+                    "modalBackdrop"
+                ) {
+                    closeModal();
+                }
+
+            }
+        );
+
+
+    function analyzeCurrentDocument() {
+
+        if (!currentDocument) {
+            return;
+        }
+
+        closeModal();
+
+        showToast(
+            "AI Analysis",
+            `${currentDocument} sent to Document Agent.`
+        );
+
+        /*
+            Production integration:
+
+            POST /api/documents/analyze
+
+            {
+                "document_name":
+                    currentDocument
+            }
+
+        */
+
+    }
+
+
+    /* ========================================
+       NAVIGATION
+    ========================================= */
+
+    document
+        .querySelectorAll(".nav-link")
+        .forEach(link => {
+
+            link.addEventListener(
+                "click",
+                () => {
+
+                    if (
+                        window.innerWidth <= 900
+                    ) {
+                        sidebar.classList.remove(
+                            "open"
+                        );
+                    }
+
+                }
+            );
+
+        });
+
+
+    /* ========================================
+       KEYBOARD SHORTCUT
+    ========================================= */
+
+    document.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                (event.ctrlKey ||
+                 event.metaKey) &&
+                event.key.toLowerCase() === "k"
+            ) {
+
+                event.preventDefault();
+
+                searchInput.focus();
+
+            }
+
+            if (event.key === "Escape") {
+                closeModal();
+            }
+
+        }
+    );
+
+
+    /* ========================================
+       FASTAPI / RAG INTEGRATION
+    =========================================
+
+       Recommended production endpoints:
+
+       GET
+       /api/documents
+
+       POST
+       /api/documents/upload
+
+       GET
+       /api/documents/{document_id}
+
+       DELETE
+       /api/documents/{document_id}
+
+       POST
+       /api/documents/{document_id}/index
+
+       POST
+       /api/documents/{document_id}/analyze
+
+       GET
+       /api/documents/{document_id}/chunks
+
+       GET
+       /api/rag/health
+
+       GET
+       /api/rag/sources
+
+       Example:
+
+       async function loadDocuments() {
+
+           const response = await fetch(
+               "/api/documents",
+               {
+                   headers: {
+                       Authorization:
+                           `Bearer ${
+                               localStorage.getItem(
+                                   "access_token"
+                               )
+                           }`
+                   }
+               }
+           );
+
+           if (response.status === 401) {
+               window.location.href =
+                   "login.html";
+
+               return;
+           }
+
+           const data =
+               await response.json();
+
+           // Render real documents here.
+       }
+
+       loadDocuments();
+
+    ========================================= */
+
+
+    /* ========================================
+       INITIALIZATION
+    ========================================= */
+
+    setTimeout(() => {
+
+        showToast(
+            "RAG System Online",
+            "Document intelligence services are healthy."
+        );
+
+    }, 850);
+
+</script>
+
+</body>
+</html>

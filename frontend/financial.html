@@ -1,0 +1,3099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Financial Intelligence | FinCo AI</title>
+
+    <meta
+        name="description"
+        content="FinCo AI Financial Intelligence — AI-powered financial analytics, revenue, cash flow, expenses, profitability and risk insights."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet"
+    />
+
+    <style>
+        :root {
+            --bg: #05060a;
+            --bg-soft: #090b12;
+            --panel: rgba(15, 17, 26, 0.82);
+            --panel-2: rgba(20, 23, 34, 0.9);
+            --border: rgba(255,255,255,0.08);
+            --border-hover: rgba(255,255,255,0.15);
+
+            --text: #f5f7fb;
+            --muted: #8e96a8;
+            --muted-2: #626b7d;
+
+            --purple: #7c5cff;
+            --purple-light: #9a82ff;
+            --cyan: #22d3ee;
+            --green: #34d399;
+            --yellow: #fbbf24;
+            --red: #fb7185;
+            --blue: #60a5fa;
+
+            --sidebar: 250px;
+            --topbar: 76px;
+
+            --shadow:
+                0 20px 70px rgba(0,0,0,.38),
+                inset 0 1px 0 rgba(255,255,255,.025);
+
+            --radius: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+            color: var(--text);
+            background:
+                radial-gradient(
+                    circle at 20% 0%,
+                    rgba(124,92,255,.10),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 100% 15%,
+                    rgba(34,211,238,.07),
+                    transparent 25%
+                ),
+                var(--bg);
+            font-family: Inter, sans-serif;
+            overflow-x: hidden;
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        button {
+            border: 0;
+            cursor: pointer;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* =========================
+           SIDEBAR
+        ========================== */
+
+        .sidebar {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: var(--sidebar);
+
+            display: flex;
+            flex-direction: column;
+
+            padding: 22px 15px;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(12,14,22,.97),
+                    rgba(7,8,13,.98)
+                );
+
+            border-right: 1px solid var(--border);
+            backdrop-filter: blur(24px);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 10px 26px;
+        }
+
+        .brand-logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+
+            display: grid;
+            place-items: center;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    #4f46e5
+                );
+
+            box-shadow:
+                0 10px 30px rgba(124,92,255,.35);
+
+            font-weight: 800;
+            font-family: "Space Grotesk";
+        }
+
+        .brand-name {
+            font-family: "Space Grotesk";
+            font-size: 21.6px;
+            font-weight: 700;
+            letter-spacing: -.4px;
+        }
+
+        .brand-name span {
+            color: var(--purple-light);
+        }
+
+        .workspace {
+            margin: 0 5px 20px;
+            padding: 11px 12px;
+
+            border: 1px solid var(--border);
+            border-radius: 13px;
+
+            background: rgba(255,255,255,.025);
+        }
+
+        .workspace-label {
+            font-size: 12px;
+            color: var(--muted-2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .workspace-name {
+            font-size: 15.6px;
+            font-weight: 600;
+        }
+
+        .workspace-status {
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+
+            color: var(--green);
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        .nav-label {
+            padding: 0 11px 8px;
+            color: var(--muted-2);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            padding: 11px 12px;
+
+            border-radius: 12px;
+
+            color: var(--muted);
+            font-size: 15.6px;
+            font-weight: 500;
+
+            transition: .2s ease;
+        }
+
+        .nav-item:hover {
+            color: var(--text);
+            background: rgba(255,255,255,.045);
+        }
+
+        .nav-item.active {
+            color: #fff;
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(124,92,255,.19),
+                    rgba(124,92,255,.05)
+                );
+
+            box-shadow:
+                inset 3px 0 var(--purple);
+        }
+
+        .nav-icon {
+            width: 18px;
+            height: 18px;
+
+            display: grid;
+            place-items: center;
+
+            color: currentColor;
+            font-size: 18px;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            padding: 3px 7px;
+            border-radius: 20px;
+
+            background: rgba(251,113,133,.13);
+            color: var(--red);
+
+            font-size: 10.8px;
+            font-weight: 700;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+        }
+
+        .ai-mini-card {
+            padding: 14px;
+            border-radius: 16px;
+
+            border: 1px solid rgba(124,92,255,.18);
+
+            background:
+                radial-gradient(
+                    circle at 100% 0,
+                    rgba(124,92,255,.16),
+                    transparent 50%
+                ),
+                rgba(124,92,255,.055);
+        }
+
+        .ai-mini-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            font-size: 14.4px;
+            font-weight: 700;
+        }
+
+        .ai-mini-icon {
+            width: 27px;
+            height: 27px;
+            display: grid;
+            place-items: center;
+
+            border-radius: 9px;
+            background: rgba(124,92,255,.2);
+        }
+
+        .ai-mini-card p {
+            margin-top: 9px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+
+            margin-top: 14px;
+            padding: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+
+            display: grid;
+            place-items: center;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #312e81,
+                    var(--purple)
+                );
+
+            font-size: 13.2px;
+            font-weight: 700;
+        }
+
+        .profile-info {
+            min-width: 0;
+        }
+
+        .profile-name {
+            font-size: 13.2px;
+            font-weight: 600;
+        }
+
+        .profile-role {
+            margin-top: 2px;
+            color: var(--muted-2);
+            font-size: 10.8px;
+        }
+
+        /* =========================
+           MAIN
+        ========================== */
+
+        .main {
+            margin-left: var(--sidebar);
+            min-height: 100vh;
+        }
+
+        .topbar {
+            height: var(--topbar);
+
+            position: sticky;
+            top: 0;
+            z-index: 900;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 30px;
+
+            background: rgba(5,6,10,.72);
+            border-bottom: 1px solid var(--border);
+
+            backdrop-filter: blur(22px);
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            color: var(--muted);
+            font-size: 14.4px;
+        }
+
+        .breadcrumb strong {
+            color: var(--text);
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon-button {
+            width: 36px;
+            height: 36px;
+
+            display: grid;
+            place-items: center;
+
+            border: 1px solid var(--border);
+            border-radius: 11px;
+
+            background: rgba(255,255,255,.025);
+            color: var(--muted);
+
+            transition: .2s;
+        }
+
+        .icon-button:hover {
+            color: white;
+            border-color: var(--border-hover);
+            background: rgba(255,255,255,.06);
+        }
+
+        .notification {
+            position: relative;
+        }
+
+        .notification::after {
+            content: "";
+
+            position: absolute;
+            top: 7px;
+            right: 7px;
+
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+
+            background: var(--red);
+            box-shadow: 0 0 8px var(--red);
+        }
+
+        .period-select {
+            padding: 9px 13px;
+
+            border: 1px solid var(--border);
+            border-radius: 10px;
+
+            background: rgba(255,255,255,.025);
+            color: var(--text);
+
+            outline: none;
+            font-size: 13.2px;
+        }
+
+        .content {
+            padding: 30px;
+            max-width: 1700px;
+            margin: auto;
+        }
+
+        /* =========================
+           HERO
+        ========================== */
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+
+            min-height: 190px;
+            padding: 30px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            border: 1px solid var(--border);
+            border-radius: 24px;
+
+            background:
+                radial-gradient(
+                    circle at 80% 20%,
+                    rgba(124,92,255,.18),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 100% 100%,
+                    rgba(34,211,238,.08),
+                    transparent 25%
+                ),
+                linear-gradient(
+                    135deg,
+                    rgba(18,20,31,.95),
+                    rgba(10,11,18,.92)
+                );
+
+            box-shadow: var(--shadow);
+        }
+
+        .hero-grid {
+            position: absolute;
+            inset: 0;
+
+            background-image:
+                linear-gradient(
+                    rgba(255,255,255,.025) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,.025) 1px,
+                    transparent 1px
+                );
+
+            background-size: 35px 35px;
+            mask-image: linear-gradient(
+                to right,
+                black,
+                transparent
+            );
+            pointer-events: none;
+        }
+
+        .hero-copy {
+            position: relative;
+            z-index: 2;
+            max-width: 720px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+
+            padding: 6px 10px;
+
+            border: 1px solid rgba(124,92,255,.25);
+            border-radius: 30px;
+
+            background: rgba(124,92,255,.08);
+
+            color: var(--purple-light);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+        }
+
+        .hero h1 {
+            margin-top: 13px;
+
+            font-family: "Space Grotesk";
+            font-size: clamp(28px, 3vw, 42px);
+            line-height: 1.05;
+            letter-spacing: -1.6px;
+        }
+
+        .hero h1 span {
+            color: var(--purple-light);
+        }
+
+        .hero p {
+            max-width: 620px;
+            margin-top: 12px;
+
+            color: var(--muted);
+            font-size: 15.6px;
+            line-height: 1.6;
+        }
+
+        .hero-actions {
+            position: relative;
+            z-index: 2;
+
+            display: flex;
+            gap: 9px;
+        }
+
+        .primary-btn,
+        .secondary-btn {
+            padding: 11px 15px;
+            border-radius: 11px;
+
+            font-size: 13.2px;
+            font-weight: 700;
+
+            transition: .2s;
+        }
+
+        .primary-btn {
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    #5b4ae8
+                );
+
+            color: white;
+
+            box-shadow:
+                0 10px 25px rgba(124,92,255,.22);
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-1px);
+            box-shadow:
+                0 15px 35px rgba(124,92,255,.3);
+        }
+
+        .secondary-btn {
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.04);
+            color: var(--text);
+        }
+
+        .secondary-btn:hover {
+            background: rgba(255,255,255,.08);
+        }
+
+        /* =========================
+           KPI
+        ========================== */
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(4, minmax(0,1fr));
+
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+
+            background: var(--panel);
+            box-shadow: var(--shadow);
+
+            backdrop-filter: blur(18px);
+        }
+
+        .kpi {
+            position: relative;
+            overflow: hidden;
+
+            padding: 20px;
+        }
+
+        .kpi::after {
+            content: "";
+
+            position: absolute;
+            width: 100px;
+            height: 100px;
+
+            right: -40px;
+            bottom: -45px;
+
+            border-radius: 50%;
+
+            background: var(--kpi-color);
+            opacity: .07;
+
+            filter: blur(4px);
+        }
+
+        .kpi-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .kpi-label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .kpi-icon {
+            width: 32px;
+            height: 32px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 10px;
+
+            background: color-mix(
+                in srgb,
+                var(--kpi-color) 13%,
+                transparent
+            );
+
+            color: var(--kpi-color);
+        }
+
+        .kpi-value {
+            margin-top: 13px;
+
+            font-family: "Space Grotesk";
+            font-size: 30px;
+            font-weight: 700;
+            letter-spacing: -.7px;
+        }
+
+        .kpi-bottom {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            margin-top: 8px;
+
+            font-size: 10.8px;
+        }
+
+        .positive {
+            color: var(--green);
+        }
+
+        .negative {
+            color: var(--red);
+        }
+
+        .neutral {
+            color: var(--muted);
+        }
+
+        /* =========================
+           SECTION HEADER
+        ========================== */
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin: 27px 0 12px;
+        }
+
+        .section-title {
+            font-family: "Space Grotesk";
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .section-subtitle {
+            margin-top: 3px;
+            color: var(--muted-2);
+            font-size: 12px;
+        }
+
+        .view-link {
+            color: var(--purple-light);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* =========================
+           ANALYTICS GRID
+        ========================== */
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.7fr) minmax(280px, .8fr);
+            gap: 14px;
+        }
+
+        .chart-card {
+            padding: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .card-title {
+            font-family: "Space Grotesk";
+            font-size: 15.6px;
+            font-weight: 700;
+        }
+
+        .card-caption {
+            margin-top: 4px;
+            color: var(--muted-2);
+            font-size: 10.8px;
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 12px;
+            font-size: 10.8px;
+            color: var(--muted);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+
+        .chart {
+            height: 270px;
+            margin-top: 15px;
+        }
+
+        .chart svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .grid-line {
+            stroke: rgba(255,255,255,.055);
+            stroke-width: 1;
+        }
+
+        .axis-text {
+            fill: #687185;
+            font-size: 10.8px;
+            font-family: Inter;
+        }
+
+        .revenue-line {
+            fill: none;
+            stroke: var(--purple-light);
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .expense-line {
+            fill: none;
+            stroke: var(--cyan);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            opacity: .8;
+        }
+
+        .area {
+            fill: url(#revenueGradient);
+            opacity: .3;
+        }
+
+        .chart-point {
+            fill: var(--purple-light);
+            stroke: #11121a;
+            stroke-width: 3;
+        }
+
+        /* =========================
+           PROFITABILITY
+        ========================== */
+
+        .profit-card {
+            padding: 20px;
+        }
+
+        .profit-main {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+
+            margin-top: 20px;
+        }
+
+        .profit-ring {
+            width: 145px;
+            height: 145px;
+
+            position: relative;
+
+            display: grid;
+            place-items: center;
+
+            flex-shrink: 0;
+
+            border-radius: 50%;
+
+            background:
+                conic-gradient(
+                    var(--green) 0 68%,
+                    rgba(255,255,255,.06) 68% 100%
+                );
+        }
+
+        .profit-ring::before {
+            content: "";
+
+            position: absolute;
+            inset: 12px;
+
+            border-radius: 50%;
+            background: #10121a;
+        }
+
+        .profit-center {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
+
+        .profit-percent {
+            font-family: "Space Grotesk";
+            font-size: 32.4px;
+            font-weight: 700;
+        }
+
+        .profit-small {
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 10.8px;
+        }
+
+        .profit-details {
+            flex: 1;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            padding: 10px 0;
+
+            border-bottom: 1px solid rgba(255,255,255,.05);
+
+            font-size: 12px;
+        }
+
+        .metric-row:last-child {
+            border-bottom: 0;
+        }
+
+        .metric-label {
+            color: var(--muted);
+        }
+
+        .metric-value {
+            font-weight: 700;
+        }
+
+        /* =========================
+           BOTTOM GRID
+        ========================== */
+
+        .bottom-grid {
+            display: grid;
+            grid-template-columns:
+                minmax(0, 1.25fr)
+                minmax(0, .9fr)
+                minmax(280px, .75fr);
+
+            gap: 14px;
+        }
+
+        .transactions-card,
+        .cash-card,
+        .insights-card {
+            padding: 20px;
+        }
+
+        /* Transactions */
+
+        .transaction-list {
+            margin-top: 14px;
+        }
+
+        .transaction {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            padding: 11px 0;
+
+            border-bottom: 1px solid rgba(255,255,255,.045);
+        }
+
+        .transaction:last-child {
+            border-bottom: 0;
+        }
+
+        .transaction-icon {
+            width: 34px;
+            height: 34px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 10px;
+
+            background: rgba(255,255,255,.045);
+
+            font-size: 15.6px;
+        }
+
+        .transaction-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .transaction-name {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .transaction-meta {
+            margin-top: 3px;
+            color: var(--muted-2);
+            font-size: 9.6px;
+        }
+
+        .transaction-amount {
+            text-align: right;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .transaction-status {
+            margin-top: 3px;
+            color: var(--green);
+            font-size: 9.6px;
+        }
+
+        /* Cash */
+
+        .cash-total {
+            margin-top: 20px;
+
+            font-family: "Space Grotesk";
+            font-size: 33.6px;
+            font-weight: 700;
+        }
+
+        .cash-change {
+            margin-top: 4px;
+            color: var(--green);
+            font-size: 10.8px;
+        }
+
+        .cash-bars {
+            height: 145px;
+
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+
+            margin-top: 20px;
+            padding-bottom: 4px;
+        }
+
+        .cash-bar-wrap {
+            flex: 1;
+            height: 100%;
+
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .cash-bar {
+            width: 100%;
+
+            border-radius: 5px 5px 2px 2px;
+
+            background:
+                linear-gradient(
+                    to top,
+                    rgba(124,92,255,.35),
+                    var(--purple)
+                );
+
+            transition: .3s;
+        }
+
+        .cash-bar:hover {
+            transform: translateY(-4px);
+            filter: brightness(1.2);
+        }
+
+        .cash-labels {
+            display: flex;
+            justify-content: space-between;
+
+            color: var(--muted-2);
+            font-size: 9.6px;
+        }
+
+        /* AI insights */
+
+        .insight {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,.05);
+        }
+
+        .insight:last-child {
+            border-bottom: 0;
+        }
+
+        .insight-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .insight-icon {
+            width: 27px;
+            height: 27px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 8px;
+            background: rgba(124,92,255,.12);
+            color: var(--purple-light);
+        }
+
+        .insight-title {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .insight-text {
+            margin-top: 7px;
+            color: var(--muted);
+            font-size: 10.8px;
+            line-height: 1.5;
+        }
+
+        /* =========================
+           FORECAST / HEALTH
+        ========================== */
+
+        .health-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .health-card {
+            padding: 20px;
+        }
+
+        .health-score {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-top: 18px;
+        }
+
+        .score-ring {
+            width: 105px;
+            height: 105px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 50%;
+
+            background:
+                conic-gradient(
+                    var(--blue) 0 82%,
+                    rgba(255,255,255,.06) 82%
+                );
+        }
+
+        .score-inner {
+            width: 82px;
+            height: 82px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 50%;
+            background: #11131c;
+
+            font-family: "Space Grotesk";
+            font-size: 26.4px;
+            font-weight: 700;
+        }
+
+        .health-info {
+            flex: 1;
+        }
+
+        .health-info strong {
+            font-size: 14.4px;
+        }
+
+        .health-info p {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 10.8px;
+            line-height: 1.5;
+        }
+
+        .health-progress {
+            height: 6px;
+            margin-top: 14px;
+
+            border-radius: 10px;
+            background: rgba(255,255,255,.06);
+            overflow: hidden;
+        }
+
+        .health-progress span {
+            display: block;
+            height: 100%;
+            width: 82%;
+
+            border-radius: inherit;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    var(--blue),
+                    var(--cyan)
+                );
+        }
+
+        /* =========================
+           FORECAST TABLE
+        ========================== */
+
+        .forecast-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 14px;
+        }
+
+        .forecast-table th {
+            text-align: left;
+            padding: 9px 7px;
+
+            color: var(--muted-2);
+            border-bottom: 1px solid var(--border);
+
+            font-size: 9.6px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .forecast-table td {
+            padding: 11px 7px;
+
+            border-bottom: 1px solid rgba(255,255,255,.04);
+
+            font-size: 10.8px;
+        }
+
+        .forecast-table tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .confidence {
+            display: inline-flex;
+            padding: 4px 7px;
+
+            border-radius: 20px;
+
+            background: rgba(52,211,153,.1);
+            color: var(--green);
+
+            font-size: 9.6px;
+            font-weight: 700;
+        }
+
+        /* =========================
+           FOOTER
+        ========================== */
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            margin-top: 28px;
+            padding: 18px 3px 10px;
+
+            color: var(--muted-2);
+            font-size: 10.8px;
+        }
+
+        .footer-right {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* =========================
+           MOBILE
+        ========================== */
+
+        .mobile-menu {
+            display: none;
+        }
+
+        @media (max-width: 1200px) {
+            .bottom-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .insights-card {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 1000px) {
+            :root {
+                --sidebar: 0px;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform .25s ease;
+                width: 250px;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main {
+                margin-left: 0;
+            }
+
+            .mobile-menu {
+                display: grid;
+            }
+
+            .hero {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profit-card {
+                min-height: auto;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .content {
+                padding: 18px;
+            }
+
+            .topbar {
+                padding: 0 18px;
+            }
+
+            .period-select {
+                display: none;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .bottom-grid,
+            .health-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .insights-card {
+                grid-column: auto;
+            }
+
+            .hero {
+                padding: 22px;
+            }
+
+            .hero h1 {
+                font-size: 33.6px;
+            }
+
+            .hero-actions {
+                width: 100%;
+            }
+
+            .hero-actions button {
+                flex: 1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profit-main {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .chart-legend {
+                display: none;
+            }
+
+            .footer {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+        }
+
+        /* =========================
+           TOAST
+        ========================== */
+
+        .toast {
+            position: fixed;
+            z-index: 3000;
+
+            right: 25px;
+            bottom: 25px;
+
+            min-width: 280px;
+
+            padding: 13px 15px;
+
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            border: 1px solid var(--border);
+            border-radius: 14px;
+
+            background: rgba(17,19,28,.96);
+            box-shadow: var(--shadow);
+
+            transform: translateY(120px);
+            opacity: 0;
+
+            transition: .3s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-icon {
+            width: 30px;
+            height: 30px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 9px;
+
+            background: rgba(52,211,153,.12);
+            color: var(--green);
+        }
+
+        .toast-title {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .toast-text {
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 10.8px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- =========================================================
+     SIDEBAR
+========================================================= -->
+
+<aside class="sidebar" id="sidebar">
+
+    <div class="brand">
+        <div class="brand-logo">F</div>
+
+        <div class="brand-name">
+            FinCo <span>AI</span>
+        </div>
+    </div>
+
+    <div class="workspace">
+        <div class="workspace-label">Workspace</div>
+        <div class="workspace-name">Finance Intelligence</div>
+
+        <div class="workspace-status">
+            <span class="status-dot"></span>
+            All systems operational
+        </div>
+    </div>
+
+    <div class="nav-label">Workspace</div>
+
+    <nav class="nav">
+
+        <a class="nav-item" href="dashboard.html">
+            <span class="nav-icon">⌂</span>
+            Dashboard
+        </a>
+
+        <a class="nav-item" href="copilot.html">
+            <span class="nav-icon">◈</span>
+            AI Copilot
+        </a>
+
+        <a class="nav-item" href="agents.html">
+            <span class="nav-icon">🤖</span>
+            AI Agents
+        </a>
+
+        <a class="nav-item" href="ml-models.html">
+            <span class="nav-icon">🧠</span>
+            ML Models
+        </a>
+
+        <a class="nav-item" href="analysis.html">
+            <span class="nav-icon">📊</span>
+            Analysis
+        </a>
+
+        <a class="nav-item" href="collaboration.html">
+            <span class="nav-icon">🤝</span>
+            Collaboration
+        </a>
+
+        <a class="nav-item active" href="financial.html">
+            <span class="nav-icon">⌁</span>
+            Transactions
+        </a>
+
+        <a class="nav-item" href="fraud.html">
+            <span class="nav-icon">⚠</span>
+            Fraud & Risk
+            <span class="nav-badge">12</span>
+        </a>
+
+        <a class="nav-item" href="forecasting.html">
+            <span class="nav-icon">↗</span>
+            Forecasting
+        </a>
+
+        <a class="nav-item" href="documents.html">
+            <span class="nav-icon">▤</span>
+            Documents
+        </a>
+
+    </nav>
+
+    <div class="nav-label" style="margin-top:20px;">Management</div>
+
+    <nav class="nav">
+
+        <a class="nav-item" href="reports.html">
+            <span class="nav-icon">▥</span>
+            Reports
+        </a>
+
+        <a class="nav-item" href="balance-sheet.html">
+            <span class="nav-icon">📋</span>
+            Balance Sheet
+        </a>
+
+        <a class="nav-item" href="alerts.html">
+            <span class="nav-icon">⚙</span>
+            Settings
+        </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+
+        <div class="ai-mini-card">
+
+            <div class="ai-mini-title">
+                <div class="ai-mini-icon">✦</div>
+                FinCo Intelligence
+            </div>
+
+            <p>
+                AI is monitoring financial activity,
+                forecasting trends and detecting anomalies.
+            </p>
+
+        </div>
+
+        <div class="profile">
+
+            <div class="avatar">PA</div>
+
+            <div class="profile-info">
+                <div class="profile-name">Finance Admin</div>
+                <div class="profile-role">Administrator</div>
+            </div>
+
+        </div>
+
+    </div>
+
+</aside>
+
+<!-- =========================================================
+     MAIN
+========================================================= -->
+
+<main class="main">
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+        <div style="display:flex;align-items:center;gap:10px;">
+
+            <button
+                class="icon-button mobile-menu"
+                id="menuBtn"
+                aria-label="Open menu"
+            >
+                ☰
+            </button>
+
+            <div class="breadcrumb">
+                FinCo AI
+                <span>/</span>
+                <strong>Financial Intelligence</strong>
+            </div>
+
+        </div>
+
+        <div class="top-actions">
+
+            <select class="period-select" id="periodSelect">
+                <option value="month">Last 30 days</option>
+                <option value="quarter">Last quarter</option>
+                <option value="year">This year</option>
+            </select>
+
+            <button
+                class="icon-button notification"
+                onclick="showToast('Notifications','You have 8 active financial alerts.')"
+            >
+                ◌
+            </button>
+
+            <button
+                class="icon-button"
+                onclick="showToast('AI Assistant','Opening FinCo AI Copilot...')"
+            >
+                ✦
+            </button>
+
+        </div>
+
+    </header>
+
+    <!-- CONTENT -->
+
+    <div class="content">
+
+        <!-- HERO -->
+
+        <section class="hero">
+
+            <div class="hero-grid"></div>
+
+            <div class="hero-copy">
+
+                <div class="eyebrow">
+                    <span class="status-dot"></span>
+                    Financial Intelligence
+                </div>
+
+                <h1>
+                    Understand your money.<br>
+                    <span>Act with intelligence.</span>
+                </h1>
+
+                <p>
+                    Monitor revenue, expenses, cash flow and profitability
+                    with AI-powered financial intelligence. FinCo continuously
+                    analyzes your financial activity and surfaces the decisions
+                    that matter most.
+                </p>
+
+            </div>
+
+            <div class="hero-actions">
+
+                <button
+                    class="primary-btn"
+                    onclick="generateReport()"
+                >
+                    ✦ AI Financial Report
+                </button>
+
+                <button
+                    class="secondary-btn"
+                    onclick="exportReport()"
+                >
+                    ↓ Export
+                </button>
+
+            </div>
+
+        </section>
+
+        <!-- KPIs -->
+
+        <section class="kpi-grid">
+
+            <div
+                class="card kpi"
+                style="--kpi-color:var(--green);"
+            >
+
+                <div class="kpi-top">
+
+                    <div class="kpi-label">
+                        Total Revenue
+                    </div>
+
+                    <div class="kpi-icon">↗</div>
+
+                </div>
+
+                <div class="kpi-value">
+                    $18.42M
+                </div>
+
+                <div class="kpi-bottom">
+                    <span class="positive">↑ 12.8%</span>
+                    <span class="neutral">vs previous period</span>
+                </div>
+
+            </div>
+
+            <div
+                class="card kpi"
+                style="--kpi-color:var(--red);"
+            >
+
+                <div class="kpi-top">
+
+                    <div class="kpi-label">
+                        Total Expenses
+                    </div>
+
+                    <div class="kpi-icon">↘</div>
+
+                </div>
+
+                <div class="kpi-value">
+                    $10.76M
+                </div>
+
+                <div class="kpi-bottom">
+                    <span class="negative">↑ 4.2%</span>
+                    <span class="neutral">cost increase</span>
+                </div>
+
+            </div>
+
+            <div
+                class="card kpi"
+                style="--kpi-color:var(--purple-light);"
+            >
+
+                <div class="kpi-top">
+
+                    <div class="kpi-label">
+                        Net Profit
+                    </div>
+
+                    <div class="kpi-icon">◆</div>
+
+                </div>
+
+                <div class="kpi-value">
+                    $7.66M
+                </div>
+
+                <div class="kpi-bottom">
+                    <span class="positive">↑ 16.4%</span>
+                    <span class="neutral">profit growth</span>
+                </div>
+
+            </div>
+
+            <div
+                class="card kpi"
+                style="--kpi-color:var(--cyan);"
+            >
+
+                <div class="kpi-top">
+
+                    <div class="kpi-label">
+                        Available Cash
+                    </div>
+
+                    <div class="kpi-icon">◈</div>
+
+                </div>
+
+                <div class="kpi-value">
+                    $12.84M
+                </div>
+
+                <div class="kpi-bottom">
+                    <span class="positive">↑ 8.7%</span>
+                    <span class="neutral">healthy liquidity</span>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- PERFORMANCE -->
+
+        <div class="section-header">
+
+            <div>
+                <div class="section-title">
+                    Financial Performance
+                </div>
+
+                <div class="section-subtitle">
+                    Revenue and operating expenses over time
+                </div>
+            </div>
+
+            <a class="view-link" href="copilot.html">
+                View detailed analytics →
+            </a>
+
+        </div>
+
+        <section class="analytics-grid">
+
+            <!-- CHART -->
+
+            <div class="card chart-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <div class="card-title">
+                            Revenue vs Expenses
+                        </div>
+
+                        <div class="card-caption">
+                            Monthly financial performance
+                        </div>
+                    </div>
+
+                    <div class="chart-legend">
+
+                        <div class="legend-item">
+                            <span
+                                class="legend-dot"
+                                style="background:var(--purple-light)"
+                            ></span>
+                            Revenue
+                        </div>
+
+                        <div class="legend-item">
+                            <span
+                                class="legend-dot"
+                                style="background:var(--cyan)"
+                            ></span>
+                            Expenses
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="chart">
+
+                    <svg
+                        viewBox="0 0 800 270"
+                        preserveAspectRatio="none"
+                    >
+
+                        <defs>
+
+                            <linearGradient
+                                id="revenueGradient"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                            >
+                                <stop
+                                    offset="0%"
+                                    stop-color="#7c5cff"
+                                    stop-opacity=".45"
+                                />
+
+                                <stop
+                                    offset="100%"
+                                    stop-color="#7c5cff"
+                                    stop-opacity="0"
+                                />
+                            </linearGradient>
+
+                        </defs>
+
+                        <!-- grid -->
+
+                        <line
+                            x1="50"
+                            y1="30"
+                            x2="780"
+                            y2="30"
+                            class="grid-line"
+                        />
+
+                        <line
+                            x1="50"
+                            y1="80"
+                            x2="780"
+                            y2="80"
+                            class="grid-line"
+                        />
+
+                        <line
+                            x1="50"
+                            y1="130"
+                            x2="780"
+                            y2="130"
+                            class="grid-line"
+                        />
+
+                        <line
+                            x1="50"
+                            y1="180"
+                            x2="780"
+                            y2="180"
+                            class="grid-line"
+                        />
+
+                        <line
+                            x1="50"
+                            y1="230"
+                            x2="780"
+                            y2="230"
+                            class="grid-line"
+                        />
+
+                        <!-- axis -->
+
+                        <text
+                            x="8"
+                            y="34"
+                            class="axis-text"
+                        >
+                            $4M
+                        </text>
+
+                        <text
+                            x="8"
+                            y="84"
+                            class="axis-text"
+                        >
+                            $3M
+                        </text>
+
+                        <text
+                            x="8"
+                            y="134"
+                            class="axis-text"
+                        >
+                            $2M
+                        </text>
+
+                        <text
+                            x="8"
+                            y="184"
+                            class="axis-text"
+                        >
+                            $1M
+                        </text>
+
+                        <text
+                            x="17"
+                            y="234"
+                            class="axis-text"
+                        >
+                            $0
+                        </text>
+
+                        <!-- revenue area -->
+
+                        <path
+                            class="area"
+                            d="
+                            M50 172
+                            L116 154
+                            L182 145
+                            L248 125
+                            L314 135
+                            L380 103
+                            L446 112
+                            L512 87
+                            L578 72
+                            L644 92
+                            L710 58
+                            L780 42
+                            L780 230
+                            L50 230
+                            Z
+                            "
+                        />
+
+                        <!-- revenue -->
+
+                        <path
+                            class="revenue-line"
+                            d="
+                            M50 172
+                            L116 154
+                            L182 145
+                            L248 125
+                            L314 135
+                            L380 103
+                            L446 112
+                            L512 87
+                            L578 72
+                            L644 92
+                            L710 58
+                            L780 42
+                            "
+                        />
+
+                        <!-- expenses -->
+
+                        <path
+                            class="expense-line"
+                            d="
+                            M50 198
+                            L116 188
+                            L182 180
+                            L248 174
+                            L314 181
+                            L380 160
+                            L446 168
+                            L512 145
+                            L578 150
+                            L644 136
+                            L710 121
+                            L780 111
+                            "
+                        />
+
+                        <!-- points -->
+
+                        <circle
+                            cx="50"
+                            cy="172"
+                            r="4"
+                            class="chart-point"
+                        />
+
+                        <circle
+                            cx="182"
+                            cy="145"
+                            r="4"
+                            class="chart-point"
+                        />
+
+                        <circle
+                            cx="314"
+                            cy="135"
+                            r="4"
+                            class="chart-point"
+                        />
+
+                        <circle
+                            cx="446"
+                            cy="112"
+                            r="4"
+                            class="chart-point"
+                        />
+
+                        <circle
+                            cx="578"
+                            cy="72"
+                            r="4"
+                            class="chart-point"
+                        />
+
+                        <circle
+                            cx="710"
+                            cy="58"
+                            r="4"
+                            class="chart-point"
+                        />
+
+                        <circle
+                            cx="780"
+                            cy="42"
+                            r="5"
+                            class="chart-point"
+                        />
+
+                        <!-- labels -->
+
+                        <text x="48" y="255" class="axis-text">Oct</text>
+                        <text x="114" y="255" class="axis-text">Nov</text>
+                        <text x="180" y="255" class="axis-text">Dec</text>
+                        <text x="246" y="255" class="axis-text">Jan</text>
+                        <text x="312" y="255" class="axis-text">Feb</text>
+                        <text x="378" y="255" class="axis-text">Mar</text>
+                        <text x="444" y="255" class="axis-text">Apr</text>
+                        <text x="510" y="255" class="axis-text">May</text>
+                        <text x="576" y="255" class="axis-text">Jun</text>
+                        <text x="642" y="255" class="axis-text">Jul</text>
+                        <text x="708" y="255" class="axis-text">Aug</text>
+                        <text x="765" y="255" class="axis-text">Sep</text>
+
+                    </svg>
+
+                </div>
+
+            </div>
+
+            <!-- PROFITABILITY -->
+
+            <div class="card profit-card">
+
+                <div class="card-title">
+                    Profitability
+                </div>
+
+                <div class="card-caption">
+                    Current net margin
+                </div>
+
+                <div class="profit-main">
+
+                    <div class="profit-ring">
+
+                        <div class="profit-center">
+
+                            <div class="profit-percent">
+                                68%
+                            </div>
+
+                            <div class="profit-small">
+                                Net Margin
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="profit-details">
+
+                        <div class="metric-row">
+                            <span class="metric-label">
+                                Gross Revenue
+                            </span>
+
+                            <span class="metric-value">
+                                $18.42M
+                            </span>
+                        </div>
+
+                        <div class="metric-row">
+                            <span class="metric-label">
+                                Operating Cost
+                            </span>
+
+                            <span class="metric-value">
+                                $10.76M
+                            </span>
+                        </div>
+
+                        <div class="metric-row">
+                            <span class="metric-label">
+                                Net Profit
+                            </span>
+
+                            <span class="metric-value positive">
+                                $7.66M
+                            </span>
+                        </div>
+
+                        <div class="metric-row">
+                            <span class="metric-label">
+                                YoY Growth
+                            </span>
+
+                            <span class="metric-value positive">
+                                +16.4%
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- TRANSACTIONS / CASH / AI -->
+
+        <div class="section-header">
+
+            <div>
+                <div class="section-title">
+                    Financial Intelligence
+                </div>
+
+                <div class="section-subtitle">
+                    Live financial activity and AI-generated insights
+                </div>
+            </div>
+
+        </div>
+
+        <section class="bottom-grid">
+
+            <!-- TRANSACTIONS -->
+
+            <div class="card transactions-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <div class="card-title">
+                            Recent Transactions
+                        </div>
+
+                        <div class="card-caption">
+                            Latest financial activity
+                        </div>
+                    </div>
+
+                    <a class="view-link" href="dashboard.html">
+                        View all
+                    </a>
+
+                </div>
+
+                <div class="transaction-list">
+
+                    <div class="transaction">
+
+                        <div
+                            class="transaction-icon"
+                            style="color:var(--green)"
+                        >
+                            ↑
+                        </div>
+
+                        <div class="transaction-info">
+                            <div class="transaction-name">
+                                Enterprise Payment
+                            </div>
+
+                            <div class="transaction-meta">
+                                TXN-928471 · Today 14:32
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="transaction-amount positive">
+                                +$84,250
+                            </div>
+
+                            <div class="transaction-status">
+                                Completed
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="transaction">
+
+                        <div
+                            class="transaction-icon"
+                            style="color:var(--red)"
+                        >
+                            ↓
+                        </div>
+
+                        <div class="transaction-info">
+                            <div class="transaction-name">
+                                Cloud Infrastructure
+                            </div>
+
+                            <div class="transaction-meta">
+                                EXP-182931 · Today 12:16
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="transaction-amount">
+                                -$18,420
+                            </div>
+
+                            <div class="transaction-status">
+                                Processed
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="transaction">
+
+                        <div
+                            class="transaction-icon"
+                            style="color:var(--purple-light)"
+                        >
+                            ↑
+                        </div>
+
+                        <div class="transaction-info">
+                            <div class="transaction-name">
+                                Subscription Revenue
+                            </div>
+
+                            <div class="transaction-meta">
+                                TXN-182744 · Yesterday
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="transaction-amount positive">
+                                +$42,850
+                            </div>
+
+                            <div class="transaction-status">
+                                Completed
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="transaction">
+
+                        <div
+                            class="transaction-icon"
+                            style="color:var(--yellow)"
+                        >
+                            ↓
+                        </div>
+
+                        <div class="transaction-info">
+                            <div class="transaction-name">
+                                Marketing Operations
+                            </div>
+
+                            <div class="transaction-meta">
+                                EXP-182721 · Yesterday
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="transaction-amount">
+                                -$12,780
+                            </div>
+
+                            <div class="transaction-status">
+                                Processed
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- CASH FLOW -->
+
+            <div class="card cash-card">
+
+                <div class="card-title">
+                    Cash Flow
+                </div>
+
+                <div class="card-caption">
+                    Available liquidity trend
+                </div>
+
+                <div class="cash-total">
+                    $12.84M
+                </div>
+
+                <div class="cash-change">
+                    ↑ 8.7% compared with last month
+                </div>
+
+                <div class="cash-bars">
+
+                    <div class="cash-bar-wrap">
+                        <div class="cash-bar" style="height:38%"></div>
+                    </div>
+
+                    <div class="cash-bar-wrap">
+                        <div class="cash-bar" style="height:46%"></div>
+                    </div>
+
+                    <div class="cash-bar-wrap">
+                        <div class="cash-bar" style="height:42%"></div>
+                    </div>
+
+                    <div class="cash-bar-wrap">
+                        <div class="cash-bar" style="height:56%"></div>
+                    </div>
+
+                    <div class="cash-bar-wrap">
+                        <div class="cash-bar" style="height:63%"></div>
+                    </div>
+
+                    <div class="cash-bar-wrap">
+                        <div class="cash-bar" style="height:60%"></div>
+                    </div>
+
+                    <div class="cash-bar-wrap">
+                        <div class="cash-bar" style="height:73%"></div>
+                    </div>
+
+                    <div class="cash-bar-wrap">
+                        <div class="cash-bar" style="height:68%"></div>
+                    </div>
+
+                    <div class="cash-bar-wrap">
+                        <div class="cash-bar" style="height:82%"></div>
+                    </div>
+
+                    <div class="cash-bar-wrap">
+                        <div class="cash-bar" style="height:90%"></div>
+                    </div>
+
+                </div>
+
+                <div class="cash-labels">
+                    <span>Jan</span>
+                    <span>Feb</span>
+                    <span>Mar</span>
+                    <span>Apr</span>
+                    <span>May</span>
+                    <span>Jun</span>
+                    <span>Jul</span>
+                    <span>Aug</span>
+                    <span>Sep</span>
+                </div>
+
+            </div>
+
+            <!-- AI INSIGHTS -->
+
+            <div class="card insights-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <div class="card-title">
+                            ✦ AI Financial Insights
+                        </div>
+
+                        <div class="card-caption">
+                            Generated by FinCo Intelligence
+                        </div>
+                    </div>
+
+                    <span class="confidence">
+                        96.8% confidence
+                    </span>
+
+                </div>
+
+                <div class="insight">
+
+                    <div class="insight-head">
+
+                        <div class="insight-icon">
+                            ↗
+                        </div>
+
+                        <div class="insight-title">
+                            Revenue acceleration
+                        </div>
+
+                    </div>
+
+                    <div class="insight-text">
+                        Revenue increased 12.8% this period.
+                        The strongest growth came from enterprise
+                        subscriptions and recurring contracts.
+                    </div>
+
+                </div>
+
+                <div class="insight">
+
+                    <div class="insight-head">
+
+                        <div class="insight-icon">
+                            ⚡
+                        </div>
+
+                        <div class="insight-title">
+                            Expense anomaly
+                        </div>
+
+                    </div>
+
+                    <div class="insight-text">
+                        Cloud infrastructure spending is 14.2%
+                        above the expected baseline. FinCo recommends
+                        reviewing unused compute resources.
+                    </div>
+
+                </div>
+
+                <div class="insight">
+
+                    <div class="insight-head">
+
+                        <div class="insight-icon">
+                            ◆
+                        </div>
+
+                        <div class="insight-title">
+                            Profit outlook
+                        </div>
+
+                    </div>
+
+                    <div class="insight-text">
+                        Current trends indicate approximately
+                        $8.1M projected net profit next month,
+                        assuming current revenue growth continues.
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- FORECAST / HEALTH -->
+
+        <div class="section-header">
+
+            <div>
+                <div class="section-title">
+                    Financial Forecast & Health
+                </div>
+
+                <div class="section-subtitle">
+                    AI predictions and overall financial condition
+                </div>
+            </div>
+
+        </div>
+
+        <section class="health-grid">
+
+            <!-- HEALTH -->
+
+            <div class="card health-card">
+
+                <div class="card-title">
+                    Financial Health Score
+                </div>
+
+                <div class="card-caption">
+                    Composite AI assessment
+                </div>
+
+                <div class="health-score">
+
+                    <div class="score-ring">
+
+                        <div class="score-inner">
+                            82
+                        </div>
+
+                    </div>
+
+                    <div class="health-info">
+
+                        <strong>
+                            Strong financial position
+                        </strong>
+
+                        <p>
+                            Healthy liquidity, improving profitability
+                            and controlled expense growth.
+                        </p>
+
+                        <div class="health-progress">
+                            <span></span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- FORECAST -->
+
+            <div class="card health-card">
+
+                <div class="card-title">
+                    AI Revenue Forecast
+                </div>
+
+                <div class="card-caption">
+                    Next 4 months
+                </div>
+
+                <table class="forecast-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Month</th>
+                            <th>Forecast</th>
+                            <th>Growth</th>
+                            <th>Confidence</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        <tr>
+                            <td>Oct</td>
+                            <td>$3.92M</td>
+                            <td class="positive">+6.2%</td>
+                            <td>
+                                <span class="confidence">
+                                    94%
+                                </span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>Nov</td>
+                            <td>$4.14M</td>
+                            <td class="positive">+5.6%</td>
+                            <td>
+                                <span class="confidence">
+                                    92%
+                                </span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>Dec</td>
+                            <td>$4.38M</td>
+                            <td class="positive">+5.8%</td>
+                            <td>
+                                <span class="confidence">
+                                    90%
+                                </span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>Jan</td>
+                            <td>$4.61M</td>
+                            <td class="positive">+5.3%</td>
+                            <td>
+                                <span class="confidence">
+                                    88%
+                                </span>
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        <!-- FOOTER -->
+
+        <footer class="footer">
+
+            <div>
+                FinCo AI · Financial Intelligence Platform
+            </div>
+
+            <div class="footer-right">
+                <span>AI Engine: Online</span>
+                <span>Data synced 2 min ago</span>
+            </div>
+
+        </footer>
+
+    </div>
+
+</main>
+
+<!-- =========================================================
+     TOAST
+========================================================= -->
+
+<div class="toast" id="toast">
+
+    <div class="toast-icon">
+        ✓
+    </div>
+
+    <div>
+        <div class="toast-title" id="toastTitle">
+            Success
+        </div>
+
+        <div class="toast-text" id="toastText">
+            Operation completed.
+        </div>
+    </div>
+
+</div>
+
+<script>
+    /* ========================================================
+       FINCO AI — FINANCIAL PAGE
+    ========================================================= */
+
+    const toast = document.getElementById("toast");
+    const toastTitle = document.getElementById("toastTitle");
+    const toastText = document.getElementById("toastText");
+
+    let toastTimer;
+
+    function showToast(title, message) {
+
+        toastTitle.textContent = title;
+        toastText.textContent = message;
+
+        toast.classList.add("show");
+
+        clearTimeout(toastTimer);
+
+        toastTimer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 3500);
+    }
+
+
+    /* ========================================================
+       MOBILE SIDEBAR
+    ======================================================== */
+
+    const sidebar = document.getElementById("sidebar");
+    const menuBtn = document.getElementById("menuBtn");
+
+    if (menuBtn) {
+
+        menuBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+        });
+
+    }
+
+
+    document.addEventListener("click", (event) => {
+
+        if (
+            window.innerWidth <= 1000 &&
+            sidebar.classList.contains("open") &&
+            !sidebar.contains(event.target) &&
+            !menuBtn.contains(event.target)
+        ) {
+            sidebar.classList.remove("open");
+        }
+
+    });
+
+
+    /* ========================================================
+       PERIOD SELECT
+    ======================================================== */
+
+    document
+        .getElementById("periodSelect")
+        .addEventListener("change", function () {
+
+            const labels = {
+                month: "Last 30 days",
+                quarter: "Last quarter",
+                year: "This year"
+            };
+
+            showToast(
+                "Period Updated",
+                `Financial metrics switched to ${labels[this.value]}.`
+            );
+
+        });
+
+
+    /* ========================================================
+       AI REPORT
+    ======================================================== */
+
+    function generateReport() {
+
+        showToast(
+            "AI Report Generated",
+            "FinCo is preparing your financial intelligence report..."
+        );
+
+        setTimeout(() => {
+
+            showToast(
+                "Report Ready",
+                "Revenue, profitability, cash flow and risk analysis completed."
+            );
+
+        }, 1800);
+
+        /*
+        ---------------------------------------------------------
+        PRODUCTION FASTAPI INTEGRATION
+
+        Replace demo behavior with:
+
+        fetch("/api/financial/report", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                period: "30d"
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+        });
+
+        Recommended backend:
+
+        POST /api/financial/report
+        GET  /api/financial/summary
+        GET  /api/financial/revenue
+        GET  /api/financial/expenses
+        GET  /api/financial/profitability
+        GET  /api/financial/cash-flow
+        GET  /api/financial/forecast
+        GET  /api/financial/health
+        GET  /api/financial/insights
+
+        ---------------------------------------------------------
+        */
+
+    }
+
+
+    /* ========================================================
+       EXPORT
+    ======================================================== */
+
+    function exportReport() {
+
+        showToast(
+            "Export Started",
+            "Preparing financial intelligence report..."
+        );
+
+        setTimeout(() => {
+
+            showToast(
+                "Export Ready",
+                "Your financial report is ready for download."
+            );
+
+        }, 1600);
+
+        /*
+        Production:
+
+        window.location.href =
+            "/api/financial/export?format=pdf";
+
+        Or:
+
+        fetch("/api/financial/export", {
+            method: "POST"
+        });
+
+        ---------------------------------------------------------
+        */
+
+    }
+
+
+    /* ========================================================
+       DEMO LIVE DATA ANIMATION
+    ======================================================== */
+
+    const kpiValues = document.querySelectorAll(".kpi-value");
+
+    function animateNumber(element, start, end, duration) {
+
+        const startTime = performance.now();
+
+        function update(currentTime) {
+
+            const progress = Math.min(
+                (currentTime - startTime) / duration,
+                1
+            );
+
+            const eased =
+                1 - Math.pow(1 - progress, 3);
+
+            const value =
+                start + (end - start) * eased;
+
+            element.textContent =
+                "$" + value.toFixed(2) + "M";
+
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            }
+
+        }
+
+        requestAnimationFrame(update);
+
+    }
+
+
+    /* ========================================================
+       KEYBOARD SHORTCUT
+    ======================================================== */
+
+    document.addEventListener("keydown", (event) => {
+
+        if (
+            (event.ctrlKey || event.metaKey) &&
+            event.key.toLowerCase() === "k"
+        ) {
+
+            event.preventDefault();
+
+            showToast(
+                "FinCo AI",
+                "Ask the AI Copilot about your financial data."
+            );
+
+        }
+
+    });
+
+
+    /* ========================================================
+       INITIALIZATION
+    ======================================================== */
+
+    window.addEventListener("load", () => {
+
+        setTimeout(() => {
+
+            showToast(
+                "Financial Intelligence Online",
+                "Your financial metrics are synchronized."
+            );
+
+        }, 900);
+
+    });
+
+
+    /*
+    ============================================================
+    PRODUCTION API MAP
+    ============================================================
+
+    Financial Summary
+    -----------------
+    GET /api/financial/summary
+
+    Response example:
+
+    {
+        "revenue": 18420000,
+        "expenses": 10760000,
+        "profit": 7660000,
+        "cash": 12840000,
+        "growth": 12.8
+    }
+
+
+    Revenue Analytics
+    ------------------
+    GET /api/financial/revenue?period=30d
+
+
+    Expense Analytics
+    -----------------
+    GET /api/financial/expenses?period=30d
+
+
+    Cash Flow
+    ---------
+    GET /api/financial/cash-flow?period=30d
+
+
+    Profitability
+    -------------
+    GET /api/financial/profitability
+
+
+    AI Forecast
+    -----------
+    GET /api/financial/forecast
+
+
+    Financial Health
+    ----------------
+    GET /api/financial/health
+
+
+    AI Insights
+    -----------
+    GET /api/financial/insights
+
+
+    Transactions
+    ------------
+    GET /api/transactions/recent
+
+
+    AI Financial Report
+    -------------------
+    POST /api/financial/report
+
+
+    Export
+    ------
+    GET /api/financial/export?format=pdf
+
+
+    Recommended architecture:
+
+    Browser
+       ↓
+    FastAPI
+       ↓
+    Financial Service
+       ↓
+    PostgreSQL
+       ↓
+    ML Forecasting
+       ↓
+    Fraud Detection
+       ↓
+    RAG
+       ↓
+    Agentic AI
+       ↓
+    Financial Intelligence Response
+
+    ============================================================
+    */
+</script>
+
+</body>
+</html>

@@ -1,0 +1,3602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta
+        name="description"
+        content="FinCo AI — Intelligent Financial Intelligence, Risk Detection, Forecasting and AI Copilot Platform."
+    />
+
+    <title>FinCo AI — Intelligent Financial Platform</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet"
+    />
+
+    <style>
+        :root {
+            --bg: #06070b;
+            --bg-soft: #0b0d13;
+            --panel: rgba(17, 20, 29, 0.72);
+            --panel-solid: #11141d;
+            --panel-light: rgba(255,255,255,0.045);
+
+            --text: #f5f7fb;
+            --muted: #8f98aa;
+            --muted-light: #b7bfce;
+
+            --primary: #7c5cff;
+            --primary-2: #a78bfa;
+            --cyan: #22d3ee;
+            --green: #34d399;
+            --yellow: #fbbf24;
+            --red: #fb7185;
+
+            --border: rgba(255,255,255,0.075);
+            --border-light: rgba(255,255,255,0.12);
+
+            --shadow:
+                0 30px 90px rgba(0,0,0,0.45);
+
+            --radius-xl: 28px;
+            --radius-lg: 20px;
+            --radius-md: 14px;
+
+            --sidebar-width: 260px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background:
+                radial-gradient(circle at 20% 10%, rgba(124,92,255,0.12), transparent 30%),
+                radial-gradient(circle at 90% 20%, rgba(34,211,238,0.08), transparent 25%),
+                var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            font-size: 110%;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.025;
+            background-image:
+                linear-gradient(rgba(255,255,255,.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.3) 1px, transparent 1px);
+            background-size: 50px 50px;
+            mask-image: linear-gradient(to bottom, black, transparent 80%);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        /* =========================================
+           LOADER
+        ========================================= */
+
+        .loader {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #05060a;
+            transition: opacity .5s ease, visibility .5s ease;
+        }
+
+        .loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader-content {
+            text-align: center;
+        }
+
+        .loader-logo {
+            width: 72px;
+            height: 72px;
+            margin: auto auto 20px;
+            display: grid;
+            place-items: center;
+            border-radius: 22px;
+            font-size: 33.6px;
+            font-weight: 800;
+            background: linear-gradient(
+                135deg,
+                var(--primary),
+                var(--cyan)
+            );
+            box-shadow:
+                0 0 50px rgba(124,92,255,.4);
+            animation: pulse 1.5s infinite;
+        }
+
+        .loader-text {
+            color: var(--muted);
+            font-size: 17.2px;
+        }
+
+        @keyframes pulse {
+            50% {
+                transform: scale(1.08);
+                box-shadow: 0 0 80px rgba(124,92,255,.65);
+            }
+        }
+
+        /* =========================================
+           APP SHELL
+        ========================================= */
+
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* =========================================
+           SIDEBAR
+        ========================================= */
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            padding: 24px 16px;
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(12,14,21,.96),
+                    rgba(8,10,15,.94)
+                );
+            border-right: 1px solid var(--border);
+            backdrop-filter: blur(25px);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 4px 10px 28px;
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            border-radius: 13px;
+            background: linear-gradient(
+                135deg,
+                var(--primary),
+                #4f46e5
+            );
+            box-shadow: 0 10px 30px rgba(124,92,255,.28);
+            font-weight: 800;
+            font-size: 21.6px;
+        }
+
+        .brand-name {
+            font-family: "Space Grotesk", sans-serif;
+            font-weight: 700;
+            font-size: 22.8px;
+            letter-spacing: -.5px;
+        }
+
+        .brand-name span {
+            color: var(--primary-2);
+        }
+
+        .nav-label {
+            color: #626b7c;
+            font-size: 13.2px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            padding: 0 12px 9px;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .nav-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 13px;
+            color: #8f98aa;
+            border-radius: 12px;
+            font-size: 17.2px;
+            font-weight: 600;
+            transition: .25s ease;
+        }
+
+        .nav-item:hover {
+            color: white;
+            background: rgba(255,255,255,.045);
+        }
+
+        .nav-item.active {
+            color: white;
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(124,92,255,.18),
+                    rgba(124,92,255,.04)
+                );
+        }
+
+        .nav-item.active::before {
+            content: "";
+            position: absolute;
+            left: -16px;
+            top: 8px;
+            bottom: 8px;
+            width: 3px;
+            border-radius: 5px;
+            background: var(--primary);
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        .nav-icon {
+            width: 19px;
+            text-align: center;
+            font-size: 19.8px;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            min-width: 20px;
+            padding: 3px 6px;
+            border-radius: 7px;
+            font-size: 11.9px;
+            text-align: center;
+            background: rgba(251,113,133,.12);
+            color: #fb7185;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+        }
+
+        .system-card {
+            padding: 14px;
+            border-radius: 16px;
+            background: rgba(255,255,255,.035);
+            border: 1px solid var(--border);
+        }
+
+        .system-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .system-title {
+            font-size: 14.5px;
+            color: var(--muted);
+        }
+
+        .online-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 12px var(--green);
+        }
+
+        .system-status {
+            font-size: 15.8px;
+            font-weight: 700;
+        }
+
+        .system-bar {
+            margin-top: 9px;
+            height: 4px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: rgba(255,255,255,.07);
+        }
+
+        .system-bar span {
+            display: block;
+            width: 98%;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--green);
+        }
+
+        /* =========================================
+           MAIN
+        ========================================= */
+
+        .main {
+            width: calc(100% - var(--sidebar-width));
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        /* =========================================
+           TOPBAR
+        ========================================= */
+
+        .topbar {
+            height: 76px;
+            padding: 0 34px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: rgba(6,7,11,.72);
+            backdrop-filter: blur(25px);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .mobile-menu {
+            display: none;
+            width: 38px;
+            height: 38px;
+            border: 1px solid var(--border);
+            background: var(--panel-light);
+            color: white;
+            border-radius: 10px;
+        }
+
+        .breadcrumb {
+            color: var(--muted);
+            font-size: 15.8px;
+        }
+
+        .breadcrumb strong {
+            color: white;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .top-btn {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.035);
+            color: #aab2c0;
+            border-radius: 11px;
+            transition: .2s;
+        }
+
+        .top-btn:hover {
+            color: white;
+            border-color: var(--border-light);
+            transform: translateY(-1px);
+        }
+
+        .notification {
+            position: relative;
+        }
+
+        .notification::after {
+            content: "";
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--red);
+            border: 2px solid var(--bg);
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding-left: 8px;
+            margin-left: 4px;
+            border-left: 1px solid var(--border);
+        }
+
+        .avatar {
+            width: 35px;
+            height: 35px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background:
+                linear-gradient(
+                    135deg,
+                    #8b5cf6,
+                    #06b6d4
+                );
+            font-size: 13.2px;
+            font-weight: 800;
+        }
+
+        .profile-info strong {
+            display: block;
+            font-size: 14.5px;
+        }
+
+        .profile-info span {
+            color: var(--muted);
+            font-size: 11.9px;
+        }
+
+        /* =========================================
+           CONTENT
+        ========================================= */
+
+        .content {
+            max-width: 1600px;
+            margin: auto;
+            padding: 32px 34px 60px;
+        }
+
+        /* =========================================
+           HERO
+        ========================================= */
+
+        .hero {
+            position: relative;
+            min-height: 245px;
+            padding: 35px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            background:
+                radial-gradient(
+                    circle at 85% 15%,
+                    rgba(124,92,255,.25),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 60% 90%,
+                    rgba(34,211,238,.08),
+                    transparent 28%
+                ),
+                linear-gradient(
+                    135deg,
+                    rgba(20,23,35,.94),
+                    rgba(10,12,18,.9)
+                );
+            box-shadow: var(--shadow);
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            width: 420px;
+            height: 420px;
+            right: -180px;
+            top: -240px;
+            border: 1px solid rgba(167,139,250,.15);
+            border-radius: 50%;
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            width: 330px;
+            height: 330px;
+            right: -110px;
+            top: -170px;
+            border: 1px solid rgba(34,211,238,.08);
+            border-radius: 50%;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 680px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(124,92,255,.1);
+            border: 1px solid rgba(124,92,255,.2);
+            color: #b7a9ff;
+            font-size: 13.2px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 17px;
+        }
+
+        .eyebrow-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 10px var(--green);
+        }
+
+        .hero h1 {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: clamp(30px, 4vw, 48px);
+            line-height: 1.05;
+            letter-spacing: -2px;
+            margin-bottom: 13px;
+        }
+
+        .gradient-text {
+            background:
+                linear-gradient(
+                    90deg,
+                    #ffffff,
+                    #b7a9ff,
+                    #67e8f9
+                );
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .hero p {
+            color: var(--muted);
+            max-width: 590px;
+            line-height: 1.7;
+            font-size: 17.2px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 23px;
+            flex-wrap: wrap;
+        }
+
+        .primary-btn,
+        .secondary-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 16px;
+            border-radius: 11px;
+            font-size: 15.8px;
+            font-weight: 700;
+            border: 1px solid transparent;
+            transition: .25s;
+        }
+
+        .primary-btn {
+            color: white;
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--primary),
+                    #5b4adf
+                );
+            box-shadow: 0 10px 25px rgba(124,92,255,.25);
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 30px rgba(124,92,255,.35);
+        }
+
+        .secondary-btn {
+            color: #c8ced9;
+            border-color: var(--border);
+            background: rgba(255,255,255,.035);
+        }
+
+        .secondary-btn:hover {
+            color: white;
+            background: rgba(255,255,255,.06);
+        }
+
+        /* =========================================
+           FEATURES
+        ========================================= */
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 18px;
+        }
+
+        .feature-card {
+            padding: 22px;
+            border: 1px solid var(--border);
+            background: var(--panel);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-lg);
+            transition: .3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-light);
+            box-shadow: 0 20px 60px rgba(0,0,0,.25);
+        }
+
+        .feature-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                var(--primary),
+                transparent
+            );
+            opacity: 0;
+            transition: .3s;
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            display: grid;
+            place-items: center;
+            border-radius: 13px;
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+
+        .feature-title {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 18.5px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .feature-description {
+            color: var(--muted);
+            font-size: 13.8px;
+            line-height: 1.65;
+            margin-bottom: 14px;
+        }
+
+        .feature-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .feature-list li {
+            color: var(--muted-light);
+            font-size: 12.6px;
+            padding-left: 18px;
+            position: relative;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--green);
+            font-weight: 700;
+        }
+
+        /* =========================================
+           KPI GRID
+        ========================================= */
+
+        .section {
+            margin-top: 25px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 13px;
+        }
+
+        .section-title {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 21.1px;
+            font-weight: 700;
+        }
+
+        .section-subtitle {
+            margin-top: 3px;
+            font-size: 13.2px;
+            color: var(--muted);
+        }
+
+        .view-link {
+            color: #9d91ff;
+            font-size: 14.5px;
+            font-weight: 600;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 13px;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            background: var(--panel);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 15px 50px rgba(0,0,0,.16);
+        }
+
+        .kpi-card {
+            padding: 19px;
+            position: relative;
+            overflow: hidden;
+            transition: .25s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--border-light);
+        }
+
+        .kpi-card::after {
+            content: "";
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            right: -50px;
+            bottom: -55px;
+            border-radius: 50%;
+            background: var(--accent, var(--primary));
+            opacity: .07;
+            filter: blur(4px);
+        }
+
+        .kpi-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .kpi-label {
+            color: var(--muted);
+            font-size: 13.2px;
+            font-weight: 600;
+        }
+
+        .kpi-icon {
+            width: 31px;
+            height: 31px;
+            display: grid;
+            place-items: center;
+            border-radius: 9px;
+            background: rgba(124,92,255,.1);
+            color: #a99aff;
+            font-size: 17.2px;
+        }
+
+        .kpi-value {
+            margin-top: 13px;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 33px;
+            font-weight: 700;
+            letter-spacing: -.7px;
+        }
+
+        .kpi-change {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 7px;
+            font-size: 11.9px;
+            font-weight: 700;
+        }
+
+        .positive {
+            color: var(--green);
+        }
+
+        .negative {
+            color: var(--red);
+        }
+
+        .neutral {
+            color: var(--muted);
+        }
+
+        /* =========================================
+           MAIN DASHBOARD GRID
+        ========================================= */
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.55fr) minmax(310px, .85fr);
+            gap: 14px;
+        }
+
+        .chart-card {
+            padding: 21px;
+            min-height: 350px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .chart-title {
+            font-family: "Space Grotesk", sans-serif;
+            font-weight: 700;
+            font-size: 18.5px;
+        }
+
+        .chart-desc {
+            color: var(--muted);
+            font-size: 13.2px;
+            margin-top: 4px;
+        }
+
+        .chart-select {
+            padding: 7px 10px;
+            border-radius: 9px;
+            background: rgba(255,255,255,.04);
+            border: 1px solid var(--border);
+            color: #aeb7c7;
+            font-size: 13.2px;
+            outline: none;
+        }
+
+        .chart {
+            height: 245px;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-grid {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .chart-line {
+            height: 1px;
+            background: rgba(255,255,255,.045);
+        }
+
+        .chart-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .chart-area {
+            fill: url(#areaGradient);
+            opacity: .25;
+        }
+
+        .chart-path {
+            fill: none;
+            stroke: #9b87ff;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            filter: drop-shadow(0 0 7px rgba(124,92,255,.5));
+        }
+
+        .chart-labels {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -3px;
+            display: flex;
+            justify-content: space-between;
+            color: #5f6878;
+            font-size: 10.6px;
+        }
+
+        /* =========================================
+           AI COPILOT
+        ========================================= */
+
+        .copilot {
+            min-height: 350px;
+            padding: 21px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .copilot::before {
+            content: "";
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            top: -90px;
+            right: -70px;
+            border-radius: 50%;
+            background: rgba(124,92,255,.18);
+            filter: blur(40px);
+        }
+
+        .copilot-header {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 11px;
+        }
+
+        .ai-orb {
+            width: 39px;
+            height: 39px;
+            display: grid;
+            place-items: center;
+            border-radius: 13px;
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--primary),
+                    var(--cyan)
+                );
+            box-shadow:
+                0 0 30px rgba(124,92,255,.25);
+            animation: orb 3s ease-in-out infinite;
+        }
+
+        @keyframes orb {
+            50% {
+                box-shadow:
+                    0 0 50px rgba(124,92,255,.45);
+            }
+        }
+
+        .copilot-name {
+            font-family: "Space Grotesk", sans-serif;
+            font-weight: 700;
+            font-size: 17.2px;
+        }
+
+        .copilot-status {
+            color: var(--green);
+            font-size: 11.9px;
+            margin-top: 2px;
+        }
+
+        .chat-window {
+            position: relative;
+            height: 220px;
+            margin-top: 17px;
+            padding: 13px;
+            border-radius: 14px;
+            background: rgba(0,0,0,.18);
+            border: 1px solid rgba(255,255,255,.045);
+            overflow-y: auto;
+        }
+
+        .message {
+            max-width: 87%;
+            padding: 9px 11px;
+            border-radius: 11px;
+            margin-bottom: 10px;
+            font-size: 13.2px;
+            line-height: 1.55;
+        }
+
+        .message.ai {
+            background: rgba(124,92,255,.08);
+            border: 1px solid rgba(124,92,255,.1);
+            color: #c9c3e9;
+        }
+
+        .message.user {
+            margin-left: auto;
+            background: rgba(255,255,255,.055);
+            color: #c7ced9;
+        }
+
+        .chat-input {
+            position: relative;
+            margin-top: 9px;
+            display: flex;
+            gap: 7px;
+        }
+
+        .chat-input input {
+            width: 100%;
+            padding: 10px 12px;
+            outline: none;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(255,255,255,.035);
+            color: white;
+            font-size: 13.2px;
+        }
+
+        .chat-input button {
+            width: 37px;
+            border: 0;
+            border-radius: 10px;
+            background: var(--primary);
+            color: white;
+        }
+
+        /* =========================================
+           INTELLIGENCE CARDS
+        ========================================= */
+
+        .intelligence-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 13px;
+        }
+
+        .intel-card {
+            padding: 19px;
+            min-height: 175px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .intel-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .intel-icon {
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            border-radius: 11px;
+            font-size: 19.8px;
+        }
+
+        .icon-fraud {
+            color: #fb7185;
+            background: rgba(251,113,133,.1);
+        }
+
+        .icon-forecast {
+            color: #22d3ee;
+            background: rgba(34,211,238,.1);
+        }
+
+        .icon-rag {
+            color: #a78bfa;
+            background: rgba(167,139,250,.1);
+        }
+
+        .intel-title {
+            margin-top: 15px;
+            font-size: 17.2px;
+            font-weight: 700;
+        }
+
+        .intel-description {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 13.2px;
+            line-height: 1.6;
+        }
+
+        .intel-metric {
+            margin-top: 13px;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .intel-metric strong {
+            font-family: "Space Grotesk";
+            font-size: 25.1px;
+        }
+
+        .intel-metric span {
+            color: var(--muted);
+            font-size: 11.9px;
+        }
+
+        /* =========================================
+           AGENTS
+        ========================================= */
+
+        .agents-card {
+            padding: 21px;
+        }
+
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .agent {
+            padding: 15px 12px;
+            border-radius: 14px;
+            background: rgba(255,255,255,.025);
+            border: 1px solid var(--border);
+            transition: .25s;
+        }
+
+        .agent:hover {
+            transform: translateY(-3px);
+            background: rgba(255,255,255,.045);
+            border-color: var(--border-light);
+        }
+
+        .agent-icon {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border-radius: 10px;
+            background: rgba(124,92,255,.1);
+            color: #b0a3ff;
+            margin-bottom: 11px;
+        }
+
+        .agent-name {
+            font-size: 14.5px;
+            font-weight: 700;
+        }
+
+        .agent-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 6px;
+            color: var(--green);
+            font-size: 10.6px;
+        }
+
+        /* =========================================
+           TRANSACTIONS
+        ========================================= */
+
+        .transactions-card {
+            padding: 21px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        th {
+            padding: 12px 10px;
+            color: #626b7b;
+            font-size: 10.6px;
+            font-weight: 700;
+            text-align: left;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 13px 10px;
+            font-size: 13.2px;
+            color: #b9c0cc;
+            border-bottom: 1px solid rgba(255,255,255,.035);
+        }
+
+        tr:hover td {
+            background: rgba(255,255,255,.018);
+        }
+
+        .transaction-id {
+            color: white;
+            font-weight: 700;
+        }
+
+        .amount {
+            color: white;
+            font-weight: 700;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 7px;
+            border-radius: 7px;
+            font-size: 11.9px;
+            font-weight: 700;
+        }
+
+        .status.success {
+            color: var(--green);
+            background: rgba(52,211,153,.08);
+        }
+
+        .status.warning {
+            color: var(--yellow);
+            background: rgba(251,191,36,.08);
+        }
+
+        .status.danger {
+            color: var(--red);
+            background: rgba(251,113,133,.08);
+        }
+
+        /* =========================================
+           ACTIVITY + RISK
+        ========================================= */
+
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 13px;
+        }
+
+        .activity-card,
+        .risk-card {
+            padding: 21px;
+        }
+
+        .activity-list {
+            margin-top: 10px;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 11px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,.035);
+        }
+
+        .activity-dot {
+            width: 29px;
+            height: 29px;
+            flex: 0 0 29px;
+            display: grid;
+            place-items: center;
+            border-radius: 9px;
+            background: rgba(124,92,255,.1);
+            color: #a99aff;
+            font-size: 13.2px;
+        }
+
+        .activity-text {
+            font-size: 12px;
+            line-height: 1.5;
+            color: #b9c0cb;
+        }
+
+        .activity-text strong {
+            color: white;
+        }
+
+        .activity-time {
+            color: #626b7a;
+            font-size: 9.6px;
+            margin-top: 3px;
+        }
+
+        .risk-score {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .score-circle {
+            width: 105px;
+            height: 105px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            position: relative;
+            background:
+                conic-gradient(
+                    var(--green) 0deg 288deg,
+                    rgba(255,255,255,.06) 288deg 360deg
+                );
+        }
+
+        .score-circle::before {
+            content: "";
+            position: absolute;
+            width: 82px;
+            height: 82px;
+            border-radius: 50%;
+            background: #10131b;
+        }
+
+        .score-number {
+            position: relative;
+            z-index: 2;
+            font-family: "Space Grotesk";
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .score-label {
+            color: var(--muted);
+            font-size: 10.8px;
+            margin-top: 2px;
+        }
+
+        .risk-details {
+            flex: 1;
+        }
+
+        .risk-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 13px;
+        }
+
+        .risk-row span {
+            color: var(--muted);
+            font-size: 10.8px;
+        }
+
+        .risk-row strong {
+            font-size: 12px;
+        }
+
+        .mini-bar {
+            height: 4px;
+            border-radius: 5px;
+            overflow: hidden;
+            background: rgba(255,255,255,.06);
+            margin-top: 6px;
+        }
+
+        .mini-bar span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+            background: currentColor;
+        }
+
+        /* =========================================
+           FOOTER
+        ========================================= */
+
+        footer {
+            padding: 30px 5px 10px;
+            display: flex;
+            justify-content: space-between;
+            color: #555e6d;
+            font-size: 10.8px;
+        }
+
+        .footer-brand {
+            font-weight: 700;
+        }
+
+        /* =========================================
+           TOAST
+        ========================================= */
+
+        .toast-container {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            min-width: 260px;
+            padding: 13px 15px;
+            border-radius: 13px;
+            background: rgba(18,21,30,.94);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(20px);
+            animation: toastIn .3s ease;
+            font-size: 12px;
+        }
+
+        .toast strong {
+            display: block;
+            margin-bottom: 3px;
+            font-size: 13.2px;
+        }
+
+        .toast span {
+            color: var(--muted);
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* =========================================
+           RESPONSIVE
+        ========================================= */
+
+        @media (max-width: 1200px) {
+
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .intelligence-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .agents-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 950px) {
+
+            :root {
+                --sidebar-width: 0px;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+                transition: .3s ease;
+                width: 260px;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .mobile-menu {
+                display: block;
+            }
+
+            .topbar {
+                padding: 0 18px;
+            }
+
+            .breadcrumb {
+                display: none;
+            }
+
+            .dashboard-grid,
+            .bottom-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .content {
+                padding: 24px 18px 45px;
+            }
+        }
+
+        @media (max-width: 650px) {
+
+            .top-actions .top-btn:nth-child(1) {
+                display: none;
+            }
+
+            .profile-info {
+                display: none;
+            }
+
+            .hero {
+                padding: 25px;
+            }
+
+            .hero h1 {
+                letter-spacing: -1px;
+            }
+
+            .kpi-grid,
+            .intelligence-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .agents-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .risk-score {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            footer {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 420px) {
+
+            .content {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+
+            .hero {
+                border-radius: 20px;
+                padding: 21px;
+            }
+
+            .agents-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+            }
+
+            .primary-btn,
+            .secondary-btn {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =========================================
+         LOADER
+    ========================================== -->
+
+    <div class="loader" id="loader">
+        <div class="loader-content">
+            <div class="loader-logo">F</div>
+            <div class="loader-text">Initializing FinCo Intelligence...</div>
+        </div>
+    </div>
+
+
+    <!-- =========================================
+         APP
+    ========================================== -->
+
+    <div class="app">
+
+        <!-- SIDEBAR -->
+
+        <aside class="sidebar" id="sidebar">
+
+            <div class="brand">
+                <div class="brand-icon">F</div>
+
+                <div class="brand-name">
+                    FinCo <span>AI</span>
+                </div>
+            </div>
+
+            <div class="nav-label">
+                Workspace
+            </div>
+
+            <nav class="nav">
+
+                <a href="dashboard.html" class="nav-item active">
+                    <span class="nav-icon">⌂</span>
+                    Dashboard
+                </a>
+
+                <a href="copilot.html" class="nav-item">
+                    <span class="nav-icon">◈</span>
+                    AI Copilot
+                </a>
+
+                <a href="agents.html" class="nav-item">
+                    <span class="nav-icon">🤖</span>
+                    AI Agents
+                </a>
+
+                <a href="ml-models.html" class="nav-item">
+                    <span class="nav-icon">🧠</span>
+                    ML Models
+                </a>
+
+                <a href="analysis.html" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    Analysis
+                </a>
+
+                <a href="collaboration.html" class="nav-item">
+                    <span class="nav-icon">🤝</span>
+                    Collaboration
+                </a>
+
+                <a href="financial.html" class="nav-item">
+                    <span class="nav-icon">⌁</span>
+                    Transactions
+                </a>
+
+                <a href="fraud.html" class="nav-item">
+                    <span class="nav-icon">⚠</span>
+                    Fraud & Risk
+                    <span class="nav-badge">12</span>
+                </a>
+
+                <a href="forecasting.html" class="nav-item">
+                    <span class="nav-icon">↗</span>
+                    Forecasting
+                </a>
+
+                <a href="documents.html" class="nav-item">
+                    <span class="nav-icon">▤</span>
+                    Documents
+                </a>
+
+            </nav>
+
+            <div style="height:25px"></div>
+
+            <div class="nav-label">
+                Management
+            </div>
+
+            <nav class="nav">
+
+                <a href="reports.html" class="nav-item">
+                    <span class="nav-icon">▥</span>
+                    Reports
+                </a>
+
+                <a href="balance-sheet.html" class="nav-item">
+                    <span class="nav-icon">📋</span>
+                    Balance Sheet
+                </a>
+
+                <a href="alerts.html" class="nav-item">
+                    <span class="nav-icon">⚙</span>
+                    Settings
+                </a>
+
+            </nav>
+
+            <div class="sidebar-bottom">
+
+                <div class="system-card">
+
+                    <div class="system-header">
+                        <span class="system-title">
+                            Platform health
+                        </span>
+
+                        <span class="online-dot"></span>
+                    </div>
+
+                    <div class="system-status">
+                        All systems operational
+                    </div>
+
+                    <div class="system-bar">
+                        <span></span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+
+        <!-- MAIN -->
+
+        <main class="main">
+
+            <!-- TOPBAR -->
+
+            <header class="topbar">
+
+                <div style="display:flex;align-items:center;gap:12px">
+
+                    <button
+                        class="mobile-menu"
+                        id="mobileMenu"
+                        aria-label="Open navigation"
+                    >
+                        ☰
+                    </button>
+
+                    <div class="breadcrumb">
+                        FinCo AI / <strong>Overview</strong>
+                    </div>
+
+                </div>
+
+                <div class="top-actions">
+
+                    <button
+                        class="top-btn"
+                        id="themeButton"
+                        title="Theme"
+                    >
+                        ◐
+                    </button>
+
+                    <button
+                        class="top-btn notification"
+                        id="notificationButton"
+                        title="Notifications"
+                    >
+                        ♢
+                    </button>
+
+                    <div class="profile">
+
+                        <div class="avatar">
+                            AI
+                        </div>
+
+                        <div class="profile-info">
+                            <strong>AI Analyst</strong>
+                            <span>Administrator</span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <!-- CONTENT -->
+
+            <div class="content">
+
+                <!-- HERO -->
+
+                <section class="hero">
+
+                    <div class="hero-content">
+
+                        <div class="eyebrow">
+                            <span class="eyebrow-dot"></span>
+                            AI Financial Intelligence
+                        </div>
+
+                        <h1>
+                            Turn financial data into
+                            <span class="gradient-text">
+                                intelligent decisions.
+                            </span>
+                        </h1>
+
+                        <p>
+                            FinCo AI combines GenAI, RAG, machine learning,
+                            fraud intelligence and autonomous AI agents into
+                            one intelligent financial operations platform.
+                        </p>
+
+                        <div class="hero-actions">
+
+                            <button
+                                class="primary-btn"
+                                id="copilotButton"
+                            >
+                                ✦ Ask FinCo AI
+                            </button>
+
+                            <button
+                                class="secondary-btn"
+                                id="reportButton"
+                            >
+                                ↗ Generate Report
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- FEATURES LIST -->
+
+                <section class="section">
+
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">🚀 Platform Features</h2>
+                            <p class="section-subtitle">
+                                Comprehensive financial intelligence powered by AI
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="features-grid">
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(124,92,255,.1); color: #a78bfa;">
+                                ◈
+                            </div>
+                            <h3 class="feature-title">AI Copilot</h3>
+                            <p class="feature-description">
+                                Conversational AI assistant for instant financial insights, analysis, and recommendations.
+                            </p>
+                            <ul class="feature-list">
+                                <li>Natural language queries</li>
+                                <li>Real-time analysis</li>
+                                <li>Context-aware responses</li>
+                                <li>Multi-turn conversations</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(34,211,238,.1); color: #22d3ee;">
+                                ⚡
+                            </div>
+                            <h3 class="feature-title">RAG Intelligence</h3>
+                            <p class="feature-description">
+                                Retrieval-Augmented Generation for document analysis and knowledge extraction.
+                            </p>
+                            <ul class="feature-list">
+                                <li>Document ingestion & parsing</li>
+                                <li>Semantic search</li>
+                                <li>Hybrid retrieval (BM25 + Vector)</li>
+                                <li>Context compression</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(251,113,133,.1); color: #fb7185;">
+                                ⚠
+                            </div>
+                            <h3 class="feature-title">Fraud Detection</h3>
+                            <p class="feature-description">
+                                Advanced ML-powered fraud detection with real-time monitoring and alerts.
+                            </p>
+                            <ul class="feature-list">
+                                <li>Anomaly detection</li>
+                                <li>Risk scoring</li>
+                                <li>Pattern recognition</li>
+                                <li>Real-time alerts</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(52,211,153,.1); color: #34d399;">
+                                ↗
+                            </div>
+                            <h3 class="feature-title">Financial Forecasting</h3>
+                            <p class="feature-description">
+                                AI-driven forecasting for revenue, expenses, cash flow, and profitability.
+                            </p>
+                            <ul class="feature-list">
+                                <li>Time series analysis</li>
+                                <li>Multi-horizon forecasts</li>
+                                <li>Confidence intervals</li>
+                                <li>Scenario modeling</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(251,191,36,.1); color: #fbbf24;">
+                                ◎
+                            </div>
+                            <h3 class="feature-title">Autonomous Agents</h3>
+                            <p class="feature-description">
+                                Multi-agent system with specialized AI agents for complex financial workflows.
+                            </p>
+                            <ul class="feature-list">
+                                <li>Supervisor orchestration</li>
+                                <li>Task planning & execution</li>
+                                <li>Tool calling</li>
+                                <li>Agent memory</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(139,92,246,.1); color: #8b5cf6;">
+                                ▤
+                            </div>
+                            <h3 class="feature-title">Document Processing</h3>
+                            <p class="feature-description">
+                                Extract, analyze, and understand financial documents automatically.
+                            </p>
+                            <ul class="feature-list">
+                                <li>PDF, Excel, Word support</li>
+                                <li>OCR for scanned docs</li>
+                                <li>Table extraction</li>
+                                <li>Smart chunking</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(236,72,153,.1); color: #ec4899;">
+                                ◐
+                            </div>
+                            <h3 class="feature-title">What-If Analysis</h3>
+                            <p class="feature-description">
+                                Simulate financial scenarios and evaluate strategic decisions.
+                            </p>
+                            <ul class="feature-list">
+                                <li>Scenario simulation</li>
+                                <li>Impact analysis</li>
+                                <li>Sensitivity testing</li>
+                                <li>Decision support</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(6,182,212,.1); color: #06b6d4;">
+                                ⌁
+                            </div>
+                            <h3 class="feature-title">Financial Analytics</h3>
+                            <p class="feature-description">
+                                Comprehensive financial analysis with KPIs, ratios, and insights.
+                            </p>
+                            <ul class="feature-list">
+                                <li>P&L, Balance Sheet, Cash Flow</li>
+                                <li>Financial ratios</li>
+                                <li>KPI tracking</li>
+                                <li>Trend analysis</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(245,158,11,.1); color: #f59e0b;">
+                                ✦
+                            </div>
+                            <h3 class="feature-title">Smart Recommendations</h3>
+                            <p class="feature-description">
+                                AI-powered recommendations for cost optimization and revenue growth.
+                            </p>
+                            <ul class="feature-list">
+                                <li>Cost reduction insights</li>
+                                <li>Revenue opportunities</li>
+                                <li>Risk mitigation</li>
+                                <li>Actionable advice</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(20,184,166,.1); color: #14b8a6;">
+                                ▥
+                            </div>
+                            <h3 class="feature-title">Automated Reporting</h3>
+                            <p class="feature-description">
+                                Generate comprehensive financial reports automatically.
+                            </p>
+                            <ul class="feature-list">
+                                <li>PDF & Excel exports</li>
+                                <li>Custom templates</li>
+                                <li>Scheduled reports</li>
+                                <li>Executive summaries</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(168,85,247,.1); color: #a855f7;">
+                                ⚙
+                            </div>
+                            <h3 class="feature-title">Enterprise Security</h3>
+                            <p class="feature-description">
+                                Bank-grade security with role-based access and audit trails.
+                            </p>
+                            <ul class="feature-list">
+                                <li>JWT authentication</li>
+                                <li>Role-based permissions</li>
+                                <li>Audit logging</li>
+                                <li>Data encryption</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(99,102,241,.1); color: #6366f1;">
+                                ⌘
+                            </div>
+                            <h3 class="feature-title">API & Integrations</h3>
+                            <p class="feature-description">
+                                REST API and integrations with popular financial systems.
+                            </p>
+                            <ul class="feature-list">
+                                <li>RESTful API</li>
+                                <li>Webhook support</li>
+                                <li>ERP integration</li>
+                                <li>Banking connectors</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(244,63,94,.1); color: #f43f5e;">
+                                🤖
+                            </div>
+                            <h3 class="feature-title">AI Agent Orchestra</h3>
+                            <p class="feature-description">
+                                8 specialized AI agents working together with intelligent orchestration.
+                            </p>
+                            <ul class="feature-list">
+                                <li>Financial Analysis Agent</li>
+                                <li>Fraud Detection Agent</li>
+                                <li>Forecasting Agent</li>
+                                <li>Document RAG Agent</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(59,130,246,.1); color: #3b82f6;">
+                                🧠
+                            </div>
+                            <h3 class="feature-title">Production ML Models</h3>
+                            <p class="feature-description">
+                                6 battle-tested machine learning models for financial intelligence.
+                            </p>
+                            <ul class="feature-list">
+                                <li>Fraud Detection (XGBoost)</li>
+                                <li>Revenue Forecasting (Prophet)</li>
+                                <li>Risk Scoring (Random Forest)</li>
+                                <li>Document Embeddings</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(217,70,239,.1); color: #d946ef;">
+                                📊
+                            </div>
+                            <h3 class="feature-title">Advanced Analysis</h3>
+                            <p class="feature-description">
+                                Upload financial data and get AI-powered profit/loss predictions with PDF reports.
+                            </p>
+                            <ul class="feature-list">
+                                <li>File upload (CSV, Excel)</li>
+                                <li>Profit/Loss prediction</li>
+                                <li>Root cause analysis</li>
+                                <li>PDF report generation</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(234,179,8,.1); color: #eab308;">
+                                🤝
+                            </div>
+                            <h3 class="feature-title">Real-Time Collaboration</h3>
+                            <p class="feature-description">
+                                Team workspace with live chat, activity feeds, and shared documents.
+                            </p>
+                            <ul class="feature-list">
+                                <li>5-user team workspace</li>
+                                <li>Live chat & mentions</li>
+                                <li>Activity feed</li>
+                                <li>File sharing</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(34,197,94,.1); color: #22c55e;">
+                                📄
+                            </div>
+                            <h3 class="feature-title">PDF Q&A Intelligence</h3>
+                            <p class="feature-description">
+                                ChatGPT-like interface for asking questions about any PDF or financial document.
+                            </p>
+                            <ul class="feature-list">
+                                <li>Drag & drop PDF upload</li>
+                                <li>Natural language Q&A</li>
+                                <li>Document summarization</li>
+                                <li>Multi-document support</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(220,38,38,.1); color: #dc2626;">
+                                📈
+                            </div>
+                            <h3 class="feature-title">KPI Dashboard</h3>
+                            <p class="feature-description">
+                                Real-time financial KPIs with interactive charts and performance tracking.
+                            </p>
+                            <ul class="feature-list">
+                                <li>50+ financial KPIs</li>
+                                <li>Interactive charts</li>
+                                <li>Trend analysis</li>
+                                <li>Custom dashboards</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(147,51,234,.1); color: #9333ea;">
+                                💬
+                            </div>
+                            <h3 class="feature-title">Natural Language Processing</h3>
+                            <p class="feature-description">
+                                Ask financial questions in plain English and get instant answers.
+                            </p>
+                            <ul class="feature-list">
+                                <li>Text-to-SQL queries</li>
+                                <li>Intent recognition</li>
+                                <li>Context understanding</li>
+                                <li>Multi-language support</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(14,165,233,.1); color: #0ea5e9;">
+                                🔍
+                            </div>
+                            <h3 class="feature-title">Smart Search</h3>
+                            <p class="feature-description">
+                                Semantic search across all financial data and documents instantly.
+                            </p>
+                            <ul class="feature-list">
+                                <li>Vector similarity search</li>
+                                <li>Fuzzy matching</li>
+                                <li>Cross-document search</li>
+                                <li>Search filters & facets</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(202,138,4,.1); color: #ca8a04;">
+                                ⚡
+                            </div>
+                            <h3 class="feature-title">Real-Time Alerts</h3>
+                            <p class="feature-description">
+                                Get instant notifications for important financial events and anomalies.
+                            </p>
+                            <ul class="feature-list">
+                                <li>Custom alert rules</li>
+                                <li>Email & SMS notifications</li>
+                                <li>Threshold monitoring</li>
+                                <li>Alert escalation</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(21,128,61,.1); color: #15803d;">
+                                🎯
+                            </div>
+                            <h3 class="feature-title">Budget Planning</h3>
+                            <p class="feature-description">
+                                AI-assisted budget creation, tracking, and variance analysis.
+                            </p>
+                            <ul class="feature-list">
+                                <li>Budget templates</li>
+                                <li>Variance analysis</li>
+                                <li>Forecast vs actual</li>
+                                <li>Budget recommendations</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon" style="background: rgba(16,185,129,.1); color: #10b981;">
+                                📋
+                            </div>
+                            <h3 class="feature-title">Balance Sheet Generator</h3>
+                            <p class="feature-description">
+                                Automatic balance sheet generation with AI-powered double-entry bookkeeping.
+                            </p>
+                            <ul class="feature-list">
+                                <li>Auto-balancing (Assets = Liabilities + Equity)</li>
+                                <li>Journal entry posting</li>
+                                <li>Trial balance verification</li>
+                                <li>Financial year closing</li>
+                            </ul>
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- KPI SECTION -->
+
+                <section class="section">
+
+                    <div class="section-header">
+
+                        <div>
+                            <div class="section-title">
+                                Executive Overview
+                            </div>
+
+                            <div class="section-subtitle">
+                                Real-time financial intelligence
+                            </div>
+                        </div>
+
+                        <a href="dashboard.html" class="view-link">
+                            View analytics →
+                        </a>
+
+                    </div>
+
+
+                    <div class="kpi-grid">
+
+                        <div class="card kpi-card"
+                             style="--accent:#7c5cff">
+
+                            <div class="kpi-top">
+                                <span class="kpi-label">
+                                    Total Transactions
+                                </span>
+
+                                <span class="kpi-icon">
+                                    ↗
+                                </span>
+                            </div>
+
+                            <div class="kpi-value" data-count="248600">
+                                248.6K
+                            </div>
+
+                            <div class="kpi-change positive">
+                                ↑ 12.8% <span class="neutral">vs last month</span>
+                            </div>
+
+                        </div>
+
+
+                        <div class="card kpi-card"
+                             style="--accent:#34d399">
+
+                            <div class="kpi-top">
+                                <span class="kpi-label">
+                                    Processed Volume
+                                </span>
+
+                                <span class="kpi-icon">
+                                    $
+                                </span>
+                            </div>
+
+                            <div class="kpi-value">
+                                $18.42M
+                            </div>
+
+                            <div class="kpi-change positive">
+                                ↑ 8.4% <span class="neutral">vs last month</span>
+                            </div>
+
+                        </div>
+
+
+                        <div class="card kpi-card"
+                             style="--accent:#fb7185">
+
+                            <div class="kpi-top">
+                                <span class="kpi-label">
+                                    Fraud Prevented
+                                </span>
+
+                                <span class="kpi-icon">
+                                    ⚠
+                                </span>
+                            </div>
+
+                            <div class="kpi-value">
+                                $426.8K
+                            </div>
+
+                            <div class="kpi-change positive">
+                                ↑ 21.3% <span class="neutral">detection efficiency</span>
+                            </div>
+
+                        </div>
+
+
+                        <div class="card kpi-card"
+                             style="--accent:#22d3ee">
+
+                            <div class="kpi-top">
+                                <span class="kpi-label">
+                                    AI Accuracy
+                                </span>
+
+                                <span class="kpi-icon">
+                                    ✦
+                                </span>
+                            </div>
+
+                            <div class="kpi-value">
+                                96.8%
+                            </div>
+
+                            <div class="kpi-change positive">
+                                ↑ 2.1% <span class="neutral">model performance</span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- CHART + COPILOT -->
+
+                <section class="section">
+
+                    <div class="dashboard-grid">
+
+                        <!-- CHART -->
+
+                        <div class="card chart-card">
+
+                            <div class="chart-header">
+
+                                <div>
+                                    <div class="chart-title">
+                                        Financial Performance
+                                    </div>
+
+                                    <div class="chart-desc">
+                                        Revenue and transaction volume intelligence
+                                    </div>
+                                </div>
+
+                                <select class="chart-select" id="chartPeriod">
+                                    <option>Last 30 days</option>
+                                    <option>Last 90 days</option>
+                                    <option>Last 12 months</option>
+                                </select>
+
+                            </div>
+
+                            <div class="chart">
+
+                                <div class="chart-grid">
+                                    <div class="chart-line"></div>
+                                    <div class="chart-line"></div>
+                                    <div class="chart-line"></div>
+                                    <div class="chart-line"></div>
+                                    <div class="chart-line"></div>
+                                </div>
+
+                                <svg
+                                    class="chart-svg"
+                                    viewBox="0 0 800 230"
+                                    preserveAspectRatio="none"
+                                >
+
+                                    <defs>
+
+                                        <linearGradient
+                                            id="areaGradient"
+                                            x1="0"
+                                            x2="0"
+                                            y1="0"
+                                            y2="1"
+                                        >
+                                            <stop
+                                                offset="0%"
+                                                stop-color="#8b5cf6"
+                                                stop-opacity=".65"
+                                            />
+
+                                            <stop
+                                                offset="100%"
+                                                stop-color="#8b5cf6"
+                                                stop-opacity="0"
+                                            />
+                                        </linearGradient>
+
+                                    </defs>
+
+                                    <path
+                                        class="chart-area"
+                                        d="
+                                        M0,190
+                                        C60,175 80,165 130,170
+                                        S210,125 260,145
+                                        S330,110 380,120
+                                        S450,75 500,100
+                                        S570,65 620,80
+                                        S690,40 740,60
+                                        S780,30 800,42
+                                        L800,230
+                                        L0,230 Z
+                                        "
+                                    />
+
+                                    <path
+                                        class="chart-path"
+                                        d="
+                                        M0,190
+                                        C60,175 80,165 130,170
+                                        S210,125 260,145
+                                        S330,110 380,120
+                                        S450,75 500,100
+                                        S570,65 620,80
+                                        S690,40 740,60
+                                        S780,30 800,42
+                                        "
+                                    />
+
+                                </svg>
+
+                                <div class="chart-labels">
+                                    <span>01 Sep</span>
+                                    <span>07 Sep</span>
+                                    <span>14 Sep</span>
+                                    <span>21 Sep</span>
+                                    <span>30 Sep</span>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- COPILOT -->
+
+                        <div class="card copilot">
+
+                            <div class="copilot-header">
+
+                                <div class="ai-orb">
+                                    ✦
+                                </div>
+
+                                <div>
+                                    <div class="copilot-name">
+                                        FinCo AI Copilot
+                                    </div>
+
+                                    <div class="copilot-status">
+                                        ● Online · Ready
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div
+                                class="chat-window"
+                                id="chatWindow"
+                            >
+
+                                <div class="message ai">
+                                    Hello! I'm your FinCo AI Copilot.
+                                    Ask me about transactions, fraud,
+                                    forecasts, documents or financial
+                                    performance.
+                                </div>
+
+                                <div class="message user">
+                                    Why did fraud risk increase today?
+                                </div>
+
+                                <div class="message ai">
+                                    Fraud risk increased by
+                                    <strong>14.2%</strong>, primarily due
+                                    to unusual transaction velocity and
+                                    high-risk merchant activity.
+                                </div>
+
+                            </div>
+
+                            <div class="chat-input">
+
+                                <input
+                                    type="text"
+                                    id="chatInput"
+                                    placeholder="Ask your financial question..."
+                                />
+
+                                <button id="sendButton">
+                                    ↑
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- AI INTELLIGENCE -->
+
+                <section class="section">
+
+                    <div class="section-header">
+
+                        <div>
+                            <div class="section-title">
+                                AI Intelligence
+                            </div>
+
+                            <div class="section-subtitle">
+                                Models continuously monitoring your financial ecosystem
+                            </div>
+                        </div>
+
+                        <a href="dashboard.html" class="view-link">
+                            Open intelligence →
+                        </a>
+
+                    </div>
+
+
+                    <div class="intelligence-grid">
+
+                        <div class="card intel-card">
+
+                            <div class="intel-top">
+
+                                <div>
+                                    <strong>Fraud Intelligence</strong>
+                                </div>
+
+                                <div class="intel-icon icon-fraud">
+                                    ⚠
+                                </div>
+
+                            </div>
+
+                            <div class="intel-title">
+                                Real-time risk detection
+                            </div>
+
+                            <div class="intel-description">
+                                ML-powered transaction scoring identifies
+                                suspicious activity and prioritizes high-risk
+                                events.
+                            </div>
+
+                            <div class="intel-metric">
+                                <strong>96.4%</strong>
+                                <span>capture rate</span>
+                            </div>
+
+                        </div>
+
+
+                        <div class="card intel-card">
+
+                            <div class="intel-top">
+
+                                <div>
+                                    <strong>Demand Forecasting</strong>
+                                </div>
+
+                                <div class="intel-icon icon-forecast">
+                                    ↗
+                                </div>
+
+                            </div>
+
+                            <div class="intel-title">
+                                Predictive financial planning
+                            </div>
+
+                            <div class="intel-description">
+                                Forecast transaction volumes, revenue,
+                                liquidity and financial demand using
+                                ML forecasting models.
+                            </div>
+
+                            <div class="intel-metric">
+                                <strong>94.8%</strong>
+                                <span>forecast accuracy</span>
+                            </div>
+
+                        </div>
+
+
+                        <div class="card intel-card">
+
+                            <div class="intel-top">
+
+                                <div>
+                                    <strong>RAG Intelligence</strong>
+                                </div>
+
+                                <div class="intel-icon icon-rag">
+                                    ◈
+                                </div>
+
+                            </div>
+
+                            <div class="intel-title">
+                                Grounded financial knowledge
+                            </div>
+
+                            <div class="intel-description">
+                                Search policies, reports, contracts and
+                                financial documents with cited,
+                                context-aware answers.
+                            </div>
+
+                            <div class="intel-metric">
+                                <strong>98.2%</strong>
+                                <span>retrieval relevance</span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- AGENTS -->
+
+                <section class="section">
+
+                    <div class="card agents-card">
+
+                        <div class="section-header">
+
+                            <div>
+                                <div class="section-title">
+                                    Autonomous AI Agents
+                                </div>
+
+                                <div class="section-subtitle">
+                                    Multi-agent orchestration across financial workflows
+                                </div>
+                            </div>
+
+                            <a href="copilot.html" class="view-link">
+                                Agent control →
+                            </a>
+
+                        </div>
+
+
+                        <div class="agents-grid">
+
+                            <div class="agent">
+                                <div class="agent-icon">◈</div>
+                                <div class="agent-name">Research Agent</div>
+                                <div class="agent-status">
+                                    <span>●</span> Active
+                                </div>
+                            </div>
+
+                            <div class="agent">
+                                <div class="agent-icon">⌁</div>
+                                <div class="agent-name">Fraud Agent</div>
+                                <div class="agent-status">
+                                    <span>●</span> Active
+                                </div>
+                            </div>
+
+                            <div class="agent">
+                                <div class="agent-icon">↗</div>
+                                <div class="agent-name">Forecast Agent</div>
+                                <div class="agent-status">
+                                    <span>●</span> Active
+                                </div>
+                            </div>
+
+                            <div class="agent">
+                                <div class="agent-icon">▤</div>
+                                <div class="agent-name">Document Agent</div>
+                                <div class="agent-status">
+                                    <span>●</span> Active
+                                </div>
+                            </div>
+
+                            <div class="agent">
+                                <div class="agent-icon">✦</div>
+                                <div class="agent-name">Decision Agent</div>
+                                <div class="agent-status">
+                                    <span>●</span> Active
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- TRANSACTIONS -->
+
+                <section class="section">
+
+                    <div class="card transactions-card">
+
+                        <div class="section-header">
+
+                            <div>
+                                <div class="section-title">
+                                    Recent Transactions
+                                </div>
+
+                                <div class="section-subtitle">
+                                    AI-monitored financial activity
+                                </div>
+                            </div>
+
+                            <a href="alerts.html" class="view-link">
+                                View all →
+                            </a>
+
+                        </div>
+
+
+                        <div class="table-wrapper">
+
+                            <table>
+
+                                <thead>
+
+                                    <tr>
+                                        <th>Transaction</th>
+                                        <th>Customer</th>
+                                        <th>Merchant</th>
+                                        <th>Amount</th>
+                                        <th>Risk Score</th>
+                                        <th>Status</th>
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    <tr>
+                                        <td class="transaction-id">
+                                            TXN-94821
+                                        </td>
+
+                                        <td>
+                                            Customer #4829
+                                        </td>
+
+                                        <td>
+                                            Amazon
+                                        </td>
+
+                                        <td class="amount">
+                                            $842.50
+                                        </td>
+
+                                        <td>
+                                            08%
+                                        </td>
+
+                                        <td>
+                                            <span class="status success">
+                                                ● Approved
+                                            </span>
+                                        </td>
+                                    </tr>
+
+
+                                    <tr>
+                                        <td class="transaction-id">
+                                            TXN-94820
+                                        </td>
+
+                                        <td>
+                                            Customer #1942
+                                        </td>
+
+                                        <td>
+                                            Global Electronics
+                                        </td>
+
+                                        <td class="amount">
+                                            $4,280.00
+                                        </td>
+
+                                        <td>
+                                            74%
+                                        </td>
+
+                                        <td>
+                                            <span class="status warning">
+                                                ● Review
+                                            </span>
+                                        </td>
+                                    </tr>
+
+
+                                    <tr>
+                                        <td class="transaction-id">
+                                            TXN-94819
+                                        </td>
+
+                                        <td>
+                                            Customer #7210
+                                        </td>
+
+                                        <td>
+                                            Travel Hub
+                                        </td>
+
+                                        <td class="amount">
+                                            $6,920.30
+                                        </td>
+
+                                        <td>
+                                            92%
+                                        </td>
+
+                                        <td>
+                                            <span class="status danger">
+                                                ● Blocked
+                                            </span>
+                                        </td>
+                                    </tr>
+
+
+                                    <tr>
+                                        <td class="transaction-id">
+                                            TXN-94818
+                                        </td>
+
+                                        <td>
+                                            Customer #3501
+                                        </td>
+
+                                        <td>
+                                            Apple Services
+                                        </td>
+
+                                        <td class="amount">
+                                            $129.99
+                                        </td>
+
+                                        <td>
+                                            04%
+                                        </td>
+
+                                        <td>
+                                            <span class="status success">
+                                                ● Approved
+                                            </span>
+                                        </td>
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- BOTTOM -->
+
+                <section class="section">
+
+                    <div class="bottom-grid">
+
+                        <!-- ACTIVITY -->
+
+                        <div class="card activity-card">
+
+                            <div class="section-title">
+                                AI Activity
+                            </div>
+
+                            <div class="section-subtitle">
+                                Latest autonomous actions
+                            </div>
+
+                            <div class="activity-list">
+
+                                <div class="activity-item">
+
+                                    <div class="activity-dot">
+                                        ⚠
+                                    </div>
+
+                                    <div class="activity-text">
+
+                                        <strong>Fraud Agent</strong>
+                                        flagged a high-risk transaction
+                                        for review.
+
+                                        <div class="activity-time">
+                                            2 minutes ago
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="activity-item">
+
+                                    <div class="activity-dot">
+                                        ◈
+                                    </div>
+
+                                    <div class="activity-text">
+
+                                        <strong>RAG Agent</strong>
+                                        indexed 48 new financial documents.
+
+                                        <div class="activity-time">
+                                            14 minutes ago
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="activity-item">
+
+                                    <div class="activity-dot">
+                                        ↗
+                                    </div>
+
+                                    <div class="activity-text">
+
+                                        <strong>Forecast Agent</strong>
+                                        updated the 30-day revenue forecast.
+
+                                        <div class="activity-time">
+                                            31 minutes ago
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- RISK -->
+
+                        <div class="card risk-card">
+
+                            <div class="section-title">
+                                Portfolio Risk Health
+                            </div>
+
+                            <div class="section-subtitle">
+                                AI-generated risk assessment
+                            </div>
+
+                            <div class="risk-score">
+
+                                <div>
+
+                                    <div class="score-circle">
+
+                                        <div>
+                                            <div class="score-number">
+                                                82
+                                            </div>
+
+                                            <div class="score-label">
+                                                HEALTH
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="risk-details">
+
+                                    <div class="risk-row">
+                                        <span>Transaction Risk</span>
+                                        <strong class="positive">
+                                            Low
+                                        </strong>
+                                    </div>
+
+                                    <div class="mini-bar">
+                                        <span
+                                            style="
+                                            width:28%;
+                                            color:#34d399;
+                                            "
+                                        ></span>
+                                    </div>
+
+
+                                    <div class="risk-row" style="margin-top:14px">
+                                        <span>Fraud Exposure</span>
+                                        <strong style="color:#fbbf24">
+                                            Medium
+                                        </strong>
+                                    </div>
+
+                                    <div class="mini-bar">
+                                        <span
+                                            style="
+                                            width:48%;
+                                            color:#fbbf24;
+                                            "
+                                        ></span>
+                                    </div>
+
+
+                                    <div class="risk-row" style="margin-top:14px">
+                                        <span>Liquidity Risk</span>
+                                        <strong class="positive">
+                                            Low
+                                        </strong>
+                                    </div>
+
+                                    <div class="mini-bar">
+                                        <span
+                                            style="
+                                            width:22%;
+                                            color:#34d399;
+                                            "
+                                        ></span>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <footer>
+
+                    <div>
+                        <span class="footer-brand">
+                            FinCo AI
+                        </span>
+                        · Intelligent Financial Operations
+                    </div>
+
+                    <div>
+                        AI Engine v1.0 · System Operational
+                    </div>
+
+                </footer>
+
+            </div>
+
+        </main>
+
+    </div>
+
+
+    <!-- TOAST -->
+
+    <div
+        class="toast-container"
+        id="toastContainer"
+    ></div>
+
+
+    <script>
+
+        /* =========================================
+           LOADER
+        ========================================== */
+
+        window.addEventListener("load", () => {
+
+            setTimeout(() => {
+                document
+                    .getElementById("loader")
+                    .classList
+                    .add("hidden");
+            }, 700);
+
+        });
+
+
+        /* =========================================
+           MOBILE SIDEBAR
+        ========================================== */
+
+        const sidebar =
+            document.getElementById("sidebar");
+
+        const mobileMenu =
+            document.getElementById("mobileMenu");
+
+        mobileMenu.addEventListener("click", () => {
+
+            sidebar.classList.toggle("open");
+
+        });
+
+
+        /* =========================================
+           NAVIGATION
+        ========================================== */
+
+        const navItems =
+            document.querySelectorAll(".nav-item");
+
+        navItems.forEach(item => {
+
+            item.addEventListener("click", event => {
+
+                // Let the default link behavior work
+                // (navigates to href)
+                // Just show a toast notification
+
+                const name =
+                    item.textContent.trim();
+
+                showToast(
+                    "Navigation",
+                    `${name} workspace selected`
+                );
+
+            });
+
+        });
+
+
+        /* =========================================
+           TOAST
+        ========================================== */
+
+        function showToast(title, message) {
+
+            const container =
+                document.getElementById("toastContainer");
+
+            const toast =
+                document.createElement("div");
+
+            toast.className = "toast";
+
+            toast.innerHTML = `
+                <strong>${title}</strong>
+                <span>${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+
+                toast.style.opacity = "0";
+                toast.style.transform =
+                    "translateY(10px)";
+
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+
+            }, 3000);
+
+        }
+
+
+        /* =========================================
+           COPILOT
+        ========================================== */
+
+        // Copilot button - navigate to copilot page
+        const copilotButton =
+            document.getElementById("copilotButton");
+
+        if (copilotButton) {
+            copilotButton.addEventListener("click", () => {
+                window.location.href = "copilot.html";
+            });
+        }
+
+        // Report button - navigate to reports page
+        const reportButton =
+            document.getElementById("reportButton");
+
+        if (reportButton) {
+            reportButton.addEventListener("click", () => {
+                window.location.href = "reports.html";
+            });
+        }
+
+        // Theme button
+        const themeButton =
+            document.getElementById("themeButton");
+
+        if (themeButton) {
+            themeButton.addEventListener("click", () => {
+                showToast("Theme", "Theme switching coming soon!");
+            });
+        }
+
+        // Notification button
+        const notificationButton =
+            document.getElementById("notificationButton");
+
+        if (notificationButton) {
+            notificationButton.addEventListener("click", () => {
+                window.location.href = "alerts.html";
+            });
+        }
+
+        // Chat functionality
+        const chatInput =
+            document.getElementById("chatInput");
+
+        const sendButton =
+            document.getElementById("sendButton");
+
+        const chatWindow =
+            document.getElementById("chatWindow");
+
+
+        function sendMessage() {
+
+            const text =
+                chatInput.value.trim();
+
+            if (!text) return;
+
+
+            const userMessage =
+                document.createElement("div");
+
+            userMessage.className =
+                "message user";
+
+            userMessage.textContent =
+                text;
+
+            chatWindow.appendChild(userMessage);
+
+
+            chatInput.value = "";
+
+            chatWindow.scrollTop =
+                chatWindow.scrollHeight;
+
+
+            setTimeout(() => {
+
+                const aiMessage =
+                    document.createElement("div");
+
+                aiMessage.className =
+                    "message ai";
+
+                const lower =
+                    text.toLowerCase();
+
+                let response =
+                    "I've analyzed your request. The FinCo AI intelligence layer can combine transaction data, ML predictions, RAG context and agent tools to provide a grounded financial answer.";
+
+                if (
+                    lower.includes("fraud") ||
+                    lower.includes("risk")
+                ) {
+
+                    response =
+                        "Current fraud intelligence shows elevated risk from unusual transaction velocity and high-risk merchant activity. The Fraud Agent recommends reviewing the highest-scoring transactions first.";
+
+                } else if (
+                    lower.includes("forecast") ||
+                    lower.includes("revenue")
+                ) {
+
+                    response =
+                        "The latest forecasting model indicates a positive near-term trend. Revenue is currently projected to remain above the recent baseline, with confidence improving as new transaction data arrives.";
+
+                } else if (
+                    lower.includes("transaction")
+                ) {
+
+                    response =
+                        "FinCo AI is monitoring 248.6K transactions. Current processing volume is $18.42M, while high-risk transactions are automatically routed to the Fraud Agent for review.";
+
+                } else if (
+                    lower.includes("document") ||
+                    lower.includes("report")
+                ) {
+
+                    response =
+                        "The RAG layer can search financial documents, extract relevant context and return grounded answers with source citations.";
+
+                }
+
+                aiMessage.textContent =
+                    response;
+
+                chatWindow.appendChild(
+                    aiMessage
+                );
+
+                chatWindow.scrollTop =
+                    chatWindow.scrollHeight;
+
+            }, 650);
+
+        }
+
+
+        sendButton.addEventListener(
+            "click",
+            sendMessage
+        );
+
+
+        chatInput.addEventListener(
+            "keydown",
+            event => {
+
+                if (event.key === "Enter") {
+                    sendMessage();
+                }
+
+            }
+        );
+
+
+        /* =========================================
+           HERO COPILOT BUTTON
+        ========================================== */
+
+        document
+            .getElementById("copilotButton")
+            .addEventListener("click", () => {
+
+                chatInput.focus();
+
+                chatInput.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+
+                showToast(
+                    "FinCo AI Copilot",
+                    "Ask a financial intelligence question."
+                );
+
+            });
+
+
+        /* =========================================
+           REPORT BUTTON
+        ========================================== */
+
+        document
+            .getElementById("reportButton")
+            .addEventListener("click", () => {
+
+                showToast(
+                    "Report Generator",
+                    "AI report generation workflow initialized."
+                );
+
+            });
+
+
+        /* =========================================
+           NOTIFICATIONS
+        ========================================== */
+
+        document
+            .getElementById("notificationButton")
+            .addEventListener("click", () => {
+
+                showToast(
+                    "Notifications",
+                    "3 AI alerts require your attention."
+                );
+
+            });
+
+
+        /* =========================================
+           THEME BUTTON
+        ========================================== */
+
+        document
+            .getElementById("themeButton")
+            .addEventListener("click", () => {
+
+                showToast(
+                    "Appearance",
+                    "FinCo AI is optimized for dark-mode financial operations."
+                );
+
+            });
+
+
+        /* =========================================
+           CHART PERIOD
+        ========================================== */
+
+        document
+            .getElementById("chartPeriod")
+            .addEventListener("change", event => {
+
+                showToast(
+                    "Analytics",
+                    `${event.target.value} selected`
+                );
+
+            });
+
+
+        /* =========================================
+           KPI NUMBER ANIMATION
+        ========================================== */
+
+        function animateNumber(
+            element,
+            target,
+            duration = 1000
+        ) {
+
+            let start = 0;
+
+            const startTime =
+                performance.now();
+
+            function update(currentTime) {
+
+                const elapsed =
+                    currentTime - startTime;
+
+                const progress =
+                    Math.min(
+                        elapsed / duration,
+                        1
+                    );
+
+                const eased =
+                    1 - Math.pow(
+                        1 - progress,
+                        3
+                    );
+
+                const value =
+                    Math.floor(
+                        start +
+                        (target - start) *
+                        eased
+                    );
+
+                element.textContent =
+                    value.toLocaleString();
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+
+            }
+
+            requestAnimationFrame(update);
+
+        }
+
+
+        /* =========================================
+           CARD OBSERVER
+        ========================================== */
+
+        const cards =
+            document.querySelectorAll(
+                ".kpi-card, .intel-card, .agent"
+            );
+
+        const observer =
+            new IntersectionObserver(
+                entries => {
+
+                    entries.forEach(entry => {
+
+                        if (
+                            entry.isIntersecting
+                        ) {
+
+                            entry.target.style.opacity =
+                                "1";
+
+                            entry.target.style.transform =
+                                "translateY(0)";
+
+                        }
+
+                    });
+
+                },
+                {
+                    threshold: .1
+                }
+            );
+
+
+        cards.forEach(card => {
+
+            card.style.opacity = "0";
+            card.style.transform =
+                "translateY(10px)";
+            card.style.transition =
+                "opacity .5s ease, transform .5s ease";
+
+            observer.observe(card);
+
+        });
+
+
+        /* =========================================
+           INITIAL TOAST
+        ========================================== */
+
+        setTimeout(() => {
+
+            showToast(
+                "FinCo AI",
+                "Financial intelligence platform is ready."
+            );
+
+        }, 1400);
+
+    </script>
+
+</body>
+</html>

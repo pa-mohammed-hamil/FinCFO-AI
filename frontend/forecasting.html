@@ -1,0 +1,3543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Forecasting | FinCo AI</title>
+
+    <meta
+        name="description"
+        content="FinCo AI Forecasting — predictive financial analytics, revenue forecasting, confidence intervals, scenarios and ML model intelligence."
+    >
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        :root {
+            --bg: #05060a;
+            --panel: rgba(15, 17, 26, .84);
+            --panel-soft: rgba(19, 22, 32, .82);
+
+            --border: rgba(255,255,255,.08);
+            --border-hover: rgba(255,255,255,.15);
+
+            --text: #f5f7fb;
+            --muted: #8e96a8;
+            --muted-2: #636c7f;
+
+            --purple: #7c5cff;
+            --purple-light: #9a82ff;
+
+            --cyan: #22d3ee;
+            --green: #34d399;
+            --yellow: #fbbf24;
+            --red: #fb7185;
+            --blue: #60a5fa;
+
+            --sidebar: 250px;
+            --topbar: 76px;
+
+            --radius: 20px;
+
+            --shadow:
+                0 20px 70px rgba(0,0,0,.38),
+                inset 0 1px 0 rgba(255,255,255,.025);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+
+            color: var(--text);
+
+            background:
+                radial-gradient(
+                    circle at 20% 0%,
+                    rgba(124,92,255,.11),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 100% 15%,
+                    rgba(34,211,238,.07),
+                    transparent 28%
+                ),
+                var(--bg);
+
+            font-family: Inter, sans-serif;
+
+            overflow-x: hidden;
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+            border: 0;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* =====================================================
+           SIDEBAR
+        ====================================================== */
+
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+
+            z-index: 1000;
+
+            width: var(--sidebar);
+
+            padding: 22px 15px;
+
+            display: flex;
+            flex-direction: column;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(12,14,22,.97),
+                    rgba(7,8,13,.99)
+                );
+
+            border-right: 1px solid var(--border);
+
+            backdrop-filter: blur(24px);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            padding: 6px 10px 26px;
+        }
+
+        .brand-logo {
+            width: 38px;
+            height: 38px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 12px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    #4f46e5
+                );
+
+            box-shadow:
+                0 10px 30px rgba(124,92,255,.35);
+
+            font-family: "Space Grotesk";
+            font-weight: 800;
+        }
+
+        .brand-name {
+            font-family: "Space Grotesk";
+            font-size: 21.6px;
+            font-weight: 700;
+        }
+
+        .brand-name span {
+            color: var(--purple-light);
+        }
+
+        .workspace {
+            margin: 0 5px 20px;
+            padding: 11px 12px;
+
+            border: 1px solid var(--border);
+            border-radius: 13px;
+
+            background: rgba(255,255,255,.025);
+        }
+
+        .workspace-label {
+            color: var(--muted-2);
+
+            font-size: 12px;
+
+            text-transform: uppercase;
+            letter-spacing: 1px;
+
+            margin-bottom: 5px;
+        }
+
+        .workspace-name {
+            font-size: 15.6px;
+            font-weight: 600;
+        }
+
+        .workspace-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+
+            margin-top: 5px;
+
+            color: var(--green);
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+
+            border-radius: 50%;
+
+            background: currentColor;
+
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        .nav-label {
+            padding: 0 11px 8px;
+
+            color: var(--muted-2);
+
+            font-size: 12px;
+
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            padding: 11px 12px;
+
+            border-radius: 12px;
+
+            color: var(--muted);
+
+            font-size: 15.6px;
+            font-weight: 500;
+
+            transition: .2s ease;
+        }
+
+        .nav-item:hover {
+            color: var(--text);
+            background: rgba(255,255,255,.045);
+        }
+
+        .nav-item.active {
+            color: #fff;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(124,92,255,.19),
+                    rgba(124,92,255,.05)
+                );
+
+            box-shadow:
+                inset 3px 0 var(--purple);
+        }
+
+        .nav-icon {
+            width: 18px;
+
+            display: grid;
+            place-items: center;
+
+            font-size: 18px;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+
+            padding: 3px 7px;
+
+            border-radius: 20px;
+
+            background: rgba(251,113,133,.13);
+
+            color: var(--red);
+
+            font-size: 10.8px;
+            font-weight: 700;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+        }
+
+        .ai-mini-card {
+            padding: 14px;
+
+            border: 1px solid rgba(124,92,255,.18);
+            border-radius: 16px;
+
+            background:
+                radial-gradient(
+                    circle at 100% 0,
+                    rgba(124,92,255,.16),
+                    transparent 50%
+                ),
+                rgba(124,92,255,.055);
+        }
+
+        .ai-mini-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            font-size: 14.4px;
+            font-weight: 700;
+        }
+
+        .ai-mini-icon {
+            width: 27px;
+            height: 27px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 9px;
+
+            background: rgba(124,92,255,.2);
+        }
+
+        .ai-mini-card p {
+            margin-top: 9px;
+
+            color: var(--muted);
+
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+
+            margin-top: 14px;
+            padding: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 50%;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #312e81,
+                    var(--purple)
+                );
+
+            font-size: 13.2px;
+            font-weight: 700;
+        }
+
+        .profile-name {
+            font-size: 13.2px;
+            font-weight: 600;
+        }
+
+        .profile-role {
+            margin-top: 2px;
+
+            color: var(--muted-2);
+
+            font-size: 10.8px;
+        }
+
+        /* =====================================================
+           MAIN
+        ====================================================== */
+
+        .main {
+            min-height: 100vh;
+            margin-left: var(--sidebar);
+        }
+
+        .topbar {
+            height: var(--topbar);
+
+            position: sticky;
+            top: 0;
+
+            z-index: 900;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 30px;
+
+            background: rgba(5,6,10,.72);
+
+            border-bottom: 1px solid var(--border);
+
+            backdrop-filter: blur(22px);
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            color: var(--muted);
+
+            font-size: 14.4px;
+        }
+
+        .breadcrumb strong {
+            color: var(--text);
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+
+            display: grid;
+            place-items: center;
+
+            border: 1px solid var(--border);
+            border-radius: 11px;
+
+            background: rgba(255,255,255,.025);
+
+            color: var(--muted);
+
+            transition: .2s;
+        }
+
+        .icon-btn:hover {
+            color: #fff;
+            background: rgba(255,255,255,.06);
+            border-color: var(--border-hover);
+        }
+
+        .notification {
+            position: relative;
+        }
+
+        .notification::after {
+            content: "";
+
+            position: absolute;
+
+            top: 7px;
+            right: 7px;
+
+            width: 5px;
+            height: 5px;
+
+            border-radius: 50%;
+
+            background: var(--red);
+
+            box-shadow: 0 0 8px var(--red);
+        }
+
+        .period-select {
+            padding: 9px 12px;
+
+            border: 1px solid var(--border);
+            border-radius: 10px;
+
+            outline: none;
+
+            background: rgba(255,255,255,.025);
+            color: var(--text);
+
+            font-size: 13.2px;
+        }
+
+        .content {
+            max-width: 1700px;
+
+            margin: auto;
+
+            padding: 30px;
+        }
+
+        /* =====================================================
+           HERO
+        ====================================================== */
+
+        .hero {
+            position: relative;
+
+            overflow: hidden;
+
+            min-height: 190px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 30px;
+
+            border: 1px solid var(--border);
+            border-radius: 24px;
+
+            background:
+                radial-gradient(
+                    circle at 80% 20%,
+                    rgba(124,92,255,.19),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 100% 100%,
+                    rgba(34,211,238,.08),
+                    transparent 25%
+                ),
+                linear-gradient(
+                    135deg,
+                    rgba(18,20,31,.95),
+                    rgba(10,11,18,.92)
+                );
+
+            box-shadow: var(--shadow);
+        }
+
+        .hero-grid {
+            position: absolute;
+            inset: 0;
+
+            background-image:
+                linear-gradient(
+                    rgba(255,255,255,.025) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,.025) 1px,
+                    transparent 1px
+                );
+
+            background-size: 35px 35px;
+
+            mask-image:
+                linear-gradient(
+                    to right,
+                    black,
+                    transparent
+                );
+        }
+
+        .hero-copy {
+            position: relative;
+            z-index: 2;
+
+            max-width: 720px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+
+            padding: 6px 10px;
+
+            border: 1px solid rgba(124,92,255,.25);
+            border-radius: 30px;
+
+            background: rgba(124,92,255,.08);
+
+            color: var(--purple-light);
+
+            font-size: 12px;
+            font-weight: 700;
+
+            text-transform: uppercase;
+            letter-spacing: .8px;
+        }
+
+        .hero h1 {
+            margin-top: 13px;
+
+            font-family: "Space Grotesk";
+
+            font-size: clamp(28px, 3vw, 42px);
+
+            line-height: 1.05;
+
+            letter-spacing: -1.6px;
+        }
+
+        .hero h1 span {
+            color: var(--purple-light);
+        }
+
+        .hero p {
+            max-width: 650px;
+
+            margin-top: 12px;
+
+            color: var(--muted);
+
+            font-size: 15.6px;
+            line-height: 1.6;
+        }
+
+        .hero-actions {
+            position: relative;
+            z-index: 2;
+
+            display: flex;
+            gap: 9px;
+        }
+
+        .primary-btn,
+        .secondary-btn {
+            padding: 11px 15px;
+
+            border-radius: 11px;
+
+            font-size: 13.2px;
+            font-weight: 700;
+
+            transition: .2s;
+        }
+
+        .primary-btn {
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    #5b4ae8
+                );
+
+            color: #fff;
+
+            box-shadow:
+                0 10px 25px rgba(124,92,255,.22);
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .secondary-btn {
+            border: 1px solid var(--border);
+
+            background: rgba(255,255,255,.04);
+
+            color: var(--text);
+        }
+
+        .secondary-btn:hover {
+            background: rgba(255,255,255,.08);
+        }
+
+        /* =====================================================
+           KPI
+        ====================================================== */
+
+        .kpi-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, minmax(0, 1fr));
+
+            gap: 14px;
+
+            margin-top: 18px;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+
+            background: var(--panel);
+
+            box-shadow: var(--shadow);
+
+            backdrop-filter: blur(18px);
+        }
+
+        .kpi {
+            position: relative;
+
+            overflow: hidden;
+
+            padding: 20px;
+        }
+
+        .kpi::after {
+            content: "";
+
+            position: absolute;
+
+            width: 100px;
+            height: 100px;
+
+            right: -40px;
+            bottom: -45px;
+
+            border-radius: 50%;
+
+            background: var(--kpi-color);
+
+            opacity: .07;
+        }
+
+        .kpi-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .kpi-label {
+            color: var(--muted);
+
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .kpi-icon {
+            width: 32px;
+            height: 32px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 10px;
+
+            background:
+                color-mix(
+                    in srgb,
+                    var(--kpi-color) 13%,
+                    transparent
+                );
+
+            color: var(--kpi-color);
+        }
+
+        .kpi-value {
+            margin-top: 13px;
+
+            font-family: "Space Grotesk";
+
+            font-size: 30px;
+            font-weight: 700;
+
+            letter-spacing: -.7px;
+        }
+
+        .kpi-bottom {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            margin-top: 8px;
+
+            font-size: 10.8px;
+        }
+
+        .positive {
+            color: var(--green);
+        }
+
+        .negative {
+            color: var(--red);
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        /* =====================================================
+           SECTION
+        ====================================================== */
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin: 27px 0 12px;
+        }
+
+        .section-title {
+            font-family: "Space Grotesk";
+
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .section-subtitle {
+            margin-top: 3px;
+
+            color: var(--muted-2);
+
+            font-size: 12px;
+        }
+
+        .view-link {
+            color: var(--purple-light);
+
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* =====================================================
+           FORECAST CHART
+        ====================================================== */
+
+        .forecast-grid {
+            display: grid;
+
+            grid-template-columns:
+                minmax(0, 1.65fr)
+                minmax(290px, .75fr);
+
+            gap: 14px;
+        }
+
+        .chart-card {
+            padding: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-family: "Space Grotesk";
+
+            font-size: 15.6px;
+            font-weight: 700;
+        }
+
+        .card-caption {
+            margin-top: 4px;
+
+            color: var(--muted-2);
+
+            font-size: 10.8px;
+        }
+
+        .chart-legend {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            color: var(--muted);
+
+            font-size: 10.8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-dot {
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+        }
+
+        .forecast-chart {
+            height: 310px;
+
+            margin-top: 15px;
+        }
+
+        .forecast-chart svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .grid-line {
+            stroke: rgba(255,255,255,.055);
+            stroke-width: 1;
+        }
+
+        .axis {
+            fill: #697285;
+
+            font-family: Inter;
+
+            font-size: 10.8px;
+        }
+
+        .actual-line {
+            fill: none;
+
+            stroke: var(--purple-light);
+
+            stroke-width: 3;
+
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .forecast-line {
+            fill: none;
+
+            stroke: var(--cyan);
+
+            stroke-width: 3;
+
+            stroke-dasharray: 7 6;
+
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .upper-bound,
+        .lower-bound {
+            fill: rgba(34,211,238,.07);
+            stroke: none;
+        }
+
+        .chart-point {
+            fill: var(--purple-light);
+
+            stroke: #11131b;
+
+            stroke-width: 3;
+        }
+
+        .forecast-point {
+            fill: var(--cyan);
+
+            stroke: #11131b;
+
+            stroke-width: 3;
+        }
+
+        /* =====================================================
+           MODEL PANEL
+        ====================================================== */
+
+        .model-card {
+            padding: 20px;
+        }
+
+        .model-score {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+
+            margin-top: 22px;
+        }
+
+        .accuracy-ring {
+            width: 125px;
+            height: 125px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 50%;
+
+            background:
+                conic-gradient(
+                    var(--cyan) 0 94%,
+                    rgba(255,255,255,.06) 94%
+                );
+
+            flex-shrink: 0;
+        }
+
+        .accuracy-inner {
+            width: 99px;
+            height: 99px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 50%;
+
+            background: #10121a;
+
+            text-align: center;
+        }
+
+        .accuracy-number {
+            font-family: "Space Grotesk";
+
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .accuracy-label {
+            margin-top: -2px;
+
+            color: var(--muted);
+
+            font-size: 9.6px;
+        }
+
+        .model-summary {
+            flex: 1;
+        }
+
+        .model-summary strong {
+            font-size: 14.4px;
+        }
+
+        .model-summary p {
+            margin-top: 6px;
+
+            color: var(--muted);
+
+            font-size: 10.8px;
+            line-height: 1.5;
+        }
+
+        .model-stat {
+            display: flex;
+            justify-content: space-between;
+
+            padding: 10px 0;
+
+            border-bottom: 1px solid rgba(255,255,255,.05);
+
+            font-size: 10.8px;
+        }
+
+        .model-stat:last-child {
+            border-bottom: 0;
+        }
+
+        .model-stat span:first-child {
+            color: var(--muted);
+        }
+
+        /* =====================================================
+           FORECAST TABLE / SCENARIOS
+        ====================================================== */
+
+        .lower-grid {
+            display: grid;
+
+            grid-template-columns:
+                minmax(0, 1.25fr)
+                minmax(0, .85fr)
+                minmax(280px, .75fr);
+
+            gap: 14px;
+        }
+
+        .table-card,
+        .scenario-card,
+        .signal-card {
+            padding: 20px;
+        }
+
+        .forecast-table {
+            width: 100%;
+
+            margin-top: 14px;
+
+            border-collapse: collapse;
+        }
+
+        .forecast-table th {
+            padding: 9px 7px;
+
+            text-align: left;
+
+            border-bottom: 1px solid var(--border);
+
+            color: var(--muted-2);
+
+            font-size: 9.6px;
+
+            text-transform: uppercase;
+        }
+
+        .forecast-table td {
+            padding: 11px 7px;
+
+            border-bottom:
+                1px solid rgba(255,255,255,.045);
+
+            font-size: 10.8px;
+        }
+
+        .forecast-table tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .confidence {
+            display: inline-flex;
+
+            padding: 4px 7px;
+
+            border-radius: 20px;
+
+            background: rgba(52,211,153,.1);
+
+            color: var(--green);
+
+            font-size: 9.6px;
+            font-weight: 700;
+        }
+
+        /* Scenarios */
+
+        .scenario-list {
+            display: flex;
+            flex-direction: column;
+
+            gap: 10px;
+
+            margin-top: 15px;
+        }
+
+        .scenario {
+            padding: 13px;
+
+            border: 1px solid var(--border);
+            border-radius: 13px;
+
+            background: rgba(255,255,255,.025);
+        }
+
+        .scenario-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .scenario-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .scenario-dot {
+            width: 8px;
+            height: 8px;
+
+            border-radius: 50%;
+        }
+
+        .scenario-value {
+            font-family: "Space Grotesk";
+
+            font-size: 14.4px;
+            font-weight: 700;
+        }
+
+        .scenario-text {
+            margin-top: 7px;
+
+            color: var(--muted);
+
+            font-size: 9.6px;
+
+            line-height: 1.45;
+        }
+
+        .scenario-bar {
+            height: 5px;
+
+            margin-top: 9px;
+
+            overflow: hidden;
+
+            border-radius: 20px;
+
+            background: rgba(255,255,255,.06);
+        }
+
+        .scenario-bar span {
+            display: block;
+
+            height: 100%;
+
+            border-radius: inherit;
+        }
+
+        /* =====================================================
+           AI SIGNALS
+        ====================================================== */
+
+        .signal {
+            padding: 12px 0;
+
+            border-bottom:
+                1px solid rgba(255,255,255,.05);
+        }
+
+        .signal:last-child {
+            border-bottom: 0;
+        }
+
+        .signal-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .signal-icon {
+            width: 28px;
+            height: 28px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 9px;
+
+            background: rgba(124,92,255,.12);
+
+            color: var(--purple-light);
+        }
+
+        .signal-title {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .signal-text {
+            margin-top: 7px;
+
+            color: var(--muted);
+
+            font-size: 10.8px;
+
+            line-height: 1.5;
+        }
+
+        .signal-tag {
+            display: inline-flex;
+
+            margin-top: 7px;
+
+            padding: 4px 7px;
+
+            border-radius: 20px;
+
+            background: rgba(96,165,250,.1);
+
+            color: var(--blue);
+
+            font-size: 9.6px;
+            font-weight: 700;
+        }
+
+        /* =====================================================
+           MODEL COMPARISON
+        ====================================================== */
+
+        .models-card {
+            padding: 20px;
+        }
+
+        .model-list {
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, minmax(0,1fr));
+
+            gap: 10px;
+
+            margin-top: 15px;
+        }
+
+        .model-item {
+            padding: 13px;
+
+            border: 1px solid var(--border);
+            border-radius: 13px;
+
+            background: rgba(255,255,255,.025);
+        }
+
+        .model-item.best {
+            border-color:
+                rgba(124,92,255,.35);
+
+            background:
+                rgba(124,92,255,.06);
+        }
+
+        .model-name {
+            color: var(--muted);
+
+            font-size: 10.8px;
+        }
+
+        .model-value {
+            margin-top: 8px;
+
+            font-family: "Space Grotesk";
+
+            font-size: 21.6px;
+            font-weight: 700;
+        }
+
+        .model-metric {
+            margin-top: 5px;
+
+            color: var(--muted-2);
+
+            font-size: 9.6px;
+        }
+
+        .best-badge {
+            display: inline-flex;
+
+            margin-top: 9px;
+
+            padding: 4px 7px;
+
+            border-radius: 20px;
+
+            background: rgba(124,92,255,.13);
+
+            color: var(--purple-light);
+
+            font-size: 8.4px;
+            font-weight: 700;
+        }
+
+        /* =====================================================
+           FOOTER
+        ====================================================== */
+
+        .footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-top: 28px;
+
+            padding: 18px 3px 10px;
+
+            color: var(--muted-2);
+
+            font-size: 10.8px;
+        }
+
+        .footer-right {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* =====================================================
+           MOBILE
+        ====================================================== */
+
+        .mobile-menu {
+            display: none;
+        }
+
+        @media (max-width: 1250px) {
+
+            .lower-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .signal-card {
+                grid-column: span 2;
+            }
+
+            .model-list {
+                grid-template-columns: 1fr 1fr;
+            }
+
+        }
+
+        @media (max-width: 1000px) {
+
+            :root {
+                --sidebar: 0px;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+
+                transition: transform .25s ease;
+
+                width: 250px;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main {
+                margin-left: 0;
+            }
+
+            .mobile-menu {
+                display: grid;
+            }
+
+            .hero {
+                flex-direction: column;
+
+                align-items: flex-start;
+
+                gap: 20px;
+            }
+
+            .forecast-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+        @media (max-width: 760px) {
+
+            .content {
+                padding: 18px;
+            }
+
+            .topbar {
+                padding: 0 18px;
+            }
+
+            .period-select {
+                display: none;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .lower-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .signal-card {
+                grid-column: auto;
+            }
+
+            .model-list {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .hero {
+                padding: 22px;
+            }
+
+            .hero h1 {
+                font-size: 33.6px;
+            }
+
+            .hero-actions {
+                width: 100%;
+            }
+
+            .hero-actions button {
+                flex: 1;
+            }
+
+        }
+
+        @media (max-width: 480px) {
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .model-list {
+                grid-template-columns: 1fr;
+            }
+
+            .model-score {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .chart-legend {
+                display: none;
+            }
+
+            .footer {
+                flex-direction: column;
+                align-items: flex-start;
+
+                gap: 10px;
+            }
+
+        }
+
+        /* =====================================================
+           TOAST
+        ====================================================== */
+
+        .toast {
+            position: fixed;
+
+            z-index: 3000;
+
+            right: 25px;
+            bottom: 25px;
+
+            min-width: 290px;
+
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            padding: 13px 15px;
+
+            border: 1px solid var(--border);
+            border-radius: 14px;
+
+            background: rgba(17,19,28,.97);
+
+            box-shadow: var(--shadow);
+
+            transform: translateY(120px);
+
+            opacity: 0;
+
+            transition: .3s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+
+            opacity: 1;
+        }
+
+        .toast-icon {
+            width: 30px;
+            height: 30px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 9px;
+
+            background: rgba(52,211,153,.12);
+
+            color: var(--green);
+        }
+
+        .toast-title {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .toast-text {
+            margin-top: 3px;
+
+            color: var(--muted);
+
+            font-size: 10.8px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- =========================================================
+     SIDEBAR
+========================================================= -->
+
+<aside class="sidebar" id="sidebar">
+
+    <div class="brand">
+
+        <div class="brand-logo">
+            F
+        </div>
+
+        <div class="brand-name">
+            FinCo <span>AI</span>
+        </div>
+
+    </div>
+
+
+    <div class="workspace">
+
+        <div class="workspace-label">
+            Workspace
+        </div>
+
+        <div class="workspace-name">
+            Finance Intelligence
+        </div>
+
+        <div class="workspace-status">
+            <span class="status-dot"></span>
+            Forecast Engine Online
+        </div>
+
+    </div>
+
+
+    <div class="nav-label">
+        Workspace
+    </div>
+
+
+    <nav class="nav">
+
+        <a class="nav-item" href="dashboard.html">
+            <span class="nav-icon">⌂</span>
+            Dashboard
+        </a>
+
+        <a class="nav-item" href="copilot.html">
+            <span class="nav-icon">◈</span>
+            AI Copilot
+        </a>
+
+        <a class="nav-item" href="agents.html">
+            <span class="nav-icon">🤖</span>
+            AI Agents
+        </a>
+
+        <a class="nav-item" href="ml-models.html">
+            <span class="nav-icon">🧠</span>
+            ML Models
+        </a>
+
+        <a class="nav-item" href="analysis.html">
+            <span class="nav-icon">📊</span>
+            Analysis
+        </a>
+
+        <a class="nav-item" href="collaboration.html">
+            <span class="nav-icon">🤝</span>
+            Collaboration
+        </a>
+
+        <a class="nav-item" href="financial.html">
+            <span class="nav-icon">⌁</span>
+            Transactions
+        </a>
+
+        <a class="nav-item" href="fraud.html">
+            <span class="nav-icon">⚠</span>
+            Fraud & Risk
+            <span class="nav-badge">12</span>
+        </a>
+
+        <a class="nav-item active" href="forecasting.html">
+            <span class="nav-icon">↗</span>
+            Forecasting
+        </a>
+
+        <a class="nav-item" href="documents.html">
+            <span class="nav-icon">▤</span>
+            Documents
+        </a>
+
+    </nav>
+
+
+    <div
+        class="nav-label"
+        style="margin-top:20px;"
+    >
+        Management
+    </div>
+
+
+    <nav class="nav">
+
+        <a class="nav-item" href="reports.html">
+            <span class="nav-icon">▥</span>
+            Reports
+        </a>
+
+        <a class="nav-item" href="balance-sheet.html">
+            <span class="nav-icon">📋</span>
+            Balance Sheet
+        </a>
+
+        <a class="nav-item" href="alerts.html">
+            <span class="nav-icon">⚙</span>
+            Settings
+        </a>
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+        <div class="ai-mini-card">
+
+            <div class="ai-mini-title">
+
+                <div class="ai-mini-icon">
+                    ✦
+                </div>
+
+                Forecast Intelligence
+
+            </div>
+
+            <p>
+                ML models continuously analyze historical
+                financial patterns and generate future forecasts.
+            </p>
+
+        </div>
+
+
+        <div class="profile">
+
+            <div class="avatar">
+                PA
+            </div>
+
+            <div>
+
+                <div class="profile-name">
+                    Finance Admin
+                </div>
+
+                <div class="profile-role">
+                    Administrator
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</aside>
+
+
+<!-- =========================================================
+     MAIN
+========================================================= -->
+
+<main class="main">
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+        <div
+            style="
+                display:flex;
+                align-items:center;
+                gap:10px;
+            "
+        >
+
+            <button
+                class="icon-btn mobile-menu"
+                id="menuBtn"
+            >
+                ☰
+            </button>
+
+            <div class="breadcrumb">
+
+                FinCo AI
+
+                <span>/</span>
+
+                <strong>
+                    AI Forecasting
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="top-actions">
+
+            <select
+                class="period-select"
+                id="forecastPeriod"
+            >
+
+                <option value="30">
+                    30 Day Forecast
+                </option>
+
+                <option value="60">
+                    60 Day Forecast
+                </option>
+
+                <option value="90">
+                    90 Day Forecast
+                </option>
+
+                <option value="180">
+                    6 Month Forecast
+                </option>
+
+            </select>
+
+
+            <button
+                class="icon-btn notification"
+                onclick="
+                    showToast(
+                        'Forecast Alerts',
+                        '3 forecast signals require attention.'
+                    )
+                "
+            >
+                ◌
+            </button>
+
+
+            <button
+                class="icon-btn"
+                onclick="
+                    showToast(
+                        'AI Engine',
+                        'Forecast models are operating normally.'
+                    )
+                "
+            >
+                ✦
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- CONTENT -->
+
+    <div class="content">
+
+
+        <!-- =================================================
+             HERO
+        ================================================== -->
+
+        <section class="hero">
+
+            <div class="hero-grid"></div>
+
+
+            <div class="hero-copy">
+
+                <div class="eyebrow">
+
+                    <span class="status-dot"></span>
+
+                    Predictive Intelligence
+
+                </div>
+
+
+                <h1>
+
+                    See what's coming<br>
+
+                    <span>before it happens.</span>
+
+                </h1>
+
+
+                <p>
+
+                    FinCo AI combines historical financial data,
+                    machine-learning models and intelligent trend
+                    analysis to forecast revenue, expenses, cash flow
+                    and financial risk with confidence intervals.
+
+                </p>
+
+            </div>
+
+
+            <div class="hero-actions">
+
+                <button
+                    class="primary-btn"
+                    onclick="runForecast()"
+                >
+                    ✦ Run Forecast
+                </button>
+
+                <button
+                    class="secondary-btn"
+                    onclick="showToast(
+                        'Scenario Analysis',
+                        'Scenario simulator is ready.'
+                    )"
+                >
+                    ◇ Simulate
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             KPIs
+        ================================================== -->
+
+        <section class="kpi-grid">
+
+
+            <div
+                class="card kpi"
+                style="--kpi-color:var(--purple-light);"
+            >
+
+                <div class="kpi-top">
+
+                    <div class="kpi-label">
+                        Forecast Accuracy
+                    </div>
+
+                    <div class="kpi-icon">
+                        ◎
+                    </div>
+
+                </div>
+
+                <div class="kpi-value">
+                    94.6%
+                </div>
+
+                <div class="kpi-bottom">
+
+                    <span class="positive">
+                        ↑ 2.8%
+                    </span>
+
+                    <span class="muted">
+                        model improvement
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="card kpi"
+                style="--kpi-color:var(--green);"
+            >
+
+                <div class="kpi-top">
+
+                    <div class="kpi-label">
+                        Next Month Revenue
+                    </div>
+
+                    <div class="kpi-icon">
+                        ↗
+                    </div>
+
+                </div>
+
+                <div class="kpi-value">
+                    $3.92M
+                </div>
+
+                <div class="kpi-bottom">
+
+                    <span class="positive">
+                        +6.2%
+                    </span>
+
+                    <span class="muted">
+                        predicted growth
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="card kpi"
+                style="--kpi-color:var(--cyan);"
+            >
+
+                <div class="kpi-top">
+
+                    <div class="kpi-label">
+                        Forecast Horizon
+                    </div>
+
+                    <div class="kpi-icon">
+                        ◷
+                    </div>
+
+                </div>
+
+                <div class="kpi-value">
+                    180 Days
+                </div>
+
+                <div class="kpi-bottom">
+
+                    <span class="positive">
+                        Stable
+                    </span>
+
+                    <span class="muted">
+                        prediction window
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="card kpi"
+                style="--kpi-color:var(--yellow);"
+            >
+
+                <div class="kpi-top">
+
+                    <div class="kpi-label">
+                        Model Confidence
+                    </div>
+
+                    <div class="kpi-icon">
+                        ◆
+                    </div>
+
+                </div>
+
+                <div class="kpi-value">
+                    91.8%
+                </div>
+
+                <div class="kpi-bottom">
+
+                    <span class="positive">
+                        High
+                    </span>
+
+                    <span class="muted">
+                        confidence level
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             FORECAST
+        ================================================== -->
+
+        <div class="section-header">
+
+            <div>
+
+                <div class="section-title">
+                    Revenue Forecast
+                </div>
+
+                <div class="section-subtitle">
+                    Historical performance and ML prediction
+                </div>
+
+            </div>
+
+
+            <a
+                href="financial.html"
+                class="view-link"
+                onclick="
+                    showToast(
+                        'Detailed Forecast',
+                        'Opening forecast analytics.'
+                    );
+                    return false;
+                "
+            >
+                Detailed analytics →
+            </a>
+
+        </div>
+
+
+        <section class="forecast-grid">
+
+
+            <!-- CHART -->
+
+            <div class="card chart-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <div class="card-title">
+                            Revenue Prediction
+                        </div>
+
+                        <div class="card-caption">
+                            Actual vs predicted revenue with confidence range
+                        </div>
+
+                    </div>
+
+
+                    <div class="chart-legend">
+
+                        <div class="legend-item">
+
+                            <span
+                                class="legend-dot"
+                                style="
+                                    background:var(--purple-light);
+                                "
+                            ></span>
+
+                            Actual
+
+                        </div>
+
+
+                        <div class="legend-item">
+
+                            <span
+                                class="legend-dot"
+                                style="
+                                    background:var(--cyan);
+                                "
+                            ></span>
+
+                            Forecast
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="forecast-chart">
+
+                    <svg
+                        viewBox="0 0 900 310"
+                        preserveAspectRatio="none"
+                    >
+
+                        <!-- GRID -->
+
+                        <line
+                            x1="55"
+                            y1="35"
+                            x2="870"
+                            y2="35"
+                            class="grid-line"
+                        />
+
+                        <line
+                            x1="55"
+                            y1="90"
+                            x2="870"
+                            y2="90"
+                            class="grid-line"
+                        />
+
+                        <line
+                            x1="55"
+                            y1="145"
+                            x2="870"
+                            y2="145"
+                            class="grid-line"
+                        />
+
+                        <line
+                            x1="55"
+                            y1="200"
+                            x2="870"
+                            y2="200"
+                            class="grid-line"
+                        />
+
+                        <line
+                            x1="55"
+                            y1="255"
+                            x2="870"
+                            y2="255"
+                            class="grid-line"
+                        />
+
+
+                        <!-- AXIS -->
+
+                        <text
+                            x="10"
+                            y="39"
+                            class="axis"
+                        >
+                            $5M
+                        </text>
+
+                        <text
+                            x="10"
+                            y="94"
+                            class="axis"
+                        >
+                            $4M
+                        </text>
+
+                        <text
+                            x="10"
+                            y="149"
+                            class="axis"
+                        >
+                            $3M
+                        </text>
+
+                        <text
+                            x="10"
+                            y="204"
+                            class="axis"
+                        >
+                            $2M
+                        </text>
+
+                        <text
+                            x="18"
+                            y="259"
+                            class="axis"
+                        >
+                            $1M
+                        </text>
+
+
+                        <!-- CONFIDENCE AREA -->
+
+                        <path
+                            class="upper-bound"
+                            d="
+                                M610 123
+                                L675 111
+                                L740 98
+                                L805 88
+                                L870 75
+                                L870 145
+                                L805 158
+                                L740 172
+                                L675 180
+                                L610 185
+                                Z
+                            "
+                        />
+
+
+                        <!-- ACTUAL -->
+
+                        <path
+                            class="actual-line"
+                            d="
+                                M55 210
+                                L120 196
+                                L185 184
+                                L250 190
+                                L315 165
+                                L380 174
+                                L445 150
+                                L510 138
+                                L575 124
+                                L610 130
+                            "
+                        />
+
+
+                        <!-- FORECAST -->
+
+                        <path
+                            class="forecast-line"
+                            d="
+                                M610 130
+                                L675 116
+                                L740 104
+                                L805 94
+                                L870 82
+                            "
+                        />
+
+
+                        <!-- ACTUAL POINTS -->
+
+                        <circle
+                            cx="55"
+                            cy="210"
+                            r="4"
+                            class="chart-point"
+                        />
+
+                        <circle
+                            cx="185"
+                            cy="184"
+                            r="4"
+                            class="chart-point"
+                        />
+
+                        <circle
+                            cx="315"
+                            cy="165"
+                            r="4"
+                            class="chart-point"
+                        />
+
+                        <circle
+                            cx="445"
+                            cy="150"
+                            r="4"
+                            class="chart-point"
+                        />
+
+                        <circle
+                            cx="575"
+                            cy="124"
+                            r="4"
+                            class="chart-point"
+                        />
+
+
+                        <!-- FORECAST POINTS -->
+
+                        <circle
+                            cx="675"
+                            cy="116"
+                            r="4"
+                            class="forecast-point"
+                        />
+
+                        <circle
+                            cx="740"
+                            cy="104"
+                            r="4"
+                            class="forecast-point"
+                        />
+
+                        <circle
+                            cx="805"
+                            cy="94"
+                            r="4"
+                            class="forecast-point"
+                        />
+
+                        <circle
+                            cx="870"
+                            cy="82"
+                            r="5"
+                            class="forecast-point"
+                        />
+
+
+                        <!-- LABELS -->
+
+                        <text
+                            x="48"
+                            y="285"
+                            class="axis"
+                        >
+                            May
+                        </text>
+
+                        <text
+                            x="112"
+                            y="285"
+                            class="axis"
+                        >
+                            Jun
+                        </text>
+
+                        <text
+                            x="177"
+                            y="285"
+                            class="axis"
+                        >
+                            Jul
+                        </text>
+
+                        <text
+                            x="242"
+                            y="285"
+                            class="axis"
+                        >
+                            Aug
+                        </text>
+
+                        <text
+                            x="307"
+                            y="285"
+                            class="axis"
+                        >
+                            Sep
+                        </text>
+
+                        <text
+                            x="372"
+                            y="285"
+                            class="axis"
+                        >
+                            Oct
+                        </text>
+
+                        <text
+                            x="437"
+                            y="285"
+                            class="axis"
+                        >
+                            Nov
+                        </text>
+
+                        <text
+                            x="502"
+                            y="285"
+                            class="axis"
+                        >
+                            Dec
+                        </text>
+
+                        <text
+                            x="567"
+                            y="285"
+                            class="axis"
+                        >
+                            Jan
+                        </text>
+
+                        <text
+                            x="660"
+                            y="285"
+                            class="axis"
+                        >
+                            Feb
+                        </text>
+
+                        <text
+                            x="725"
+                            y="285"
+                            class="axis"
+                        >
+                            Mar
+                        </text>
+
+                        <text
+                            x="790"
+                            y="285"
+                            class="axis"
+                        >
+                            Apr
+                        </text>
+
+                        <text
+                            x="850"
+                            y="285"
+                            class="axis"
+                        >
+                            May
+                        </text>
+
+                    </svg>
+
+                </div>
+
+            </div>
+
+
+            <!-- MODEL -->
+
+            <div class="card model-card">
+
+                <div class="card-title">
+                    Forecast Model
+                </div>
+
+                <div class="card-caption">
+                    Production model performance
+                </div>
+
+
+                <div class="model-score">
+
+                    <div class="accuracy-ring">
+
+                        <div class="accuracy-inner">
+
+                            <div>
+
+                                <div class="accuracy-number">
+                                    94.6%
+                                </div>
+
+                                <div class="accuracy-label">
+                                    Accuracy
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="model-summary">
+
+                        <strong>
+                            Gradient Boosting
+                        </strong>
+
+                        <p>
+                            Current production model selected
+                            using validation performance and
+                            forecast error metrics.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    style="
+                        margin-top:20px;
+                    "
+                >
+
+                    <div class="model-stat">
+
+                        <span>
+                            MAE
+                        </span>
+
+                        <strong>
+                            0.084
+                        </strong>
+
+                    </div>
+
+
+                    <div class="model-stat">
+
+                        <span>
+                            RMSE
+                        </span>
+
+                        <strong>
+                            0.126
+                        </strong>
+
+                    </div>
+
+
+                    <div class="model-stat">
+
+                        <span>
+                            MAPE
+                        </span>
+
+                        <strong class="positive">
+                            5.4%
+                        </strong>
+
+                    </div>
+
+
+                    <div class="model-stat">
+
+                        <span>
+                            R²
+                        </span>
+
+                        <strong class="positive">
+                            0.946
+                        </strong>
+
+                    </div>
+
+
+                    <div class="model-stat">
+
+                        <span>
+                            Last trained
+                        </span>
+
+                        <strong>
+                            18 min ago
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             FORECAST DETAILS
+        ================================================== -->
+
+        <div class="section-header">
+
+            <div>
+
+                <div class="section-title">
+                    Forecast Intelligence
+                </div>
+
+                <div class="section-subtitle">
+                    Upcoming predictions, scenarios and AI signals
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <section class="lower-grid">
+
+
+            <!-- FORECAST TABLE -->
+
+            <div class="card table-card">
+
+                <div class="card-title">
+                    Upcoming Forecast
+                </div>
+
+                <div class="card-caption">
+                    Revenue predictions by period
+                </div>
+
+
+                <table class="forecast-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Period
+                            </th>
+
+                            <th>
+                                Revenue
+                            </th>
+
+                            <th>
+                                Growth
+                            </th>
+
+                            <th>
+                                Range
+                            </th>
+
+                            <th>
+                                Confidence
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        <tr>
+
+                            <td>
+                                Oct
+                            </td>
+
+                            <td>
+                                $3.92M
+                            </td>
+
+                            <td class="positive">
+                                +6.2%
+                            </td>
+
+                            <td>
+                                $3.71–4.14M
+                            </td>
+
+                            <td>
+                                <span class="confidence">
+                                    94%
+                                </span>
+                            </td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <td>
+                                Nov
+                            </td>
+
+                            <td>
+                                $4.14M
+                            </td>
+
+                            <td class="positive">
+                                +5.6%
+                            </td>
+
+                            <td>
+                                $3.87–4.38M
+                            </td>
+
+                            <td>
+                                <span class="confidence">
+                                    92%
+                                </span>
+                            </td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <td>
+                                Dec
+                            </td>
+
+                            <td>
+                                $4.38M
+                            </td>
+
+                            <td class="positive">
+                                +5.8%
+                            </td>
+
+                            <td>
+                                $4.05–4.72M
+                            </td>
+
+                            <td>
+                                <span class="confidence">
+                                    90%
+                                </span>
+                            </td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <td>
+                                Jan
+                            </td>
+
+                            <td>
+                                $4.61M
+                            </td>
+
+                            <td class="positive">
+                                +5.3%
+                            </td>
+
+                            <td>
+                                $4.19–4.97M
+                            </td>
+
+                            <td>
+                                <span class="confidence">
+                                    88%
+                                </span>
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- SCENARIOS -->
+
+            <div class="card scenario-card">
+
+                <div class="card-title">
+                    Scenario Simulator
+                </div>
+
+                <div class="card-caption">
+                    AI-generated financial outcomes
+                </div>
+
+
+                <div class="scenario-list">
+
+
+                    <div class="scenario">
+
+                        <div class="scenario-head">
+
+                            <div class="scenario-name">
+
+                                <span
+                                    class="scenario-dot"
+                                    style="
+                                        background:var(--green);
+                                    "
+                                ></span>
+
+                                Bull Case
+
+                            </div>
+
+                            <div
+                                class="scenario-value positive"
+                            >
+                                $4.62M
+                            </div>
+
+                        </div>
+
+                        <div class="scenario-text">
+                            Revenue accelerates with stronger
+                            customer acquisition and lower churn.
+                        </div>
+
+                        <div class="scenario-bar">
+                            <span
+                                style="
+                                    width:91%;
+                                    background:var(--green);
+                                "
+                            ></span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="scenario">
+
+                        <div class="scenario-head">
+
+                            <div class="scenario-name">
+
+                                <span
+                                    class="scenario-dot"
+                                    style="
+                                        background:var(--purple);
+                                    "
+                                ></span>
+
+                                Base Case
+
+                            </div>
+
+                            <div
+                                class="scenario-value"
+                            >
+                                $3.92M
+                            </div>
+
+                        </div>
+
+                        <div class="scenario-text">
+                            Current growth patterns continue
+                            with stable operating conditions.
+                        </div>
+
+                        <div class="scenario-bar">
+                            <span
+                                style="
+                                    width:76%;
+                                    background:var(--purple);
+                                "
+                            ></span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="scenario">
+
+                        <div class="scenario-head">
+
+                            <div class="scenario-name">
+
+                                <span
+                                    class="scenario-dot"
+                                    style="
+                                        background:var(--red);
+                                    "
+                                ></span>
+
+                                Bear Case
+
+                            </div>
+
+                            <div
+                                class="scenario-value negative"
+                            >
+                                $3.34M
+                            </div>
+
+                        </div>
+
+                        <div class="scenario-text">
+                            Higher operating costs and weaker
+                            demand reduce expected revenue.
+                        </div>
+
+                        <div class="scenario-bar">
+                            <span
+                                style="
+                                    width:57%;
+                                    background:var(--red);
+                                "
+                            ></span>
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+            <!-- AI SIGNALS -->
+
+            <div class="card signal-card">
+
+                <div class="card-title">
+                    ✦ AI Forecast Signals
+                </div>
+
+                <div class="card-caption">
+                    Machine-generated observations
+                </div>
+
+
+                <div class="signal">
+
+                    <div class="signal-head">
+
+                        <div class="signal-icon">
+                            ↗
+                        </div>
+
+                        <div class="signal-title">
+                            Revenue momentum
+                        </div>
+
+                    </div>
+
+                    <div class="signal-text">
+                        Revenue momentum remains positive.
+                        The model detects a sustained upward trend
+                        across the latest three periods.
+                    </div>
+
+                    <span class="signal-tag">
+                        Growth signal
+                    </span>
+
+                </div>
+
+
+                <div class="signal">
+
+                    <div class="signal-head">
+
+                        <div class="signal-icon">
+                            ⚡
+                        </div>
+
+                        <div class="signal-title">
+                            Expense pressure
+                        </div>
+
+                    </div>
+
+                    <div class="signal-text">
+                        Operating expenses are increasing slightly
+                        faster than the long-term baseline.
+                    </div>
+
+                    <span
+                        class="signal-tag"
+                        style="
+                            background:rgba(251,191,36,.1);
+                            color:var(--yellow);
+                        "
+                    >
+                        Watch
+                    </span>
+
+                </div>
+
+
+                <div class="signal">
+
+                    <div class="signal-head">
+
+                        <div class="signal-icon">
+                            ◆
+                        </div>
+
+                        <div class="signal-title">
+                            Forecast confidence
+                        </div>
+
+                    </div>
+
+                    <div class="signal-text">
+                        Confidence remains high for the next
+                        30–60 days but gradually decreases
+                        as the forecast horizon expands.
+                    </div>
+
+                    <span
+                        class="signal-tag"
+                        style="
+                            background:rgba(52,211,153,.1);
+                            color:var(--green);
+                        "
+                    >
+                        High confidence
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             MODEL COMPARISON
+        ================================================== -->
+
+        <div class="section-header">
+
+            <div>
+
+                <div class="section-title">
+                    Model Performance
+                </div>
+
+                <div class="section-subtitle">
+                    Comparison of candidate forecasting algorithms
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <section class="card models-card">
+
+            <div class="card-header">
+
+                <div>
+
+                    <div class="card-title">
+                        Forecast Model Benchmark
+                    </div>
+
+                    <div class="card-caption">
+                        Validation performance across production candidates
+                    </div>
+
+                </div>
+
+                <span class="confidence">
+                    Best: Gradient Boosting
+                </span>
+
+            </div>
+
+
+            <div class="model-list">
+
+
+                <div class="model-item">
+
+                    <div class="model-name">
+                        Linear Regression
+                    </div>
+
+                    <div class="model-value">
+                        82.4%
+                    </div>
+
+                    <div class="model-metric">
+                        R² · 0.824
+                    </div>
+
+                </div>
+
+
+                <div class="model-item">
+
+                    <div class="model-name">
+                        Random Forest
+                    </div>
+
+                    <div class="model-value">
+                        91.2%
+                    </div>
+
+                    <div class="model-metric">
+                        R² · 0.912
+                    </div>
+
+                </div>
+
+
+                <div class="model-item best">
+
+                    <div class="model-name">
+                        Gradient Boosting
+                    </div>
+
+                    <div class="model-value">
+                        94.6%
+                    </div>
+
+                    <div class="model-metric">
+                        R² · 0.946
+                    </div>
+
+                    <span class="best-badge">
+                        PRODUCTION
+                    </span>
+
+                </div>
+
+
+                <div class="model-item">
+
+                    <div class="model-name">
+                        Hist. Gradient Boosting
+                    </div>
+
+                    <div class="model-value">
+                        93.8%
+                    </div>
+
+                    <div class="model-metric">
+                        R² · 0.938
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+        <!-- FOOTER -->
+
+        <footer class="footer">
+
+            <div>
+                FinCo AI · Predictive Financial Intelligence
+            </div>
+
+            <div class="footer-right">
+
+                <span>
+                    Forecast Engine: Online
+                </span>
+
+                <span>
+                    Model synced 18 min ago
+                </span>
+
+            </div>
+
+        </footer>
+
+    </div>
+
+</main>
+
+
+<!-- =========================================================
+     TOAST
+========================================================= -->
+
+<div
+    class="toast"
+    id="toast"
+>
+
+    <div class="toast-icon">
+        ✓
+    </div>
+
+    <div>
+
+        <div
+            class="toast-title"
+            id="toastTitle"
+        >
+            Success
+        </div>
+
+        <div
+            class="toast-text"
+            id="toastText"
+        >
+            Operation completed.
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    /* ========================================================
+       FINCO AI — FORECASTING
+    ======================================================== */
+
+    const toast =
+        document.getElementById("toast");
+
+    const toastTitle =
+        document.getElementById("toastTitle");
+
+    const toastText =
+        document.getElementById("toastText");
+
+    let toastTimer;
+
+
+    function showToast(title, message) {
+
+        toastTitle.textContent = title;
+
+        toastText.textContent = message;
+
+        toast.classList.add("show");
+
+        clearTimeout(toastTimer);
+
+        toastTimer = setTimeout(() => {
+
+            toast.classList.remove("show");
+
+        }, 3500);
+
+    }
+
+
+    /* ========================================================
+       MOBILE SIDEBAR
+    ======================================================== */
+
+    const sidebar =
+        document.getElementById("sidebar");
+
+    const menuBtn =
+        document.getElementById("menuBtn");
+
+
+    if (menuBtn) {
+
+        menuBtn.addEventListener(
+            "click",
+            () => {
+
+                sidebar.classList.toggle("open");
+
+            }
+        );
+
+    }
+
+
+    document.addEventListener(
+        "click",
+        event => {
+
+            if (
+                window.innerWidth <= 1000 &&
+                sidebar.classList.contains("open") &&
+                !sidebar.contains(event.target) &&
+                !menuBtn.contains(event.target)
+            ) {
+
+                sidebar.classList.remove("open");
+
+            }
+
+        }
+    );
+
+
+    /* ========================================================
+       FORECAST PERIOD
+    ======================================================== */
+
+    document
+        .getElementById("forecastPeriod")
+        .addEventListener(
+            "change",
+            function () {
+
+                showToast(
+                    "Forecast Horizon Updated",
+                    `${this.value}-day prediction window selected.`
+                );
+
+            }
+        );
+
+
+    /* ========================================================
+       RUN FORECAST
+    ======================================================== */
+
+    function runForecast() {
+
+        showToast(
+            "Forecast Started",
+            "FinCo AI is running the production forecasting pipeline..."
+        );
+
+
+        setTimeout(() => {
+
+            showToast(
+                "Forecast Complete",
+                "Revenue predictions and confidence intervals have been refreshed."
+            );
+
+        }, 1800);
+
+
+        /*
+        ========================================================
+        PRODUCTION FASTAPI INTEGRATION
+        ========================================================
+
+        Replace the demo behavior with:
+
+        fetch("/api/forecasting/run", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                horizon: 90,
+                model: "best"
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+        });
+
+
+        Recommended endpoints:
+
+        POST /api/forecasting/run
+
+        GET /api/forecasting/summary
+
+        GET /api/forecasting/revenue
+
+        GET /api/forecasting/expenses
+
+        GET /api/forecasting/cash-flow
+
+        GET /api/forecasting/predictions
+
+        GET /api/forecasting/confidence
+
+        GET /api/forecasting/models
+
+        GET /api/forecasting/metrics
+
+        POST /api/forecasting/scenario
+
+        GET /api/forecasting/signals
+
+
+        ========================================================
+        */
+
+    }
+
+
+    /* ========================================================
+       KEYBOARD SHORTCUT
+    ======================================================== */
+
+    document.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                (event.ctrlKey || event.metaKey) &&
+                event.key.toLowerCase() === "k"
+            ) {
+
+                event.preventDefault();
+
+                showToast(
+                    "FinCo AI",
+                    "Use the AI Copilot to ask about forecast results."
+                );
+
+            }
+
+        }
+    );
+
+
+    /* ========================================================
+       INITIALIZATION
+    ======================================================== */
+
+    window.addEventListener(
+        "load",
+        () => {
+
+            setTimeout(() => {
+
+                showToast(
+                    "Forecast Engine Online",
+                    "Prediction models are ready."
+                );
+
+            }, 900);
+
+        }
+    );
+
+
+    /*
+    ============================================================
+    PRODUCTION ARCHITECTURE
+    ============================================================
+
+
+                      ┌──────────────────────┐
+                      │   Forecasting UI     │
+                      │  forecasting.html    │
+                      └──────────┬───────────┘
+                                 │
+                                 ▼
+                      ┌──────────────────────┐
+                      │       FastAPI        │
+                      │ Forecasting Routes   │
+                      └──────────┬───────────┘
+                                 │
+                  ┌──────────────┼──────────────┐
+                  │              │              │
+                  ▼              ▼              ▼
+             PostgreSQL      Feature Store   Redis Cache
+                  │              │              │
+                  └──────────────┼──────────────┘
+                                 │
+                                 ▼
+                      ┌──────────────────────┐
+                      │   ML Forecasting     │
+                      │                     │
+                      │ Linear Regression   │
+                      │ Random Forest       │
+                      │ Gradient Boosting   │
+                      │ HistGradientBoost   │
+                      │ XGBoost (optional)  │
+                      └──────────┬───────────┘
+                                 │
+                                 ▼
+                      ┌──────────────────────┐
+                      │ Model Evaluation     │
+                      │                     │
+                      │ MAE                 │
+                      │ RMSE                │
+                      │ MAPE                │
+                      │ SMAPE               │
+                      │ WAPE                │
+                      │ R²                  │
+                      │ Forecast Bias       │
+                      └──────────┬───────────┘
+                                 │
+                                 ▼
+                      ┌──────────────────────┐
+                      │ Forecast Service     │
+                      │                     │
+                      │ Predictions         │
+                      │ Confidence          │
+                      │ Scenarios           │
+                      │ Signals             │
+                      └──────────────────────┘
+
+
+    ============================================================
+    */
+
+</script>
+
+</body>
+</html>

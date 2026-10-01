@@ -1,0 +1,2523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Alerts | FinCo AI</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #05060a;
+            --panel: rgba(15, 17, 25, 0.78);
+            --panel-2: rgba(20, 22, 32, 0.92);
+            --border: rgba(255,255,255,0.08);
+
+            --text: #f5f7fb;
+            --muted: #8b93a7;
+
+            --purple: #7c5cff;
+            --purple-2: #9b87ff;
+            --cyan: #22d3ee;
+            --green: #34d399;
+            --red: #fb7185;
+            --orange: #f59e0b;
+            --blue: #60a5fa;
+
+            --shadow: 0 20px 70px rgba(0,0,0,.35);
+            --radius: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 15% 10%, rgba(124,92,255,.12), transparent 30%),
+                radial-gradient(circle at 90% 15%, rgba(34,211,238,.08), transparent 25%),
+                radial-gradient(circle at 50% 100%, rgba(124,92,255,.06), transparent 30%),
+                var(--bg);
+            color: var(--text);
+            font-family: Inter, sans-serif;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: .18;
+            background-image:
+                linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+            background-size: 42px 42px;
+            mask-image: linear-gradient(to bottom, black, transparent);
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        /* =========================
+           APP
+        ========================= */
+
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* =========================
+           SIDEBAR
+        ========================= */
+
+        .sidebar {
+            width: 255px;
+            min-height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+            padding: 22px 16px;
+
+            background: rgba(7,8,13,.92);
+            backdrop-filter: blur(24px);
+            border-right: 1px solid var(--border);
+
+            transition: transform .3s ease;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 5px 9px 28px;
+        }
+
+        .brand-logo {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            border-radius: 13px;
+
+            background:
+                linear-gradient(135deg, var(--purple), #5541c7);
+
+            box-shadow:
+                0 0 30px rgba(124,92,255,.35);
+        }
+
+        .brand-logo svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .brand-name {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -.5px;
+        }
+
+        .brand-name span {
+            color: var(--purple-2);
+        }
+
+        .nav-label {
+            color: #555d70;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            padding: 0 12px 10px;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .nav-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            padding: 12px 13px;
+            border-radius: 12px;
+
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 15.6px;
+            font-weight: 600;
+
+            transition: .2s ease;
+        }
+
+        .nav-item:hover {
+            color: white;
+            background: rgba(255,255,255,.045);
+        }
+
+        .nav-item.active {
+            color: white;
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(124,92,255,.18),
+                    rgba(124,92,255,.05)
+                );
+        }
+
+        .nav-item.active::before {
+            content: "";
+            position: absolute;
+            left: -16px;
+            width: 3px;
+            height: 25px;
+            border-radius: 0 5px 5px 0;
+            background: var(--purple);
+            box-shadow: 0 0 14px var(--purple);
+        }
+
+        .nav-icon {
+            width: 18px;
+            height: 18px;
+            opacity: .9;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            min-width: 22px;
+            height: 21px;
+            display: grid;
+            place-items: center;
+            padding: 0 6px;
+            border-radius: 999px;
+            background: rgba(251,113,133,.15);
+            color: var(--red);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .sidebar-bottom {
+            position: absolute;
+            left: 16px;
+            right: 16px;
+            bottom: 20px;
+        }
+
+        .system-status {
+            padding: 13px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: rgba(255,255,255,.025);
+        }
+
+        .system-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13.2px;
+            font-weight: 700;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 12px var(--green);
+        }
+
+        .system-text {
+            margin-top: 7px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* =========================
+           MAIN
+        ========================= */
+
+        .main {
+            width: calc(100% - 255px);
+            margin-left: 255px;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 32px;
+
+            border-bottom: 1px solid var(--border);
+            background: rgba(5,6,10,.65);
+            backdrop-filter: blur(18px);
+
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .page-title {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 22.8px;
+            font-weight: 700;
+        }
+
+        .page-subtitle {
+            color: var(--muted);
+            font-size: 13.2px;
+            margin-top: 3px;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            position: relative;
+            width: 39px;
+            height: 39px;
+            display: grid;
+            place-items: center;
+
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(255,255,255,.035);
+            color: var(--muted);
+
+            transition: .2s;
+        }
+
+        .icon-btn:hover {
+            color: white;
+            border-color: rgba(124,92,255,.4);
+            background: rgba(124,92,255,.08);
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-left: 8px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7c5cff, #22d3ee);
+            color: white;
+            font-size: 14.4px;
+            font-weight: 800;
+        }
+
+        .profile-name {
+            font-size: 13.2px;
+            font-weight: 700;
+        }
+
+        .profile-role {
+            color: var(--muted);
+            font-size: 10.8px;
+            margin-top: 2px;
+        }
+
+        .mobile-menu {
+            display: none;
+        }
+
+        /* =========================
+           CONTENT
+        ========================= */
+
+        .content {
+            padding: 30px 32px 50px;
+            max-width: 1550px;
+            margin: auto;
+        }
+
+        .hero {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .eyebrow {
+            color: var(--purple-2);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .hero h1 {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: clamp(28px, 4vw, 42px);
+            line-height: 1;
+            letter-spacing: -1.5px;
+        }
+
+        .hero p {
+            max-width: 650px;
+            margin-top: 11px;
+            color: var(--muted);
+            font-size: 14.4px;
+            line-height: 1.7;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 9px;
+        }
+
+        .btn {
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.04);
+            color: white;
+            border-radius: 11px;
+            padding: 10px 15px;
+            font-size: 13.2px;
+            font-weight: 700;
+            transition: .2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            background: rgba(255,255,255,.08);
+        }
+
+        .btn-primary {
+            border-color: rgba(124,92,255,.5);
+            background: linear-gradient(135deg, var(--purple), #6248db);
+            box-shadow: 0 8px 25px rgba(124,92,255,.2);
+        }
+
+        /* =========================
+           SUMMARY CARDS
+        ========================= */
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+
+        .summary-card {
+            position: relative;
+            overflow: hidden;
+
+            padding: 18px;
+            min-height: 115px;
+
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--panel);
+            box-shadow: var(--shadow);
+
+            backdrop-filter: blur(18px);
+        }
+
+        .summary-card::after {
+            content: "";
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            right: -45px;
+            bottom: -45px;
+            border-radius: 50%;
+            background: rgba(124,92,255,.12);
+            filter: blur(10px);
+        }
+
+        .summary-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .summary-label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .summary-icon {
+            width: 32px;
+            height: 32px;
+            display: grid;
+            place-items: center;
+            border-radius: 10px;
+            background: rgba(124,92,255,.1);
+            color: var(--purple-2);
+        }
+
+        .summary-value {
+            margin-top: 15px;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .summary-note {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 10.8px;
+        }
+
+        .up {
+            color: var(--green);
+        }
+
+        .danger {
+            color: var(--red);
+        }
+
+        .warning {
+            color: var(--orange);
+        }
+
+        /* =========================
+           FILTER PANEL
+        ========================= */
+
+        .filter-panel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+
+            padding: 14px;
+            margin-bottom: 16px;
+
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: rgba(15,17,25,.65);
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+
+        .filter-btn {
+            padding: 8px 12px;
+            border-radius: 9px;
+
+            border: 1px solid transparent;
+            background: rgba(255,255,255,.035);
+            color: var(--muted);
+
+            font-size: 12px;
+            font-weight: 700;
+
+            transition: .2s;
+        }
+
+        .filter-btn:hover {
+            color: white;
+        }
+
+        .filter-btn.active {
+            color: white;
+            border-color: rgba(124,92,255,.4);
+            background: rgba(124,92,255,.13);
+        }
+
+        .search-box {
+            position: relative;
+            min-width: 230px;
+        }
+
+        .search-box svg {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 15px;
+            color: var(--muted);
+        }
+
+        .search-box input {
+            width: 100%;
+            height: 34px;
+
+            padding: 0 11px 0 34px;
+
+            border: 1px solid var(--border);
+            outline: none;
+            border-radius: 9px;
+
+            background: rgba(255,255,255,.035);
+            color: white;
+            font-size: 12px;
+        }
+
+        .search-box input:focus {
+            border-color: rgba(124,92,255,.5);
+        }
+
+        /* =========================
+           ALERTS
+        ========================= */
+
+        .alerts-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 310px;
+            gap: 18px;
+        }
+
+        .panel {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--panel);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(18px);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 17px 18px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-title {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 16.8px;
+            font-weight: 700;
+        }
+
+        .panel-meta {
+            color: var(--muted);
+            font-size: 10.8px;
+        }
+
+        .alerts-list {
+            padding: 5px 12px;
+        }
+
+        .alert-item {
+            display: grid;
+            grid-template-columns: 42px 1fr auto;
+            gap: 13px;
+
+            padding: 16px 7px;
+            border-bottom: 1px solid rgba(255,255,255,.055);
+
+            transition: .2s;
+        }
+
+        .alert-item:last-child {
+            border-bottom: 0;
+        }
+
+        .alert-item:hover {
+            background: rgba(255,255,255,.018);
+        }
+
+        .alert-icon {
+            width: 40px;
+            height: 40px;
+            display: grid;
+            place-items: center;
+
+            border-radius: 12px;
+        }
+
+        .alert-icon svg {
+            width: 19px;
+            height: 19px;
+        }
+
+        .alert-icon.fraud {
+            color: var(--red);
+            background: rgba(251,113,133,.1);
+        }
+
+        .alert-icon.forecast {
+            color: var(--cyan);
+            background: rgba(34,211,238,.1);
+        }
+
+        .alert-icon.security {
+            color: var(--orange);
+            background: rgba(245,158,11,.1);
+        }
+
+        .alert-icon.system {
+            color: var(--green);
+            background: rgba(52,211,153,.1);
+        }
+
+        .alert-icon.document {
+            color: var(--purple-2);
+            background: rgba(124,92,255,.1);
+        }
+
+        .alert-title {
+            font-size: 14.4px;
+            font-weight: 700;
+        }
+
+        .alert-description {
+            max-width: 680px;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .alert-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .tag {
+            padding: 4px 7px;
+            border-radius: 6px;
+            background: rgba(255,255,255,.04);
+            color: #9ca3b5;
+            font-size: 9.6px;
+            font-weight: 700;
+        }
+
+        .tag.red {
+            color: var(--red);
+            background: rgba(251,113,133,.08);
+        }
+
+        .tag.green {
+            color: var(--green);
+            background: rgba(52,211,153,.08);
+        }
+
+        .tag.blue {
+            color: var(--cyan);
+            background: rgba(34,211,238,.08);
+        }
+
+        .alert-time {
+            min-width: 68px;
+            text-align: right;
+            color: #646c7d;
+            font-size: 10.8px;
+        }
+
+        .unread-dot {
+            width: 6px;
+            height: 6px;
+            display: inline-block;
+            margin-right: 5px;
+            border-radius: 50%;
+            background: var(--purple);
+            box-shadow: 0 0 10px var(--purple);
+        }
+
+        .alert-actions {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
+
+        .small-btn {
+            padding: 6px 8px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: rgba(255,255,255,.03);
+            color: var(--muted);
+            font-size: 9.6px;
+            font-weight: 700;
+        }
+
+        .small-btn:hover {
+            color: white;
+        }
+
+        /* =========================
+           RIGHT PANEL
+        ========================= */
+
+        .side-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .severity-list {
+            padding: 16px 18px;
+        }
+
+        .severity-row {
+            margin-bottom: 16px;
+        }
+
+        .severity-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .severity-head {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 7px;
+        }
+
+        .severity-name {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .severity-count {
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .progress {
+            height: 6px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(255,255,255,.055);
+        }
+
+        .progress span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+        }
+
+        .progress-critical span {
+            width: 72%;
+            background: var(--red);
+            box-shadow: 0 0 12px rgba(251,113,133,.35);
+        }
+
+        .progress-warning span {
+            width: 51%;
+            background: var(--orange);
+        }
+
+        .progress-info span {
+            width: 35%;
+            background: var(--cyan);
+        }
+
+        .progress-success span {
+            width: 18%;
+            background: var(--green);
+        }
+
+        /* AI Monitor */
+
+        .ai-monitor {
+            padding: 18px;
+        }
+
+        .ai-orb {
+            width: 58px;
+            height: 58px;
+            display: grid;
+            place-items: center;
+
+            margin-bottom: 14px;
+            border-radius: 17px;
+
+            background:
+                radial-gradient(circle at 35% 30%, #b7aaff, var(--purple) 45%, #4332a8);
+
+            box-shadow:
+                0 0 35px rgba(124,92,255,.35),
+                inset 0 0 20px rgba(255,255,255,.13);
+        }
+
+        .ai-orb svg {
+            width: 27px;
+        }
+
+        .ai-monitor h3 {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 18px;
+        }
+
+        .ai-monitor p {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 10.8px;
+            line-height: 1.65;
+        }
+
+        .ai-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .ai-stat {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(255,255,255,.025);
+        }
+
+        .ai-stat strong {
+            display: block;
+            font-size: 16.8px;
+        }
+
+        .ai-stat span {
+            display: block;
+            color: var(--muted);
+            margin-top: 3px;
+            font-size: 9.6px;
+        }
+
+        /* =========================
+           EMPTY STATE
+        ========================= */
+
+        .empty {
+            display: none;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .empty svg {
+            width: 40px;
+            margin-bottom: 12px;
+            color: var(--muted);
+        }
+
+        .empty h3 {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 18px;
+        }
+
+        .empty p {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* =========================
+           TOAST
+        ========================= */
+
+        .toast-container {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            z-index: 500;
+
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            min-width: 280px;
+            max-width: 350px;
+
+            padding: 13px 15px;
+
+            border: 1px solid var(--border);
+            border-radius: 13px;
+
+            background: rgba(14,16,24,.94);
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow);
+
+            animation: toastIn .3s ease;
+        }
+
+        .toast-title {
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .toast-text {
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 10.8px;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 1150px) {
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .alerts-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 800px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .mobile-menu {
+                display: grid;
+                place-items: center;
+                width: 38px;
+                height: 38px;
+                margin-right: 10px;
+
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                background: rgba(255,255,255,.035);
+                color: white;
+            }
+
+            .topbar {
+                padding: 0 18px;
+            }
+
+            .top-left {
+                display: flex;
+                align-items: center;
+            }
+
+            .profile {
+                display: none;
+            }
+
+            .content {
+                padding: 24px 17px 40px;
+            }
+
+            .hero {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .hero-actions {
+                width: 100%;
+            }
+
+            .hero-actions .btn {
+                flex: 1;
+            }
+
+            .filter-panel {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .search-box {
+                width: 100%;
+                min-width: 0;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .summary-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 9px;
+            }
+
+            .summary-card {
+                padding: 13px;
+                min-height: 105px;
+            }
+
+            .summary-value {
+                font-size: 24px;
+            }
+
+            .alert-item {
+                grid-template-columns: 36px 1fr;
+            }
+
+            .alert-icon {
+                width: 35px;
+                height: 35px;
+            }
+
+            .alert-time {
+                grid-column: 2;
+                text-align: left;
+            }
+
+            .alert-actions {
+                justify-content: flex-start;
+            }
+
+            .page-subtitle {
+                display: none;
+            }
+
+            .top-actions .icon-btn:nth-child(2) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- =========================
+         SIDEBAR
+    ========================== -->
+
+    <aside class="sidebar" id="sidebar">
+
+        <div class="brand">
+            <div class="brand-logo">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M6 17V7l6-3 6 3v10l-6 3-6-3Z"
+                          stroke="white"
+                          stroke-width="2"/>
+                    <path d="M9 9h6M9 12h6M9 15h4"
+                          stroke="white"
+                          stroke-width="1.8"
+                          stroke-linecap="round"/>
+                </svg>
+            </div>
+
+            <div class="brand-name">
+                FinCo <span>AI</span>
+            </div>
+        </div>
+
+        <div class="nav-label">Workspace</div>
+
+        <nav class="nav">
+
+            <a href="dashboard.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <rect x="4" y="4" width="6" height="6" rx="1"
+                          stroke="currentColor" stroke-width="1.8"/>
+                    <rect x="14" y="4" width="6" height="6" rx="1"
+                          stroke="currentColor" stroke-width="1.8"/>
+                    <rect x="4" y="14" width="6" height="6" rx="1"
+                          stroke="currentColor" stroke-width="1.8"/>
+                    <rect x="14" y="14" width="6" height="6" rx="1"
+                          stroke="currentColor" stroke-width="1.8"/>
+                </svg>
+                Dashboard
+            </a>
+
+            <a href="copilot.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 3v18M3 12h18"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linecap="round"/>
+                    <circle cx="12" cy="12" r="8"
+                            stroke="currentColor"
+                            stroke-width="1.8"/>
+                </svg>
+                AI Copilot
+            </a>
+
+            <a href="agents.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="8" r="3" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M12 11v10M8 15l4 2 4-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                AI Agents
+            </a>
+
+            <a href="ml-models.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.8"/>
+                </svg>
+                ML Models
+            </a>
+
+            <a href="analysis.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 18V9M10 18V5M16 18v-7M22 18H2"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linecap="round"/>
+                </svg>
+                Analysis
+            </a>
+
+            <a href="collaboration.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/>
+                    <circle cx="17" cy="17" r="4" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M13 11l-2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                Collaboration
+            </a>
+
+            <a href="financial.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 19V5M4 19h16"
+                          stroke="currentColor" stroke-width="1.8"/>
+                    <path d="m7 15 4-4 3 2 5-7"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"/>
+                </svg>
+                Transactions
+            </a>
+
+            <a href="fraud.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 3 4 6v6c0 5 3.4 8.1 8 9 4.6-.9 8-4 8-9V6l-8-3Z"
+                          stroke="currentColor" stroke-width="1.8"/>
+                    <path d="m8.5 12 2.2 2.2 4.8-5"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"/>
+                </svg>
+                Fraud & Risk
+                <span class="nav-badge">12</span>
+            </a>
+
+            <a href="forecasting.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 3v18h18" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M7 14l4-4 3 3 5-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                Forecasting
+            </a>
+
+            <a href="documents.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 4h14v16H5z"
+                          stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M8 8h8M8 12h8M8 16h5"
+                          stroke="currentColor"
+                          stroke-width="1.6"
+                          stroke-linecap="round"/>
+                </svg>
+                Documents
+            </a>
+
+        </nav>
+
+        <div class="nav-label">Management</div>
+
+        <nav class="nav">
+
+            <a href="reports.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                Reports
+            </a>
+
+            <a href="balance-sheet.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M3 10h18M9 4v16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                Balance Sheet
+            </a>
+
+            <a href="alerts.html" class="nav-item active">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                Settings
+                <span class="nav-badge" id="navBadge">12</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="system-status">
+                <div class="system-title">
+                    <span class="status-dot"></span>
+                    All systems operational
+                </div>
+
+                <div class="system-text">
+                    AI services · RAG · Fraud · Forecasting
+                </div>
+            </div>
+        </div>
+
+    </aside>
+
+    <!-- =========================
+         MAIN
+    ========================== -->
+
+    <main class="main">
+
+        <header class="topbar">
+
+            <div class="top-left">
+
+                <button class="mobile-menu" id="mobileMenu">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                        <path d="M4 7h16M4 12h16M4 17h16"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"/>
+                    </svg>
+                </button>
+
+                <div>
+                    <div class="page-title">Alert Center</div>
+                    <div class="page-subtitle">
+                        Real-time financial intelligence & risk monitoring
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="top-actions">
+
+                <button class="icon-btn" onclick="showToast('AI Monitor','Monitoring is active.')">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 3v4M12 17v4M3 12h4M17 12h4"
+                              stroke="currentColor"
+                              stroke-width="1.8"
+                              stroke-linecap="round"/>
+                        <circle cx="12" cy="12" r="5"
+                                stroke="currentColor"
+                                stroke-width="1.8"/>
+                    </svg>
+                </button>
+
+                <button class="icon-btn">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"
+                              stroke="currentColor"
+                              stroke-width="1.7"/>
+                        <path d="M10 21h4"
+                              stroke="currentColor"
+                              stroke-width="1.7"
+                              stroke-linecap="round"/>
+                    </svg>
+                </button>
+
+                <div class="profile">
+                    <div class="avatar">PA</div>
+
+                    <div>
+                        <div class="profile-name">FinCo Admin</div>
+                        <div class="profile-role">Risk & Intelligence</div>
+                    </div>
+                </div>
+
+            </div>
+
+        </header>
+
+        <section class="content">
+
+            <!-- HERO -->
+
+            <div class="hero">
+
+                <div>
+                    <div class="eyebrow">Intelligent monitoring</div>
+
+                    <h1>Alerts & Insights</h1>
+
+                    <p>
+                        FinCo AI continuously monitors transactions, fraud signals,
+                        forecasts, documents, security events and system health.
+                    </p>
+                </div>
+
+                <div class="hero-actions">
+                    <button class="btn" onclick="markAllRead()">
+                        Mark all read
+                    </button>
+
+                    <button class="btn btn-primary" onclick="createDemoAlert()">
+                        + Test alert
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- SUMMARY -->
+
+            <div class="summary-grid">
+
+                <div class="summary-card">
+
+                    <div class="summary-top">
+                        <div class="summary-label">Total Alerts</div>
+
+                        <div class="summary-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"
+                                      stroke="currentColor"
+                                      stroke-width="1.8"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="summary-value" id="totalAlerts">48</div>
+
+                    <div class="summary-note">
+                        <span class="up">+8.4%</span> vs previous period
+                    </div>
+
+                </div>
+
+                <div class="summary-card">
+
+                    <div class="summary-top">
+                        <div class="summary-label">Critical</div>
+
+                        <div class="summary-icon" style="color:var(--red);background:rgba(251,113,133,.1)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 3 2.8 19h18.4L12 3Z"
+                                      stroke="currentColor"
+                                      stroke-width="1.8"
+                                      stroke-linejoin="round"/>
+                                <path d="M12 9v4"
+                                      stroke="currentColor"
+                                      stroke-width="1.8"
+                                      stroke-linecap="round"/>
+                                <circle cx="12" cy="16.5" r=".8"
+                                        fill="currentColor"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="summary-value danger" id="criticalAlerts">7</div>
+
+                    <div class="summary-note">
+                        Requires immediate attention
+                    </div>
+
+                </div>
+
+                <div class="summary-card">
+
+                    <div class="summary-top">
+                        <div class="summary-label">Fraud Signals</div>
+
+                        <div class="summary-icon" style="color:var(--orange);background:rgba(245,158,11,.1)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 3v18M3 12h18"
+                                      stroke="currentColor"
+                                      stroke-width="1.8"
+                                      stroke-linecap="round"/>
+                                <circle cx="12" cy="12" r="8"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="summary-value warning">19</div>
+
+                    <div class="summary-note">
+                        96.8% AI detection confidence
+                    </div>
+
+                </div>
+
+                <div class="summary-card">
+
+                    <div class="summary-top">
+                        <div class="summary-label">Resolved</div>
+
+                        <div class="summary-icon" style="color:var(--green);background:rgba(52,211,153,.1)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="m5 12 4 4L19 6"
+                                      stroke="currentColor"
+                                      stroke-width="2"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="summary-value up">31</div>
+
+                    <div class="summary-note">
+                        <span class="up">64.6%</span> resolution rate
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- FILTER -->
+
+            <div class="filter-panel">
+
+                <div class="filters">
+
+                    <button class="filter-btn active" data-filter="all">
+                        All
+                    </button>
+
+                    <button class="filter-btn" data-filter="fraud">
+                        Fraud
+                    </button>
+
+                    <button class="filter-btn" data-filter="forecast">
+                        Forecast
+                    </button>
+
+                    <button class="filter-btn" data-filter="security">
+                        Security
+                    </button>
+
+                    <button class="filter-btn" data-filter="system">
+                        System
+                    </button>
+
+                    <button class="filter-btn" data-filter="document">
+                        Documents
+                    </button>
+
+                </div>
+
+                <div class="search-box">
+
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="11" cy="11" r="7"
+                                stroke="currentColor"
+                                stroke-width="1.8"/>
+                        <path d="m16 16 5 5"
+                              stroke="currentColor"
+                              stroke-width="1.8"
+                              stroke-linecap="round"/>
+                    </svg>
+
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Search alerts..."
+                    >
+
+                </div>
+
+            </div>
+
+            <!-- ALERT LAYOUT -->
+
+            <div class="alerts-layout">
+
+                <!-- ALERT LIST -->
+
+                <section class="panel">
+
+                    <div class="panel-header">
+
+                        <div>
+                            <div class="panel-title">Live Alert Stream</div>
+                            <div class="panel-meta">
+                                AI-generated and rule-based intelligence
+                            </div>
+                        </div>
+
+                        <div class="panel-meta">
+                            Updated just now
+                        </div>
+
+                    </div>
+
+                    <div class="alerts-list" id="alertsList">
+
+                        <!-- ALERT 1 -->
+
+                        <article
+                            class="alert-item"
+                            data-type="fraud"
+                            data-search="high risk transaction fraud payment blocked">
+
+                            <div class="alert-icon fraud">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 3 2.8 19h18.4L12 3Z"
+                                          stroke="currentColor"
+                                          stroke-width="1.8"
+                                          stroke-linejoin="round"/>
+                                    <path d="M12 9v4"
+                                          stroke="currentColor"
+                                          stroke-width="1.8"
+                                          stroke-linecap="round"/>
+                                    <circle cx="12" cy="16.5" r=".8"
+                                            fill="currentColor"/>
+                                </svg>
+                            </div>
+
+                            <div>
+
+                                <div class="alert-title">
+                                    High-risk transaction detected
+                                </div>
+
+                                <div class="alert-description">
+                                    AI fraud engine detected an unusual transaction
+                                    pattern with a risk score of 94.7%.
+                                    Transaction automatically placed under review.
+                                </div>
+
+                                <div class="alert-tags">
+                                    <span class="tag red">Critical</span>
+                                    <span class="tag">Fraud Agent</span>
+                                    <span class="tag">Risk 94.7%</span>
+                                </div>
+
+                                <div class="alert-actions">
+                                    <button class="small-btn"
+                                            onclick="resolveAlert(this)">
+                                        Resolve
+                                    </button>
+
+                                    <button class="small-btn"
+                                            onclick="showToast('Transaction','Opening transaction investigation...')">
+                                        Investigate
+                                    </button>
+                                </div>
+
+                            </div>
+
+                            <div class="alert-time">
+                                <span class="unread-dot"></span>
+                                2 min ago
+                            </div>
+
+                        </article>
+
+                        <!-- ALERT 2 -->
+
+                        <article
+                            class="alert-item"
+                            data-type="forecast"
+                            data-search="revenue forecast demand prediction">
+
+                            <div class="alert-icon forecast">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M4 18V9M10 18V5M16 18v-7M22 18H2"
+                                          stroke="currentColor"
+                                          stroke-width="1.8"
+                                          stroke-linecap="round"/>
+                                </svg>
+                            </div>
+
+                            <div>
+
+                                <div class="alert-title">
+                                    Revenue forecast updated
+                                </div>
+
+                                <div class="alert-description">
+                                    Forecast Agent updated the next 30-day revenue
+                                    projection. Expected revenue increased by 8.6%
+                                    based on recent transaction trends.
+                                </div>
+
+                                <div class="alert-tags">
+                                    <span class="tag blue">Forecast</span>
+                                    <span class="tag">30 days</span>
+                                    <span class="tag green">+8.6%</span>
+                                </div>
+
+                            </div>
+
+                            <div class="alert-time">
+                                8 min ago
+                            </div>
+
+                        </article>
+
+                        <!-- ALERT 3 -->
+
+                        <article
+                            class="alert-item"
+                            data-type="security"
+                            data-search="login security suspicious session">
+
+                            <div class="alert-icon security">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 3 4 6v6c0 5 3.4 8.1 8 9 4.6-.9 8-4 8-9V6l-8-3Z"
+                                          stroke="currentColor"
+                                          stroke-width="1.8"/>
+                                    <path d="M12 8v4"
+                                          stroke="currentColor"
+                                          stroke-width="1.8"
+                                          stroke-linecap="round"/>
+                                    <circle cx="12" cy="15.5" r=".8"
+                                            fill="currentColor"/>
+                                </svg>
+                            </div>
+
+                            <div>
+
+                                <div class="alert-title">
+                                    Suspicious authentication event
+                                </div>
+
+                                <div class="alert-description">
+                                    Multiple failed authentication attempts were
+                                    detected within a short period. Security policy
+                                    automatically increased monitoring.
+                                </div>
+
+                                <div class="alert-tags">
+                                    <span class="tag red">Security</span>
+                                    <span class="tag">Authentication</span>
+                                    <span class="tag">Monitoring</span>
+                                </div>
+
+                            </div>
+
+                            <div class="alert-time">
+                                <span class="unread-dot"></span>
+                                21 min ago
+                            </div>
+
+                        </article>
+
+                        <!-- ALERT 4 -->
+
+                        <article
+                            class="alert-item"
+                            data-type="system"
+                            data-search="system service healthy api">
+
+                            <div class="alert-icon system">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="m5 12 4 4L19 6"
+                                          stroke="currentColor"
+                                          stroke-width="2"
+                                          stroke-linecap="round"
+                                          stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+
+                            <div>
+
+                                <div class="alert-title">
+                                    AI pipeline completed successfully
+                                </div>
+
+                                <div class="alert-description">
+                                    Document ingestion, embedding generation,
+                                    vector indexing and RAG evaluation completed
+                                    without errors.
+                                </div>
+
+                                <div class="alert-tags">
+                                    <span class="tag green">Healthy</span>
+                                    <span class="tag">RAG Pipeline</span>
+                                    <span class="tag">2,481 docs</span>
+                                </div>
+
+                            </div>
+
+                            <div class="alert-time">
+                                34 min ago
+                            </div>
+
+                        </article>
+
+                        <!-- ALERT 5 -->
+
+                        <article
+                            class="alert-item"
+                            data-type="document"
+                            data-search="document contract report extraction">
+
+                            <div class="alert-icon document">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M5 4h14v16H5z"
+                                          stroke="currentColor"
+                                          stroke-width="1.8"/>
+                                    <path d="M8 8h8M8 12h8M8 16h5"
+                                          stroke="currentColor"
+                                          stroke-width="1.6"
+                                          stroke-linecap="round"/>
+                                </svg>
+                            </div>
+
+                            <div>
+
+                                <div class="alert-title">
+                                    Financial document processed
+                                </div>
+
+                                <div class="alert-description">
+                                    Annual financial report successfully processed.
+                                    Metadata extraction, semantic chunking and
+                                    citation indexing completed.
+                                </div>
+
+                                <div class="alert-tags">
+                                    <span class="tag">Document Agent</span>
+                                    <span class="tag green">Processed</span>
+                                    <span class="tag">RAG Ready</span>
+                                </div>
+
+                            </div>
+
+                            <div class="alert-time">
+                                48 min ago
+                            </div>
+
+                        </article>
+
+                        <!-- ALERT 6 -->
+
+                        <article
+                            class="alert-item"
+                            data-type="fraud"
+                            data-search="fraud velocity anomaly transaction">
+
+                            <div class="alert-icon fraud">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M4 16 8 12l3 3 8-9"
+                                          stroke="currentColor"
+                                          stroke-width="1.8"
+                                          stroke-linecap="round"
+                                          stroke-linejoin="round"/>
+                                    <path d="M16 6h3v3"
+                                          stroke="currentColor"
+                                          stroke-width="1.8"
+                                          stroke-linecap="round"
+                                          stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+
+                            <div>
+
+                                <div class="alert-title">
+                                    Transaction velocity anomaly
+                                </div>
+
+                                <div class="alert-description">
+                                    Customer transaction frequency exceeded the
+                                    expected behavioral baseline by 4.8×.
+                                    Fraud Agent recommends manual review.
+                                </div>
+
+                                <div class="alert-tags">
+                                    <span class="tag red">High Risk</span>
+                                    <span class="tag">Velocity</span>
+                                    <span class="tag">4.8× baseline</span>
+                                </div>
+
+                            </div>
+
+                            <div class="alert-time">
+                                1 hr ago
+                            </div>
+
+                        </article>
+
+                        <!-- ALERT 7 -->
+
+                        <article
+                            class="alert-item"
+                            data-type="forecast"
+                            data-search="cash flow forecast warning">
+
+                            <div class="alert-icon forecast">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M4 18V9M10 18V5M16 18v-7M22 18H2"
+                                          stroke="currentColor"
+                                          stroke-width="1.8"
+                                          stroke-linecap="round"/>
+                                </svg>
+                            </div>
+
+                            <div>
+
+                                <div class="alert-title">
+                                    Cash-flow variance detected
+                                </div>
+
+                                <div class="alert-description">
+                                    Forecast variance crossed the configured
+                                    monitoring threshold. Expected short-term
+                                    cash flow is 5.2% below baseline.
+                                </div>
+
+                                <div class="alert-tags">
+                                    <span class="tag">Forecast</span>
+                                    <span class="tag red">-5.2%</span>
+                                </div>
+
+                            </div>
+
+                            <div class="alert-time">
+                                1 hr ago
+                            </div>
+
+                        </article>
+
+                    </div>
+
+                    <div class="empty" id="emptyState">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <circle cx="11" cy="11" r="7"
+                                    stroke="currentColor"
+                                    stroke-width="1.7"/>
+                            <path d="m16 16 5 5"
+                                  stroke="currentColor"
+                                  stroke-width="1.7"
+                                  stroke-linecap="round"/>
+                        </svg>
+
+                        <h3>No alerts found</h3>
+
+                        <p>
+                            Try another category or search term.
+                        </p>
+                    </div>
+
+                </section>
+
+                <!-- RIGHT COLUMN -->
+
+                <aside class="side-stack">
+
+                    <!-- SEVERITY -->
+
+                    <section class="panel">
+
+                        <div class="panel-header">
+
+                            <div>
+                                <div class="panel-title">
+                                    Alert Severity
+                                </div>
+
+                                <div class="panel-meta">
+                                    Current distribution
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="severity-list">
+
+                            <div class="severity-row">
+
+                                <div class="severity-head">
+                                    <span class="severity-name">
+                                        Critical
+                                    </span>
+
+                                    <span class="severity-count danger">
+                                        7
+                                    </span>
+                                </div>
+
+                                <div class="progress progress-critical">
+                                    <span></span>
+                                </div>
+
+                            </div>
+
+                            <div class="severity-row">
+
+                                <div class="severity-head">
+                                    <span class="severity-name">
+                                        Warning
+                                    </span>
+
+                                    <span class="severity-count warning">
+                                        14
+                                    </span>
+                                </div>
+
+                                <div class="progress progress-warning">
+                                    <span></span>
+                                </div>
+
+                            </div>
+
+                            <div class="severity-row">
+
+                                <div class="severity-head">
+                                    <span class="severity-name">
+                                        Informational
+                                    </span>
+
+                                    <span class="severity-count">
+                                        19
+                                    </span>
+                                </div>
+
+                                <div class="progress progress-info">
+                                    <span></span>
+                                </div>
+
+                            </div>
+
+                            <div class="severity-row">
+
+                                <div class="severity-head">
+                                    <span class="severity-name">
+                                        Resolved
+                                    </span>
+
+                                    <span class="severity-count up">
+                                        8
+                                    </span>
+                                </div>
+
+                                <div class="progress progress-success">
+                                    <span></span>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+                    <!-- AI MONITOR -->
+
+                    <section class="panel ai-monitor">
+
+                        <div class="ai-orb">
+
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M12 3v4M12 17v4M3 12h4M17 12h4"
+                                      stroke="white"
+                                      stroke-width="1.8"
+                                      stroke-linecap="round"/>
+                                <circle cx="12" cy="12" r="5"
+                                        stroke="white"
+                                        stroke-width="1.8"/>
+                            </svg>
+
+                        </div>
+
+                        <h3>AI Monitoring Engine</h3>
+
+                        <p>
+                            Autonomous agents continuously evaluate transaction
+                            behavior, financial forecasts, documents and security
+                            events.
+                        </p>
+
+                        <div class="ai-stats">
+
+                            <div class="ai-stat">
+                                <strong>96.8%</strong>
+                                <span>Detection accuracy</span>
+                            </div>
+
+                            <div class="ai-stat">
+                                <strong>1.4s</strong>
+                                <span>Avg response</span>
+                            </div>
+
+                            <div class="ai-stat">
+                                <strong>24/7</strong>
+                                <span>Monitoring</span>
+                            </div>
+
+                            <div class="ai-stat">
+                                <strong>5</strong>
+                                <span>AI agents</span>
+                            </div>
+
+                        </div>
+
+                    </section>
+
+                </aside>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+    /* ==========================================
+       FINCO AI — ALERT CENTER
+    ========================================== */
+
+    const alertsList = document.getElementById("alertsList");
+    const emptyState = document.getElementById("emptyState");
+    const searchInput = document.getElementById("searchInput");
+    const navBadge = document.getElementById("navBadge");
+    const totalAlerts = document.getElementById("totalAlerts");
+    const criticalAlerts = document.getElementById("criticalAlerts");
+
+    let activeFilter = "all";
+
+    /* ==========================================
+       MOBILE SIDEBAR
+    ========================================== */
+
+    document
+        .getElementById("mobileMenu")
+        .addEventListener("click", () => {
+
+            document
+                .getElementById("sidebar")
+                .classList.toggle("open");
+
+        });
+
+    /* ==========================================
+       FILTERS
+    ========================================== */
+
+    document.querySelectorAll(".filter-btn").forEach(button => {
+
+        button.addEventListener("click", () => {
+
+            document
+                .querySelectorAll(".filter-btn")
+                .forEach(btn => btn.classList.remove("active"));
+
+            button.classList.add("active");
+
+            activeFilter = button.dataset.filter;
+
+            applyFilters();
+
+        });
+
+    });
+
+    /* ==========================================
+       SEARCH
+    ========================================== */
+
+    searchInput.addEventListener("input", applyFilters);
+
+    function applyFilters() {
+
+        const query =
+            searchInput.value
+                .trim()
+                .toLowerCase();
+
+        const items =
+            document.querySelectorAll(".alert-item");
+
+        let visible = 0;
+
+        items.forEach(item => {
+
+            const type = item.dataset.type;
+            const search = item.dataset.search || "";
+
+            const matchesFilter =
+                activeFilter === "all" ||
+                type === activeFilter;
+
+            const matchesSearch =
+                !query ||
+                search.includes(query) ||
+                item.innerText.toLowerCase().includes(query);
+
+            if (matchesFilter && matchesSearch) {
+
+                item.style.display = "grid";
+                visible++;
+
+            } else {
+
+                item.style.display = "none";
+
+            }
+
+        });
+
+        emptyState.style.display =
+            visible === 0 ? "block" : "none";
+
+    }
+
+    /* ==========================================
+       MARK ALL READ
+    ========================================== */
+
+    function markAllRead() {
+
+        document
+            .querySelectorAll(".unread-dot")
+            .forEach(dot => dot.remove());
+
+        navBadge.textContent = "0";
+
+        showToast(
+            "Alerts updated",
+            "All notifications have been marked as read."
+        );
+
+    }
+
+    /* ==========================================
+       RESOLVE ALERT
+    ========================================== */
+
+    function resolveAlert(button) {
+
+        const item =
+            button.closest(".alert-item");
+
+        if (!item) return;
+
+        item.style.opacity = "0.45";
+
+        const tag =
+            item.querySelector(".tag.red");
+
+        if (tag) {
+
+            tag.classList.remove("red");
+            tag.classList.add("green");
+            tag.textContent = "Resolved";
+
+        }
+
+        button.textContent = "Resolved";
+        button.disabled = true;
+
+        const current =
+            parseInt(
+                criticalAlerts.textContent,
+                10
+            );
+
+        if (current > 0) {
+
+            criticalAlerts.textContent =
+                current - 1;
+
+        }
+
+        showToast(
+            "Alert resolved",
+            "The selected alert has been marked as resolved."
+        );
+
+    }
+
+    /* ==========================================
+       DEMO ALERT
+    ========================================== */
+
+    function createDemoAlert() {
+
+        const article =
+            document.createElement("article");
+
+        article.className = "alert-item";
+
+        article.dataset.type = "fraud";
+        article.dataset.search =
+            "demo fraud transaction anomaly test";
+
+        article.innerHTML = `
+            <div class="alert-icon fraud">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M12 3 2.8 19h18.4L12 3Z"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linejoin="round"/>
+                    <path d="M12 9v4"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linecap="round"/>
+                    <circle cx="12" cy="16.5" r=".8"
+                            fill="currentColor"/>
+                </svg>
+            </div>
+
+            <div>
+
+                <div class="alert-title">
+                    Demo fraud alert generated
+                </div>
+
+                <div class="alert-description">
+                    FinCo AI detected a simulated high-risk
+                    transaction for demonstration purposes.
+                </div>
+
+                <div class="alert-tags">
+                    <span class="tag red">Demo</span>
+                    <span class="tag">Fraud Agent</span>
+                    <span class="tag">Risk 91.4%</span>
+                </div>
+
+                <div class="alert-actions">
+                    <button
+                        class="small-btn"
+                        onclick="resolveAlert(this)">
+                        Resolve
+                    </button>
+
+                    <button
+                        class="small-btn"
+                        onclick="showToast('Investigation','Demo investigation opened.')">
+                        Investigate
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="alert-time">
+                <span class="unread-dot"></span>
+                Just now
+            </div>
+        `;
+
+        alertsList.prepend(article);
+
+        const count =
+            parseInt(totalAlerts.textContent, 10);
+
+        totalAlerts.textContent = count + 1;
+
+        navBadge.textContent =
+            parseInt(navBadge.textContent || "0", 10) + 1;
+
+        applyFilters();
+
+        showToast(
+            "New AI alert",
+            "A simulated fraud alert was generated."
+        );
+
+    }
+
+    /* ==========================================
+       TOAST
+    ========================================== */
+
+    function showToast(title, message) {
+
+        const container =
+            document.getElementById("toastContainer");
+
+        const toast =
+            document.createElement("div");
+
+        toast.className = "toast";
+
+        toast.innerHTML = `
+            <div class="toast-title">
+                ${escapeHtml(title)}
+            </div>
+
+            <div class="toast-text">
+                ${escapeHtml(message)}
+            </div>
+        `;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+
+            toast.style.opacity = "0";
+            toast.style.transform = "translateY(10px)";
+            toast.style.transition = ".25s";
+
+            setTimeout(() => toast.remove(), 250);
+
+        }, 3200);
+
+    }
+
+    function escapeHtml(value) {
+
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+
+    }
+
+    /* ==========================================
+       DEMO REAL-TIME ALERT SIMULATION
+    ========================================== */
+
+    let simulationEnabled = false;
+
+    function startAlertSimulation() {
+
+        if (simulationEnabled) return;
+
+        simulationEnabled = true;
+
+        setInterval(() => {
+
+            if (Math.random() > 0.82) {
+
+                navBadge.textContent =
+                    parseInt(navBadge.textContent || "0", 10) + 1;
+
+                showToast(
+                    "New monitoring event",
+                    "FinCo AI has detected a new activity."
+                );
+
+            }
+
+        }, 15000);
+
+    }
+
+    startAlertSimulation();
+
+    /* ==========================================
+       FUTURE FASTAPI INTEGRATION
+    ========================================== */
+
+    /*
+        Replace demo data with:
+
+        GET /api/alerts
+        GET /api/alerts?severity=critical
+        GET /api/alerts?type=fraud
+        PATCH /api/alerts/{alert_id}/read
+        PATCH /api/alerts/{alert_id}/resolve
+
+        Example:
+
+        async function loadAlerts() {
+
+            const response = await fetch("/api/alerts", {
+                headers: {
+                    "Authorization":
+                        `Bearer ${localStorage.getItem("access_token")}`
+                }
+            });
+
+            const data = await response.json();
+
+            renderAlerts(data.alerts);
+        }
+
+        Recommended production architecture:
+
+        Fraud Agent
+             ↓
+        Risk Engine
+             ↓
+        Alert Service
+             ↓
+        PostgreSQL / Redis
+             ↓
+        FastAPI
+             ↓
+        alerts.html
+
+        For real-time alerts:
+
+        FastAPI WebSocket
+             ↓
+        Browser WebSocket
+             ↓
+        Live Alert Stream
+    */
+
+    /* ==========================================
+       KEYBOARD SHORTCUT
+    ========================================== */
+
+    document.addEventListener("keydown", event => {
+
+        if ((event.ctrlKey || event.metaKey) && event.key === "k") {
+
+            event.preventDefault();
+
+            searchInput.focus();
+
+        }
+
+        if (event.key === "Escape") {
+
+            searchInput.value = "";
+            applyFilters();
+
+        }
+
+    });
+
+</script>
+
+</body>
+</html>

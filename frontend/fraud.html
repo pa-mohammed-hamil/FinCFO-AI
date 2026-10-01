@@ -1,0 +1,3736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Fraud Intelligence | FinCo AI</title>
+
+    <meta
+        name="description"
+        content="FinCo AI Fraud Intelligence — real-time fraud detection, risk analytics, anomaly monitoring and AI-powered transaction investigation."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet"
+    />
+
+    <style>
+        :root {
+            --bg: #05060a;
+            --bg-soft: #090b12;
+            --panel: rgba(15, 18, 28, .78);
+            --panel-solid: #10131d;
+            --panel-2: #131722;
+
+            --border: rgba(255,255,255,.08);
+            --border-hover: rgba(255,255,255,.15);
+
+            --text: #f5f7fb;
+            --muted: #8e96a8;
+            --muted-2: #697184;
+
+            --purple: #7c5cff;
+            --purple-light: #9b87ff;
+            --cyan: #22d3ee;
+            --green: #34d399;
+            --yellow: #fbbf24;
+            --red: #fb7185;
+            --orange: #fb923c;
+            --blue: #60a5fa;
+
+            --shadow: 0 25px 80px rgba(0,0,0,.35);
+
+            --sidebar-width: 250px;
+            --topbar-height: 76px;
+
+            --radius: 18px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(
+                    circle at 75% 5%,
+                    rgba(124,92,255,.12),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 20% 35%,
+                    rgba(34,211,238,.055),
+                    transparent 25%
+                ),
+                var(--bg);
+            color: var(--text);
+            font-family: Inter, sans-serif;
+            overflow-x: hidden;
+        }
+
+        button,
+        input,
+        select,
+        textarea {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        ::selection {
+            background: rgba(124,92,255,.35);
+        }
+
+        /* =========================================================
+           SCROLLBAR
+        ========================================================= */
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #252a38;
+            border-radius: 20px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #363d50;
+        }
+
+        /* =========================================================
+           BACKGROUND
+        ========================================================= */
+
+        .background-grid {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: .18;
+            background-image:
+                linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+            background-size: 50px 50px;
+            mask-image: linear-gradient(to bottom, black, transparent 85%);
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(90px);
+            pointer-events: none;
+            opacity: .12;
+        }
+
+        .orb.one {
+            width: 300px;
+            height: 300px;
+            background: var(--red);
+            top: 20%;
+            right: 5%;
+        }
+
+        .orb.two {
+            width: 260px;
+            height: 260px;
+            background: var(--purple);
+            bottom: 5%;
+            left: 10%;
+        }
+
+        /* =========================================================
+           SIDEBAR
+        ========================================================= */
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            z-index: 100;
+            padding: 22px 16px;
+            background: rgba(7,9,15,.88);
+            backdrop-filter: blur(25px);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 4px 9px 28px;
+        }
+
+        .brand-logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    #5540d8
+                );
+            box-shadow:
+                0 8px 30px rgba(124,92,255,.3);
+            font-weight: 800;
+            font-family: "Space Grotesk", sans-serif;
+        }
+
+        .brand-name {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 21.6px;
+            font-weight: 700;
+        }
+
+        .brand-ai {
+            color: var(--purple-light);
+        }
+
+        .nav-label {
+            color: var(--muted-2);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 0 11px;
+            margin: 12px 0 9px;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-item {
+            min-height: 43px;
+            padding: 0 12px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--muted);
+            font-size: 15.6px;
+            font-weight: 500;
+            transition: .2s ease;
+        }
+
+        .nav-item:hover {
+            color: var(--text);
+            background: rgba(255,255,255,.045);
+        }
+
+        .nav-item.active {
+            color: white;
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(124,92,255,.20),
+                    rgba(124,92,255,.06)
+                );
+            border: 1px solid rgba(124,92,255,.18);
+        }
+
+        .nav-icon {
+            width: 20px;
+            text-align: center;
+            font-size: 19.2px;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            min-width: 22px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            background: rgba(251,113,133,.14);
+            color: var(--red);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+        }
+
+        .system-card {
+            padding: 14px;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.025);
+        }
+
+        .system-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .system-title {
+            font-size: 13.2px;
+            color: var(--muted);
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--green);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 12px currentColor;
+        }
+
+        .system-bar {
+            height: 5px;
+            border-radius: 99px;
+            overflow: hidden;
+            background: rgba(255,255,255,.06);
+        }
+
+        .system-bar span {
+            display: block;
+            width: 99.8%;
+            height: 100%;
+            background: var(--green);
+            border-radius: inherit;
+        }
+
+        .system-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 10.8px;
+            color: var(--muted-2);
+        }
+
+        /* =========================================================
+           MAIN
+        ========================================================= */
+
+        .main {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        /* =========================================================
+           TOPBAR
+        ========================================================= */
+
+        .topbar {
+            height: var(--topbar-height);
+            position: sticky;
+            top: 0;
+            z-index: 80;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(5,6,10,.72);
+            backdrop-filter: blur(22px);
+        }
+
+        .top-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .page-title {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 19.2px;
+            font-weight: 600;
+        }
+
+        .breadcrumb {
+            color: var(--muted-2);
+            font-size: 14.4px;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.025);
+            color: var(--muted);
+            display: grid;
+            place-items: center;
+            transition: .2s;
+        }
+
+        .icon-btn:hover {
+            color: white;
+            border-color: var(--border-hover);
+            background: rgba(255,255,255,.06);
+        }
+
+        .notification {
+            position: relative;
+        }
+
+        .notification::after {
+            content: "";
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--red);
+            border: 2px solid #080a10;
+        }
+
+        .user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-left: 9px;
+            border-left: 1px solid var(--border);
+            margin-left: 4px;
+        }
+
+        .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            background:
+                linear-gradient(
+                    135deg,
+                    #312e81,
+                    #7c3aed
+                );
+            font-size: 13.2px;
+            font-weight: 700;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .user-name {
+            font-size: 13.2px;
+            font-weight: 600;
+        }
+
+        .user-role {
+            font-size: 10.8px;
+            color: var(--muted-2);
+        }
+
+        /* =========================================================
+           CONTENT
+        ========================================================= */
+
+        .content {
+            padding: 32px;
+            max-width: 1800px;
+            margin: auto;
+        }
+
+        .hero {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 25px;
+            margin-bottom: 26px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(251,113,133,.08);
+            border: 1px solid rgba(251,113,133,.15);
+            color: #ff9aac;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .7px;
+            text-transform: uppercase;
+            margin-bottom: 13px;
+        }
+
+        .hero h1 {
+            max-width: 700px;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: clamp(28px, 3vw, 43px);
+            line-height: 1.05;
+            letter-spacing: -1.5px;
+            margin-bottom: 10px;
+        }
+
+        .hero p {
+            color: var(--muted);
+            font-size: 15.6px;
+            line-height: 1.7;
+            max-width: 680px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 9px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            height: 40px;
+            padding: 0 15px;
+            border-radius: 11px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.035);
+            color: #dce1ea;
+            font-size: 13.2px;
+            font-weight: 600;
+            transition: .2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            border-color: var(--border-hover);
+            background: rgba(255,255,255,.07);
+        }
+
+        .btn-primary {
+            color: white;
+            border-color: transparent;
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    #6245e9
+                );
+            box-shadow: 0 8px 25px rgba(124,92,255,.2);
+        }
+
+        .btn-danger {
+            color: #ffd7dd;
+            background: rgba(251,113,133,.09);
+            border-color: rgba(251,113,133,.18);
+        }
+
+        /* =========================================================
+           KPI GRID
+        ========================================================= */
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(18,21,32,.9),
+                    rgba(10,12,19,.82)
+                );
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .kpi-card {
+            padding: 19px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::after {
+            content: "";
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            right: -40px;
+            bottom: -45px;
+            border-radius: 50%;
+            background: var(--accent);
+            filter: blur(35px);
+            opacity: .15;
+        }
+
+        .kpi-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .kpi-label {
+            color: var(--muted);
+            font-size: 13.2px;
+        }
+
+        .kpi-icon {
+            width: 33px;
+            height: 33px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            background: color-mix(in srgb, var(--accent) 10%, transparent);
+            color: var(--accent);
+            border: 1px solid color-mix(in srgb, var(--accent) 16%, transparent);
+        }
+
+        .kpi-value {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 32.4px;
+            font-weight: 700;
+            letter-spacing: -.7px;
+        }
+
+        .kpi-bottom {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 8px;
+            font-size: 12px;
+        }
+
+        .positive {
+            color: var(--green);
+        }
+
+        .negative {
+            color: var(--red);
+        }
+
+        .neutral {
+            color: var(--muted);
+        }
+
+        /* =========================================================
+           LAYOUT
+        ========================================================= */
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.65fr) minmax(320px, .9fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 20px 0;
+        }
+
+        .card-title {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 16.8px;
+            font-weight: 600;
+        }
+
+        .card-subtitle {
+            color: var(--muted-2);
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .select {
+            height: 32px;
+            padding: 0 10px;
+            border-radius: 8px;
+            color: var(--muted);
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.03);
+            outline: none;
+            font-size: 12px;
+        }
+
+        .select option {
+            background: #10131d;
+        }
+
+        /* =========================================================
+           FRAUD CHART
+        ========================================================= */
+
+        .chart-card {
+            min-height: 390px;
+        }
+
+        .chart-summary {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            padding: 18px 20px 0;
+        }
+
+        .chart-number {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 34.8px;
+            font-weight: 700;
+        }
+
+        .chart-caption {
+            color: var(--muted-2);
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .chart-area {
+            position: relative;
+            height: 270px;
+            margin: 10px 20px 15px;
+            overflow: hidden;
+        }
+
+        .grid-lines {
+            position: absolute;
+            inset: 12px 0 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .grid-line {
+            width: 100%;
+            border-top: 1px dashed rgba(255,255,255,.065);
+        }
+
+        .chart-svg {
+            position: absolute;
+            inset: 15px 0 25px;
+            width: 100%;
+            height: calc(100% - 40px);
+            overflow: visible;
+        }
+
+        .chart-labels {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            color: var(--muted-2);
+            font-size: 10.8px;
+        }
+
+        .legend {
+            display: flex;
+            gap: 17px;
+            padding: 0 20px 18px;
+            font-size: 10.8px;
+            color: var(--muted);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+
+        /* =========================================================
+           RISK DISTRIBUTION
+        ========================================================= */
+
+        .risk-card {
+            padding-bottom: 19px;
+        }
+
+        .risk-content {
+            padding: 20px;
+        }
+
+        .risk-ring-wrap {
+            display: flex;
+            justify-content: center;
+            margin: 5px 0 25px;
+        }
+
+        .risk-ring {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background:
+                conic-gradient(
+                    var(--green) 0 69%,
+                    var(--yellow) 69% 88%,
+                    var(--red) 88% 100%
+                );
+            position: relative;
+            box-shadow:
+                0 0 45px rgba(52,211,153,.07);
+        }
+
+        .risk-ring::before {
+            content: "";
+            position: absolute;
+            width: 132px;
+            height: 132px;
+            border-radius: 50%;
+            background: #10131d;
+            border: 1px solid var(--border);
+        }
+
+        .risk-center {
+            position: relative;
+            text-align: center;
+        }
+
+        .risk-score {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 37.2px;
+            font-weight: 700;
+        }
+
+        .risk-center span {
+            display: block;
+            color: var(--muted);
+            font-size: 10.8px;
+            margin-top: 3px;
+        }
+
+        .risk-list {
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+        }
+
+        .risk-row {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .risk-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .risk-name {
+            flex: 1;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .risk-count {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .risk-percent {
+            width: 38px;
+            text-align: right;
+            color: var(--muted-2);
+            font-size: 10.8px;
+        }
+
+        /* =========================================================
+           DETECTION TABLE
+        ========================================================= */
+
+        .table-card {
+            overflow: hidden;
+        }
+
+        .table-toolbar {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            margin-top: 16px;
+        }
+
+        .search {
+            position: relative;
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .search input {
+            width: 100%;
+            height: 35px;
+            border-radius: 9px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.025);
+            color: var(--text);
+            outline: none;
+            padding: 0 12px 0 34px;
+            font-size: 12px;
+        }
+
+        .search input:focus {
+            border-color: rgba(124,92,255,.45);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted-2);
+            font-size: 14.4px;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 7px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 780px;
+        }
+
+        th {
+            padding: 12px 20px;
+            text-align: left;
+            color: var(--muted-2);
+            font-size: 10.8px;
+            text-transform: uppercase;
+            letter-spacing: .7px;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 14px 20px;
+            border-top: 1px solid rgba(255,255,255,.045);
+            font-size: 12px;
+            color: #d6dbe4;
+        }
+
+        tbody tr {
+            transition: .15s;
+        }
+
+        tbody tr:hover {
+            background: rgba(255,255,255,.025);
+        }
+
+        .transaction {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .transaction-icon {
+            width: 31px;
+            height: 31px;
+            border-radius: 9px;
+            display: grid;
+            place-items: center;
+            background: rgba(255,255,255,.045);
+            font-size: 14.4px;
+        }
+
+        .transaction-id {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .transaction-meta {
+            font-size: 9.6px;
+            color: var(--muted-2);
+            margin-top: 3px;
+        }
+
+        .risk-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 8px;
+            border-radius: 999px;
+            font-size: 9.6px;
+            font-weight: 700;
+        }
+
+        .risk-pill.high {
+            color: #ffb5c1;
+            background: rgba(251,113,133,.10);
+            border: 1px solid rgba(251,113,133,.17);
+        }
+
+        .risk-pill.medium {
+            color: #fcd78a;
+            background: rgba(251,191,36,.09);
+            border: 1px solid rgba(251,191,36,.16);
+        }
+
+        .risk-pill.low {
+            color: #7de8bd;
+            background: rgba(52,211,153,.08);
+            border: 1px solid rgba(52,211,153,.15);
+        }
+
+        .risk-pill .mini-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .action-btn {
+            height: 28px;
+            padding: 0 9px;
+            border-radius: 7px;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            background: rgba(255,255,255,.025);
+            font-size: 10.8px;
+        }
+
+        .action-btn:hover {
+            color: white;
+            background: rgba(255,255,255,.06);
+        }
+
+        /* =========================================================
+           LOWER GRID
+        ========================================================= */
+
+        .lower-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .small-card {
+            padding-bottom: 19px;
+        }
+
+        /* =========================================================
+           MODEL METRICS
+        ========================================================= */
+
+        .model-body {
+            padding: 20px;
+        }
+
+        .model-main {
+            padding: 15px;
+            border-radius: 13px;
+            background: rgba(124,92,255,.06);
+            border: 1px solid rgba(124,92,255,.13);
+            margin-bottom: 14px;
+        }
+
+        .model-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .model-name {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 16.8px;
+            font-weight: 600;
+        }
+
+        .production {
+            color: #b9acff;
+            background: rgba(124,92,255,.12);
+            border: 1px solid rgba(124,92,255,.2);
+            border-radius: 999px;
+            padding: 4px 7px;
+            font-size: 8.4px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .model-desc {
+            margin-top: 7px;
+            color: var(--muted);
+            font-size: 10.8px;
+            line-height: 1.5;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 9px;
+        }
+
+        .metric {
+            padding: 11px;
+            border-radius: 10px;
+            background: rgba(255,255,255,.025);
+            border: 1px solid var(--border);
+        }
+
+        .metric-label {
+            color: var(--muted-2);
+            font-size: 9.6px;
+        }
+
+        .metric-value {
+            font-family: "Space Grotesk", sans-serif;
+            margin-top: 5px;
+            font-size: 19.2px;
+            font-weight: 600;
+        }
+
+        /* =========================================================
+           AI EXPLANATION
+        ========================================================= */
+
+        .ai-body {
+            padding: 20px;
+        }
+
+        .ai-banner {
+            display: flex;
+            gap: 11px;
+            padding: 13px;
+            border-radius: 12px;
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(124,92,255,.09),
+                    rgba(34,211,238,.035)
+                );
+            border: 1px solid rgba(124,92,255,.13);
+            margin-bottom: 15px;
+        }
+
+        .ai-icon {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+            border-radius: 9px;
+            display: grid;
+            place-items: center;
+            background: rgba(124,92,255,.15);
+            color: var(--purple-light);
+        }
+
+        .ai-title {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .ai-text {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 10.8px;
+            line-height: 1.55;
+        }
+
+        .signal-list {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .signal {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10.8px;
+            color: #cbd1dc;
+        }
+
+        .signal-icon {
+            width: 21px;
+            height: 21px;
+            border-radius: 6px;
+            display: grid;
+            place-items: center;
+            background: rgba(251,113,133,.08);
+            color: var(--red);
+            font-size: 10.8px;
+        }
+
+        /* =========================================================
+           THRESHOLD
+        ========================================================= */
+
+        .threshold-body {
+            padding: 20px;
+        }
+
+        .threshold-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .threshold-value {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 33.6px;
+            font-weight: 700;
+        }
+
+        .threshold-desc {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 10.8px;
+            line-height: 1.55;
+        }
+
+        .range-wrap {
+            margin-top: 22px;
+        }
+
+        input[type="range"] {
+            appearance: none;
+            width: 100%;
+            height: 5px;
+            border-radius: 10px;
+            background: rgba(255,255,255,.08);
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: var(--purple);
+            border: 3px solid #c9c2ff;
+            box-shadow: 0 0 18px rgba(124,92,255,.5);
+        }
+
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            color: var(--muted-2);
+            font-size: 9.6px;
+        }
+
+        .threshold-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 18px;
+        }
+
+        .threshold-stat {
+            padding: 10px;
+            border-radius: 9px;
+            background: rgba(255,255,255,.025);
+            border: 1px solid var(--border);
+        }
+
+        .threshold-stat span {
+            color: var(--muted-2);
+            font-size: 9.6px;
+        }
+
+        .threshold-stat strong {
+            display: block;
+            margin-top: 4px;
+            font-size: 14.4px;
+        }
+
+        /* =========================================================
+           MODAL
+        ========================================================= */
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 500;
+            display: none;
+            place-items: center;
+            padding: 20px;
+            background: rgba(0,0,0,.72);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-backdrop.show {
+            display: grid;
+        }
+
+        .modal {
+            width: min(620px, 100%);
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-hover);
+            border-radius: 20px;
+            background: #0d1018;
+            box-shadow: 0 30px 100px rgba(0,0,0,.65);
+            animation: modalIn .2s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px) scale(.98);
+            }
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 19.2px;
+            font-weight: 700;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .detail {
+            padding: 13px;
+            border-radius: 11px;
+            background: rgba(255,255,255,.025);
+            border: 1px solid var(--border);
+        }
+
+        .detail-label {
+            color: var(--muted-2);
+            font-size: 9.6px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .detail-value {
+            margin-top: 5px;
+            font-size: 13.2px;
+            font-weight: 600;
+        }
+
+        .ai-explanation {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 12px;
+            background: rgba(251,113,133,.055);
+            border: 1px solid rgba(251,113,133,.13);
+        }
+
+        .ai-explanation strong {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+
+        .ai-explanation p {
+            color: var(--muted);
+            font-size: 10.8px;
+            line-height: 1.6;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 0 20px 20px;
+        }
+
+        /* =========================================================
+           TOAST
+        ========================================================= */
+
+        .toast-container {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            z-index: 900;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            min-width: 270px;
+            max-width: 360px;
+            padding: 13px 15px;
+            border: 1px solid var(--border-hover);
+            border-radius: 12px;
+            background: rgba(16,19,29,.94);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 15px 50px rgba(0,0,0,.4);
+            animation: toastIn .25s ease;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .toast-title {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .toast-text {
+            color: var(--muted);
+            font-size: 10.8px;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        /* =========================================================
+           MOBILE
+        ========================================================= */
+
+        .mobile-menu {
+            display: none;
+        }
+
+        .sidebar-overlay {
+            display: none;
+        }
+
+        @media (max-width: 1200px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .lower-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 980px) {
+            :root {
+                --sidebar-width: 0px;
+            }
+
+            .sidebar {
+                width: 250px;
+                transform: translateX(-100%);
+                transition: transform .25s ease;
+                box-shadow: 20px 0 60px rgba(0,0,0,.5);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 90;
+                background: rgba(0,0,0,.6);
+                backdrop-filter: blur(3px);
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+            }
+
+            .mobile-menu {
+                display: grid;
+                width: 38px;
+                height: 38px;
+                place-items: center;
+                border-radius: 10px;
+                border: 1px solid var(--border);
+                background: rgba(255,255,255,.025);
+                color: var(--muted);
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .content {
+                padding: 20px 15px 30px;
+            }
+
+            .topbar {
+                padding: 0 15px;
+            }
+
+            .hero {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .hero-actions {
+                width: 100%;
+            }
+
+            .hero-actions .btn {
+                flex: 1;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 9px;
+            }
+
+            .kpi-card {
+                padding: 14px;
+            }
+
+            .kpi-value {
+                font-size: 25.2px;
+            }
+
+            .lower-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .user-info {
+                display: none;
+            }
+
+            .page-title {
+                font-size: 16.8px;
+            }
+
+            .breadcrumb {
+                display: none;
+            }
+
+            .table-toolbar {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .search {
+                max-width: none;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+
+            .filter-group .select {
+                flex: 1;
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 430px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h1 {
+                font-size: 33.6px;
+            }
+
+            .top-actions .icon-btn:nth-child(2) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="background-grid"></div>
+<div class="orb one"></div>
+<div class="orb two"></div>
+
+<!-- =========================================================
+     SIDEBAR
+========================================================= -->
+
+<aside class="sidebar" id="sidebar">
+
+    <div class="brand">
+        <div class="brand-logo">F</div>
+        <div class="brand-name">
+            FinCo <span class="brand-ai">AI</span>
+        </div>
+    </div>
+
+    <div class="nav-label">Workspace</div>
+
+    <nav class="nav">
+
+        <a class="nav-item" href="dashboard.html">
+            <span class="nav-icon">⌂</span>
+            Dashboard
+        </a>
+
+        <a class="nav-item" href="copilot.html">
+            <span class="nav-icon">◈</span>
+            AI Copilot
+        </a>
+
+        <a class="nav-item" href="agents.html">
+            <span class="nav-icon">🤖</span>
+            AI Agents
+        </a>
+
+        <a class="nav-item" href="ml-models.html">
+            <span class="nav-icon">🧠</span>
+            ML Models
+        </a>
+
+        <a class="nav-item" href="analysis.html">
+            <span class="nav-icon">📊</span>
+            Analysis
+        </a>
+
+        <a class="nav-item" href="collaboration.html">
+            <span class="nav-icon">🤝</span>
+            Collaboration
+        </a>
+
+        <a class="nav-item" href="financial.html">
+            <span class="nav-icon">⌁</span>
+            Transactions
+        </a>
+
+        <a class="nav-item active" href="fraud.html">
+            <span class="nav-icon">⚠</span>
+            Fraud & Risk
+            <span class="nav-badge">12</span>
+        </a>
+
+        <a class="nav-item" href="forecasting.html">
+            <span class="nav-icon">↗</span>
+            Forecasting
+        </a>
+
+        <a class="nav-item" href="documents.html">
+            <span class="nav-icon">▤</span>
+            Documents
+        </a>
+
+    </nav>
+
+    <div class="nav-label">Management</div>
+
+    <nav class="nav">
+
+        <a class="nav-item" href="reports.html">
+            <span class="nav-icon">▥</span>
+            Reports
+        </a>
+
+        <a class="nav-item" href="balance-sheet.html">
+            <span class="nav-icon">📋</span>
+            Balance Sheet
+        </a>
+
+        <a class="nav-item" href="alerts.html">
+            <span class="nav-icon">⚙</span>
+            Settings
+        </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+
+        <div class="system-card">
+
+            <div class="system-top">
+                <span class="system-title">AI Platform Health</span>
+
+                <span class="system-status">
+                    <span class="status-dot"></span>
+                    Operational
+                </span>
+            </div>
+
+            <div class="system-bar">
+                <span></span>
+            </div>
+
+            <div class="system-meta">
+                <span>All services healthy</span>
+                <span>99.8%</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</aside>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- =========================================================
+     MAIN
+========================================================= -->
+
+<main class="main">
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+        <div class="top-left">
+
+            <button
+                class="mobile-menu"
+                id="mobileMenu"
+                aria-label="Open menu"
+            >
+                ☰
+            </button>
+
+            <div>
+                <div class="page-title">Fraud Intelligence</div>
+                <div class="breadcrumb">
+                    Risk &nbsp;/&nbsp; Transaction Monitoring
+                </div>
+            </div>
+
+        </div>
+
+        <div class="top-actions">
+
+            <button
+                class="icon-btn"
+                onclick="showToast('Search', 'Global search is ready.')"
+            >
+                ⌕
+            </button>
+
+            <button
+                class="icon-btn notification"
+                onclick="showToast('Notifications', '7 fraud alerts require attention.')"
+            >
+                ♢
+            </button>
+
+            <div class="user">
+
+                <div class="avatar">PA</div>
+
+                <div class="user-info">
+                    <span class="user-name">FinCo Admin</span>
+                    <span class="user-role">Risk Analyst</span>
+                </div>
+
+            </div>
+
+        </div>
+
+    </header>
+
+    <!-- CONTENT -->
+
+    <section class="content">
+
+        <!-- HERO -->
+
+        <div class="hero">
+
+            <div>
+
+                <div class="eyebrow">
+                    <span>●</span>
+                    Real-Time Fraud Detection
+                </div>
+
+                <h1>
+                    Stop suspicious transactions
+                    before they become losses.
+                </h1>
+
+                <p>
+                    FinCo AI continuously analyzes transaction behavior,
+                    customer velocity, device signals, merchant patterns
+                    and contextual risk to identify fraudulent activity.
+                </p>
+
+            </div>
+
+            <div class="hero-actions">
+
+                <button
+                    class="btn"
+                    onclick="refreshDetection()"
+                >
+                    ↻ Refresh
+                </button>
+
+                <button
+                    class="btn btn-danger"
+                    onclick="showToast(
+                        'Investigation queue',
+                        '24 high-risk transactions are currently queued.'
+                    )"
+                >
+                    ⚠ Investigate 24
+                </button>
+
+                <button
+                    class="btn btn-primary"
+                    onclick="runDetection()"
+                >
+                    ✦ Run Detection
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- =====================================================
+             KPI CARDS
+        ====================================================== -->
+
+        <div class="kpi-grid">
+
+            <div
+                class="card kpi-card"
+                style="--accent: var(--red);"
+            >
+
+                <div class="kpi-top">
+                    <span class="kpi-label">Fraud Detected</span>
+                    <span class="kpi-icon">⚠</span>
+                </div>
+
+                <div class="kpi-value" id="fraudDetected">
+                    1,842
+                </div>
+
+                <div class="kpi-bottom negative">
+                    ↑ 14.8%
+                    <span class="neutral">
+                        vs last month
+                    </span>
+                </div>
+
+            </div>
+
+            <div
+                class="card kpi-card"
+                style="--accent: var(--green);"
+            >
+
+                <div class="kpi-top">
+                    <span class="kpi-label">Fraud Prevented</span>
+                    <span class="kpi-icon">✓</span>
+                </div>
+
+                <div class="kpi-value">
+                    $426.8K
+                </div>
+
+                <div class="kpi-bottom positive">
+                    ↑ 18.2%
+                    <span class="neutral">
+                        saved this month
+                    </span>
+                </div>
+
+            </div>
+
+            <div
+                class="card kpi-card"
+                style="--accent: var(--purple-light);"
+            >
+
+                <div class="kpi-top">
+                    <span class="kpi-label">Detection Accuracy</span>
+                    <span class="kpi-icon">◎</span>
+                </div>
+
+                <div class="kpi-value">
+                    96.8%
+                </div>
+
+                <div class="kpi-bottom positive">
+                    ↑ 1.7%
+                    <span class="neutral">
+                        model improvement
+                    </span>
+                </div>
+
+            </div>
+
+            <div
+                class="card kpi-card"
+                style="--accent: var(--cyan);"
+            >
+
+                <div class="kpi-top">
+                    <span class="kpi-label">Avg Detection Time</span>
+                    <span class="kpi-icon">◷</span>
+                </div>
+
+                <div class="kpi-value">
+                    42ms
+                </div>
+
+                <div class="kpi-bottom positive">
+                    ↓ 12ms
+                    <span class="neutral">
+                        faster than target
+                    </span>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- =====================================================
+             CHART + RISK
+        ====================================================== -->
+
+        <div class="dashboard-grid">
+
+            <!-- FRAUD TREND -->
+
+            <section class="card chart-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <div class="card-title">
+                            Fraud Detection Trend
+                        </div>
+
+                        <div class="card-subtitle">
+                            Detected vs prevented suspicious transactions
+                        </div>
+                    </div>
+
+                    <select class="select" id="chartPeriod">
+                        <option>Last 30 days</option>
+                        <option>Last 90 days</option>
+                        <option>Last 12 months</option>
+                    </select>
+
+                </div>
+
+                <div class="chart-summary">
+
+                    <div class="chart-number">
+                        1,842
+                    </div>
+
+                    <div class="chart-caption">
+                        flagged transactions
+                    </div>
+
+                </div>
+
+                <div class="chart-area">
+
+                    <div class="grid-lines">
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                    </div>
+
+                    <svg
+                        class="chart-svg"
+                        viewBox="0 0 900 250"
+                        preserveAspectRatio="none"
+                    >
+
+                        <defs>
+
+                            <linearGradient
+                                id="fraudArea"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                            >
+                                <stop
+                                    offset="0%"
+                                    stop-color="#fb7185"
+                                    stop-opacity=".18"
+                                />
+                                <stop
+                                    offset="100%"
+                                    stop-color="#fb7185"
+                                    stop-opacity="0"
+                                />
+                            </linearGradient>
+
+                            <linearGradient
+                                id="preventArea"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                            >
+                                <stop
+                                    offset="0%"
+                                    stop-color="#34d399"
+                                    stop-opacity=".13"
+                                />
+                                <stop
+                                    offset="100%"
+                                    stop-color="#34d399"
+                                    stop-opacity="0"
+                                />
+                            </linearGradient>
+
+                        </defs>
+
+                        <!-- detected area -->
+
+                        <path
+                            d="
+                            M0 202
+                            C50 194 70 184 110 190
+                            S165 165 205 174
+                            S260 150 300 162
+                            S350 126 395 141
+                            S450 119 490 133
+                            S545 102 585 120
+                            S640 86 680 107
+                            S735 75 775 93
+                            S840 57 900 73
+                            L900 250
+                            L0 250 Z
+                            "
+                            fill="url(#fraudArea)"
+                        />
+
+                        <!-- detected line -->
+
+                        <path
+                            d="
+                            M0 202
+                            C50 194 70 184 110 190
+                            S165 165 205 174
+                            S260 150 300 162
+                            S350 126 395 141
+                            S450 119 490 133
+                            S545 102 585 120
+                            S640 86 680 107
+                            S735 75 775 93
+                            S840 57 900 73
+                            "
+                            fill="none"
+                            stroke="#fb7185"
+                            stroke-width="3"
+                            vector-effect="non-scaling-stroke"
+                        />
+
+                        <!-- prevented area -->
+
+                        <path
+                            d="
+                            M0 217
+                            C50 207 70 201 110 208
+                            S165 190 205 197
+                            S260 178 300 190
+                            S350 158 395 170
+                            S450 151 490 164
+                            S545 137 585 151
+                            S640 119 680 137
+                            S735 111 775 125
+                            S840 96 900 108
+                            L900 250
+                            L0 250 Z
+                            "
+                            fill="url(#preventArea)"
+                        />
+
+                        <!-- prevented line -->
+
+                        <path
+                            d="
+                            M0 217
+                            C50 207 70 201 110 208
+                            S165 190 205 197
+                            S260 178 300 190
+                            S350 158 395 170
+                            S450 151 490 164
+                            S545 137 585 151
+                            S640 119 680 137
+                            S735 111 775 125
+                            S840 96 900 108
+                            "
+                            fill="none"
+                            stroke="#34d399"
+                            stroke-width="2"
+                            vector-effect="non-scaling-stroke"
+                        />
+
+                    </svg>
+
+                    <div class="chart-labels">
+                        <span>Aug 14</span>
+                        <span>Aug 21</span>
+                        <span>Aug 28</span>
+                        <span>Sep 04</span>
+                        <span>Sep 11</span>
+                    </div>
+
+                </div>
+
+                <div class="legend">
+
+                    <div class="legend-item">
+                        <span
+                            class="legend-dot"
+                            style="background:#fb7185"
+                        ></span>
+                        Fraud detected
+                    </div>
+
+                    <div class="legend-item">
+                        <span
+                            class="legend-dot"
+                            style="background:#34d399"
+                        ></span>
+                        Fraud prevented
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- RISK DISTRIBUTION -->
+
+            <section class="card risk-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <div class="card-title">
+                            Risk Distribution
+                        </div>
+
+                        <div class="card-subtitle">
+                            Current transaction portfolio
+                        </div>
+                    </div>
+
+                    <button
+                        class="icon-btn"
+                        onclick="showToast(
+                            'Risk distribution',
+                            'Risk distribution refreshed.'
+                        )"
+                    >
+                        ↻
+                    </button>
+
+                </div>
+
+                <div class="risk-content">
+
+                    <div class="risk-ring-wrap">
+
+                        <div class="risk-ring">
+
+                            <div class="risk-center">
+
+                                <div class="risk-score">
+                                    69%
+                                </div>
+
+                                <span>
+                                    Low Risk
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="risk-list">
+
+                        <div class="risk-row">
+                            <span
+                                class="risk-dot"
+                                style="background:var(--green)"
+                            ></span>
+
+                            <span class="risk-name">
+                                Low Risk
+                            </span>
+
+                            <span class="risk-count">
+                                171.4K
+                            </span>
+
+                            <span class="risk-percent">
+                                69%
+                            </span>
+                        </div>
+
+                        <div class="risk-row">
+                            <span
+                                class="risk-dot"
+                                style="background:var(--yellow)"
+                            ></span>
+
+                            <span class="risk-name">
+                                Medium Risk
+                            </span>
+
+                            <span class="risk-count">
+                                47.2K
+                            </span>
+
+                            <span class="risk-percent">
+                                19%
+                            </span>
+                        </div>
+
+                        <div class="risk-row">
+                            <span
+                                class="risk-dot"
+                                style="background:var(--red)"
+                            ></span>
+
+                            <span class="risk-name">
+                                High Risk
+                            </span>
+
+                            <span class="risk-count">
+                                24.8K
+                            </span>
+
+                            <span class="risk-percent">
+                                10%
+                            </span>
+                        </div>
+
+                        <div class="risk-row">
+                            <span
+                                class="risk-dot"
+                                style="background:var(--orange)"
+                            ></span>
+
+                            <span class="risk-name">
+                                Critical
+                            </span>
+
+                            <span class="risk-count">
+                                5.2K
+                            </span>
+
+                            <span class="risk-percent">
+                                2%
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+        <!-- =====================================================
+             TRANSACTION TABLE
+        ====================================================== -->
+
+        <section class="card table-card">
+
+            <div class="card-header">
+
+                <div>
+                    <div class="card-title">
+                        Live Fraud Detection Queue
+                    </div>
+
+                    <div class="card-subtitle">
+                        Highest-risk transactions requiring investigation
+                    </div>
+                </div>
+
+                <button
+                    class="btn"
+                    onclick="exportTransactions()"
+                >
+                    ↓ Export
+                </button>
+
+            </div>
+
+            <div class="table-toolbar">
+
+                <div class="search">
+
+                    <span class="search-icon">
+                        ⌕
+                    </span>
+
+                    <input
+                        id="transactionSearch"
+                        type="search"
+                        placeholder="Search transaction, customer or merchant..."
+                    />
+
+                </div>
+
+                <div class="filter-group">
+
+                    <select class="select" id="riskFilter">
+                        <option value="all">All Risk Levels</option>
+                        <option value="critical">Critical</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+
+                    <select class="select">
+                        <option>All Sources</option>
+                        <option>Card</option>
+                        <option>Bank Transfer</option>
+                        <option>Wallet</option>
+                        <option>UPI</option>
+                    </select>
+
+                </div>
+
+            </div>
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>Transaction</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Risk Score</th>
+                            <th>Risk Level</th>
+                            <th>Detection Signal</th>
+                            <th>Time</th>
+                            <th></th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="fraudTable">
+
+                        <tr data-risk="critical">
+
+                            <td>
+                                <div class="transaction">
+
+                                    <div class="transaction-icon">
+                                        ◉
+                                    </div>
+
+                                    <div>
+                                        <div class="transaction-id">
+                                            TXN-94821
+                                        </div>
+                                        <div class="transaction-meta">
+                                            Card payment
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </td>
+
+                            <td>
+                                CUST-2819
+                            </td>
+
+                            <td>
+                                <strong>$8,420.00</strong>
+                            </td>
+
+                            <td>
+                                <strong class="negative">
+                                    98.7%
+                                </strong>
+                            </td>
+
+                            <td>
+                                <span class="risk-pill high">
+                                    <span class="mini-dot"></span>
+                                    Critical
+                                </span>
+                            </td>
+
+                            <td>
+                                Device + Velocity
+                            </td>
+
+                            <td>
+                                23 sec ago
+                            </td>
+
+                            <td>
+                                <button
+                                    class="action-btn"
+                                    onclick="openTransaction(
+                                        'TXN-94821',
+                                        'CUST-2819',
+                                        '$8,420.00',
+                                        '98.7%',
+                                        'Critical',
+                                        'Device fingerprint mismatch + unusual transaction velocity'
+                                    )"
+                                >
+                                    Review
+                                </button>
+                            </td>
+
+                        </tr>
+
+                        <tr data-risk="high">
+
+                            <td>
+                                <div class="transaction">
+
+                                    <div class="transaction-icon">
+                                        ◇
+                                    </div>
+
+                                    <div>
+                                        <div class="transaction-id">
+                                            TXN-94817
+                                        </div>
+                                        <div class="transaction-meta">
+                                            Bank transfer
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </td>
+
+                            <td>
+                                CUST-1074
+                            </td>
+
+                            <td>
+                                <strong>$4,890.00</strong>
+                            </td>
+
+                            <td>
+                                <strong class="negative">
+                                    94.2%
+                                </strong>
+                            </td>
+
+                            <td>
+                                <span class="risk-pill high">
+                                    <span class="mini-dot"></span>
+                                    High
+                                </span>
+                            </td>
+
+                            <td>
+                                Geo anomaly
+                            </td>
+
+                            <td>
+                                1 min ago
+                            </td>
+
+                            <td>
+                                <button
+                                    class="action-btn"
+                                    onclick="openTransaction(
+                                        'TXN-94817',
+                                        'CUST-1074',
+                                        '$4,890.00',
+                                        '94.2%',
+                                        'High',
+                                        'Transaction originated from an unusual geographic location'
+                                    )"
+                                >
+                                    Review
+                                </button>
+                            </td>
+
+                        </tr>
+
+                        <tr data-risk="high">
+
+                            <td>
+                                <div class="transaction">
+
+                                    <div class="transaction-icon">
+                                        ◈
+                                    </div>
+
+                                    <div>
+                                        <div class="transaction-id">
+                                            TXN-94811
+                                        </div>
+                                        <div class="transaction-meta">
+                                            Digital wallet
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </td>
+
+                            <td>
+                                CUST-4421
+                            </td>
+
+                            <td>
+                                <strong>$2,760.50</strong>
+                            </td>
+
+                            <td>
+                                <strong class="negative">
+                                    91.6%
+                                </strong>
+                            </td>
+
+                            <td>
+                                <span class="risk-pill high">
+                                    <span class="mini-dot"></span>
+                                    High
+                                </span>
+                            </td>
+
+                            <td>
+                                Velocity spike
+                            </td>
+
+                            <td>
+                                2 min ago
+                            </td>
+
+                            <td>
+                                <button
+                                    class="action-btn"
+                                    onclick="openTransaction(
+                                        'TXN-94811',
+                                        'CUST-4421',
+                                        '$2,760.50',
+                                        '91.6%',
+                                        'High',
+                                        'Unusually high transaction frequency within a short time window'
+                                    )"
+                                >
+                                    Review
+                                </button>
+                            </td>
+
+                        </tr>
+
+                        <tr data-risk="medium">
+
+                            <td>
+                                <div class="transaction">
+
+                                    <div class="transaction-icon">
+                                        ○
+                                    </div>
+
+                                    <div>
+                                        <div class="transaction-id">
+                                            TXN-94798
+                                        </div>
+                                        <div class="transaction-meta">
+                                            Card payment
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </td>
+
+                            <td>
+                                CUST-3920
+                            </td>
+
+                            <td>
+                                <strong>$1,280.00</strong>
+                            </td>
+
+                            <td>
+                                <strong style="color:var(--yellow)">
+                                    73.8%
+                                </strong>
+                            </td>
+
+                            <td>
+                                <span class="risk-pill medium">
+                                    <span class="mini-dot"></span>
+                                    Medium
+                                </span>
+                            </td>
+
+                            <td>
+                                Amount anomaly
+                            </td>
+
+                            <td>
+                                4 min ago
+                            </td>
+
+                            <td>
+                                <button
+                                    class="action-btn"
+                                    onclick="openTransaction(
+                                        'TXN-94798',
+                                        'CUST-3920',
+                                        '$1,280.00',
+                                        '73.8%',
+                                        'Medium',
+                                        'Transaction amount is significantly above the customer baseline'
+                                    )"
+                                >
+                                    Review
+                                </button>
+                            </td>
+
+                        </tr>
+
+                        <tr data-risk="low">
+
+                            <td>
+                                <div class="transaction">
+
+                                    <div class="transaction-icon">
+                                        ◌
+                                    </div>
+
+                                    <div>
+                                        <div class="transaction-id">
+                                            TXN-94781
+                                        </div>
+                                        <div class="transaction-meta">
+                                            UPI payment
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </td>
+
+                            <td>
+                                CUST-7201
+                            </td>
+
+                            <td>
+                                <strong>$430.20</strong>
+                            </td>
+
+                            <td>
+                                <strong class="positive">
+                                    21.4%
+                                </strong>
+                            </td>
+
+                            <td>
+                                <span class="risk-pill low">
+                                    <span class="mini-dot"></span>
+                                    Low
+                                </span>
+                            </td>
+
+                            <td>
+                                Normal behavior
+                            </td>
+
+                            <td>
+                                7 min ago
+                            </td>
+
+                            <td>
+                                <button
+                                    class="action-btn"
+                                    onclick="openTransaction(
+                                        'TXN-94781',
+                                        'CUST-7201',
+                                        '$430.20',
+                                        '21.4%',
+                                        'Low',
+                                        'No significant anomaly detected'
+                                    )"
+                                >
+                                    Review
+                                </button>
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        <!-- =====================================================
+             LOWER CARDS
+        ====================================================== -->
+
+        <div class="lower-grid">
+
+            <!-- MODEL -->
+
+            <section class="card small-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <div class="card-title">
+                            Fraud Model
+                        </div>
+
+                        <div class="card-subtitle">
+                            Production model performance
+                        </div>
+                    </div>
+
+                    <span class="production">
+                        Production
+                    </span>
+
+                </div>
+
+                <div class="model-body">
+
+                    <div class="model-main">
+
+                        <div class="model-head">
+
+                            <div class="model-name">
+                                Gradient Boosting
+                            </div>
+
+                            <div style="color:var(--green);font-size: 10.8px;">
+                                96.8%
+                            </div>
+
+                        </div>
+
+                        <div class="model-desc">
+                            Ensemble classifier optimized for
+                            imbalanced financial transaction data.
+                        </div>
+
+                    </div>
+
+                    <div class="metric-grid">
+
+                        <div class="metric">
+                            <div class="metric-label">
+                                PR-AUC
+                            </div>
+                            <div class="metric-value">
+                                0.943
+                            </div>
+                        </div>
+
+                        <div class="metric">
+                            <div class="metric-label">
+                                Precision
+                            </div>
+                            <div class="metric-value">
+                                94.1%
+                            </div>
+                        </div>
+
+                        <div class="metric">
+                            <div class="metric-label">
+                                Recall
+                            </div>
+                            <div class="metric-value">
+                                91.8%
+                            </div>
+                        </div>
+
+                        <div class="metric">
+                            <div class="metric-label">
+                                F1 Score
+                            </div>
+                            <div class="metric-value">
+                                92.9%
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- AI EXPLANATION -->
+
+            <section class="card small-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <div class="card-title">
+                            AI Risk Explanation
+                        </div>
+
+                        <div class="card-subtitle">
+                            Latest model-generated signals
+                        </div>
+                    </div>
+
+                    <span style="color:var(--purple-light);font-size: 20.4px;">
+                        ✦
+                    </span>
+
+                </div>
+
+                <div class="ai-body">
+
+                    <div class="ai-banner">
+
+                        <div class="ai-icon">
+                            ✦
+                        </div>
+
+                        <div>
+
+                            <div class="ai-title">
+                                Fraud pattern detected
+                            </div>
+
+                            <div class="ai-text">
+                                18 transactions share a similar
+                                device fingerprint and unusually
+                                compressed transaction timing.
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="signal-list">
+
+                        <div class="signal">
+                            <span class="signal-icon">⌁</span>
+                            Transaction velocity increased 4.7×
+                        </div>
+
+                        <div class="signal">
+                            <span class="signal-icon">◉</span>
+                            Device fingerprint differs from baseline
+                        </div>
+
+                        <div class="signal">
+                            <span class="signal-icon">◎</span>
+                            Merchant category risk increased
+                        </div>
+
+                        <div class="signal">
+                            <span class="signal-icon">⌖</span>
+                            Geographic distance exceeds normal range
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- THRESHOLD -->
+
+            <section class="card small-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <div class="card-title">
+                            Detection Threshold
+                        </div>
+
+                        <div class="card-subtitle">
+                            Tune model sensitivity
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="threshold-body">
+
+                    <div class="threshold-top">
+
+                        <div>
+
+                            <div class="threshold-value" id="thresholdValue">
+                                0.72
+                            </div>
+
+                            <div class="threshold-desc">
+                                Current fraud probability threshold
+                            </div>
+
+                        </div>
+
+                        <span class="risk-pill medium">
+                            Balanced
+                        </span>
+
+                    </div>
+
+                    <div class="range-wrap">
+
+                        <input
+                            type="range"
+                            id="thresholdRange"
+                            min="0.30"
+                            max="0.95"
+                            step="0.01"
+                            value="0.72"
+                        />
+
+                        <div class="range-labels">
+                            <span>More sensitive</span>
+                            <span>More selective</span>
+                        </div>
+
+                    </div>
+
+                    <div class="threshold-stats">
+
+                        <div class="threshold-stat">
+                            <span>Expected Recall</span>
+                            <strong id="recallValue">91.8%</strong>
+                        </div>
+
+                        <div class="threshold-stat">
+                            <span>Expected Precision</span>
+                            <strong id="precisionValue">94.1%</strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </section>
+
+</main>
+
+<!-- =========================================================
+     TRANSACTION MODAL
+========================================================= -->
+
+<div
+    class="modal-backdrop"
+    id="transactionModal"
+    onclick="closeModal(event)"
+>
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <div>
+                <div class="modal-title">
+                    Transaction Investigation
+                </div>
+
+                <div
+                    style="
+                    color:var(--muted-2);
+                    font-size: 10.8px;
+                    margin-top:4px;
+                    "
+                >
+                    AI-powered fraud analysis
+                </div>
+            </div>
+
+            <button
+                class="icon-btn"
+                onclick="closeTransaction()"
+            >
+                ×
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <div class="detail-grid">
+
+                <div class="detail">
+                    <div class="detail-label">
+                        Transaction ID
+                    </div>
+                    <div class="detail-value" id="modalTxn">
+                        —
+                    </div>
+                </div>
+
+                <div class="detail">
+                    <div class="detail-label">
+                        Customer
+                    </div>
+                    <div class="detail-value" id="modalCustomer">
+                        —
+                    </div>
+                </div>
+
+                <div class="detail">
+                    <div class="detail-label">
+                        Amount
+                    </div>
+                    <div class="detail-value" id="modalAmount">
+                        —
+                    </div>
+                </div>
+
+                <div class="detail">
+                    <div class="detail-label">
+                        Risk Score
+                    </div>
+                    <div
+                        class="detail-value negative"
+                        id="modalScore"
+                    >
+                        —
+                    </div>
+                </div>
+
+                <div class="detail">
+                    <div class="detail-label">
+                        Risk Level
+                    </div>
+                    <div class="detail-value" id="modalRisk">
+                        —
+                    </div>
+                </div>
+
+                <div class="detail">
+                    <div class="detail-label">
+                        Detection Engine
+                    </div>
+                    <div class="detail-value">
+                        Gradient Boosting
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="ai-explanation">
+
+                <strong>
+                    ✦ AI Explanation
+                </strong>
+
+                <p id="modalExplanation">
+                    —
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="modal-actions">
+
+            <button
+                class="btn"
+                onclick="closeTransaction()"
+            >
+                Close
+            </button>
+
+            <button
+                class="btn btn-danger"
+                onclick="blockTransaction()"
+            >
+                Block Transaction
+            </button>
+
+            <button
+                class="btn btn-primary"
+                onclick="markReviewed()"
+            >
+                Mark Reviewed
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- =========================================================
+     TOAST
+========================================================= -->
+
+<div
+    class="toast-container"
+    id="toastContainer"
+></div>
+
+<script>
+    /* =========================================================
+       FinCo AI — Fraud Intelligence
+       Frontend Demo Layer
+       
+       Production API integration:
+       
+       GET  /api/fraud/summary
+       GET  /api/fraud/transactions
+       POST /api/fraud/detect
+       GET  /api/fraud/models
+       GET  /api/fraud/metrics
+       POST /api/fraud/score
+       POST /api/fraud/investigate
+       POST /api/fraud/{transaction_id}/block
+       POST /api/fraud/{transaction_id}/review
+       GET  /api/fraud/risk-distribution
+       GET  /api/fraud/signals
+       POST /api/fraud/threshold
+       
+       Example:
+       
+       const response = await fetch("/api/fraud/summary");
+       const data = await response.json();
+       
+       ========================================================= */
+
+
+    /* =========================================================
+       MOBILE SIDEBAR
+    ========================================================= */
+
+    const mobileMenu = document.getElementById("mobileMenu");
+    const sidebar = document.getElementById("sidebar");
+    const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+    mobileMenu?.addEventListener("click", () => {
+        sidebar.classList.add("open");
+        sidebarOverlay.classList.add("show");
+    });
+
+    sidebarOverlay?.addEventListener("click", () => {
+        sidebar.classList.remove("open");
+        sidebarOverlay.classList.remove("show");
+    });
+
+
+    /* =========================================================
+       TOAST
+    ========================================================= */
+
+    function showToast(title, message) {
+
+        const container =
+            document.getElementById("toastContainer");
+
+        const toast =
+            document.createElement("div");
+
+        toast.className = "toast";
+
+        toast.innerHTML = `
+            <div class="toast-title">
+                ${escapeHtml(title)}
+            </div>
+
+            <div class="toast-text">
+                ${escapeHtml(message)}
+            </div>
+        `;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+
+            toast.style.opacity = "0";
+            toast.style.transform = "translateY(8px)";
+            toast.style.transition = ".2s";
+
+            setTimeout(() => toast.remove(), 220);
+
+        }, 3500);
+    }
+
+
+    /* =========================================================
+       HTML ESCAPE
+    ========================================================= */
+
+    function escapeHtml(value) {
+
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+
+    /* =========================================================
+       RUN FRAUD DETECTION
+    ========================================================= */
+
+    function runDetection() {
+
+        showToast(
+            "Fraud Detection Started",
+            "FinCo AI is analyzing the latest transaction batch..."
+        );
+
+        setTimeout(() => {
+
+            document.getElementById("fraudDetected").textContent =
+                "1,847";
+
+            showToast(
+                "Detection Complete",
+                "5 new suspicious transactions were identified."
+            );
+
+        }, 1400);
+
+        /*
+        Production:
+
+        fetch("/api/fraud/detect", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                mode: "realtime"
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            updateFraudDashboard(data);
+        });
+        */
+    }
+
+
+    /* =========================================================
+       REFRESH
+    ========================================================= */
+
+    function refreshDetection() {
+
+        showToast(
+            "Refreshing",
+            "Fetching the latest fraud intelligence..."
+        );
+
+        setTimeout(() => {
+
+            showToast(
+                "Dashboard Updated",
+                "Fraud detection data is now up to date."
+            );
+
+        }, 900);
+
+        /*
+        Production:
+
+        GET /api/fraud/summary
+        GET /api/fraud/transactions
+        GET /api/fraud/risk-distribution
+        GET /api/fraud/signals
+        */
+    }
+
+
+    /* =========================================================
+       TRANSACTION SEARCH
+    ========================================================= */
+
+    const searchInput =
+        document.getElementById("transactionSearch");
+
+    const riskFilter =
+        document.getElementById("riskFilter");
+
+    function filterTransactions() {
+
+        const search =
+            searchInput.value.toLowerCase().trim();
+
+        const selectedRisk =
+            riskFilter.value;
+
+        const rows =
+            document.querySelectorAll("#fraudTable tr");
+
+        rows.forEach(row => {
+
+            const text =
+                row.textContent.toLowerCase();
+
+            const risk =
+                row.dataset.risk || "";
+
+            const matchesSearch =
+                !search || text.includes(search);
+
+            const matchesRisk =
+                selectedRisk === "all" ||
+                risk === selectedRisk;
+
+            row.style.display =
+                matchesSearch && matchesRisk
+                    ? ""
+                    : "none";
+        });
+    }
+
+    searchInput.addEventListener(
+        "input",
+        filterTransactions
+    );
+
+    riskFilter.addEventListener(
+        "change",
+        filterTransactions
+    );
+
+
+    /* =========================================================
+       TRANSACTION MODAL
+    ========================================================= */
+
+    const transactionModal =
+        document.getElementById("transactionModal");
+
+    function openTransaction(
+        transactionId,
+        customer,
+        amount,
+        score,
+        risk,
+        explanation
+    ) {
+
+        document.getElementById("modalTxn").textContent =
+            transactionId;
+
+        document.getElementById("modalCustomer").textContent =
+            customer;
+
+        document.getElementById("modalAmount").textContent =
+            amount;
+
+        document.getElementById("modalScore").textContent =
+            score;
+
+        document.getElementById("modalRisk").textContent =
+            risk;
+
+        document.getElementById("modalExplanation").textContent =
+            explanation;
+
+        transactionModal.classList.add("show");
+
+        document.body.style.overflow = "hidden";
+    }
+
+
+    function closeTransaction() {
+
+        transactionModal.classList.remove("show");
+
+        document.body.style.overflow = "";
+    }
+
+
+    function closeModal(event) {
+
+        if (event.target === transactionModal) {
+            closeTransaction();
+        }
+    }
+
+
+    /* =========================================================
+       BLOCK TRANSACTION
+    ========================================================= */
+
+    function blockTransaction() {
+
+        const id =
+            document.getElementById("modalTxn").textContent;
+
+        closeTransaction();
+
+        showToast(
+            "Transaction Blocked",
+            `${id} has been blocked and added to the investigation log.`
+        );
+
+        /*
+        Production:
+
+        POST /api/fraud/{transaction_id}/block
+
+        Expected response:
+
+        {
+            "transaction_id": "...",
+            "status": "blocked",
+            "reason": "...",
+            "risk_score": 0.987
+        }
+        */
+    }
+
+
+    /* =========================================================
+       MARK REVIEWED
+    ========================================================= */
+
+    function markReviewed() {
+
+        const id =
+            document.getElementById("modalTxn").textContent;
+
+        closeTransaction();
+
+        showToast(
+            "Investigation Updated",
+            `${id} has been marked as reviewed.`
+        );
+
+        /*
+        Production:
+
+        POST /api/fraud/{transaction_id}/review
+        */
+    }
+
+
+    /* =========================================================
+       EXPORT
+    ========================================================= */
+
+    function exportTransactions() {
+
+        showToast(
+            "Export Preparing",
+            "Generating fraud investigation CSV..."
+        );
+
+        setTimeout(() => {
+
+            const csv = [
+                [
+                    "Transaction",
+                    "Customer",
+                    "Amount",
+                    "Risk Score",
+                    "Risk Level"
+                ],
+                [
+                    "TXN-94821",
+                    "CUST-2819",
+                    "8420.00",
+                    "98.7%",
+                    "Critical"
+                ],
+                [
+                    "TXN-94817",
+                    "CUST-1074",
+                    "4890.00",
+                    "94.2%",
+                    "High"
+                ],
+                [
+                    "TXN-94811",
+                    "CUST-4421",
+                    "2760.50",
+                    "91.6%",
+                    "High"
+                ]
+            ]
+            .map(row => row.join(","))
+            .join("\n");
+
+            const blob =
+                new Blob([csv], {
+                    type: "text/csv;charset=utf-8;"
+                });
+
+            const url =
+                URL.createObjectURL(blob);
+
+            const link =
+                document.createElement("a");
+
+            link.href = url;
+            link.download = "finco-fraud-investigation.csv";
+
+            document.body.appendChild(link);
+
+            link.click();
+
+            link.remove();
+
+            URL.revokeObjectURL(url);
+
+            showToast(
+                "Export Complete",
+                "Fraud investigation CSV has been generated."
+            );
+
+        }, 700);
+    }
+
+
+    /* =========================================================
+       THRESHOLD CONTROLLER
+    ========================================================= */
+
+    const thresholdRange =
+        document.getElementById("thresholdRange");
+
+    const thresholdValue =
+        document.getElementById("thresholdValue");
+
+    const recallValue =
+        document.getElementById("recallValue");
+
+    const precisionValue =
+        document.getElementById("precisionValue");
+
+
+    function updateThreshold() {
+
+        const threshold =
+            Number(thresholdRange.value);
+
+        thresholdValue.textContent =
+            threshold.toFixed(2);
+
+        /*
+         * Demo relationship.
+         * Replace with metrics returned by backend.
+         */
+
+        const recall =
+            Math.max(
+                65,
+                100 - ((threshold - .30) * 15)
+            );
+
+        const precision =
+            Math.min(
+                99,
+                80 + ((threshold - .30) * 28)
+            );
+
+        recallValue.textContent =
+            recall.toFixed(1) + "%";
+
+        precisionValue.textContent =
+            precision.toFixed(1) + "%";
+
+        /*
+        Production:
+
+        POST /api/fraud/threshold
+
+        {
+            "threshold": threshold
+        }
+
+        Backend should return:
+
+        {
+            "threshold": 0.72,
+            "precision": 0.941,
+            "recall": 0.918,
+            "f1": 0.929,
+            "pr_auc": 0.943
+        }
+        */
+    }
+
+    thresholdRange.addEventListener(
+        "input",
+        updateThreshold
+    );
+
+
+    /* =========================================================
+       CHART PERIOD
+    ========================================================= */
+
+    document
+        .getElementById("chartPeriod")
+        .addEventListener("change", function () {
+
+            showToast(
+                "Chart Updated",
+                `Showing ${this.value.toLowerCase()} of fraud activity.`
+            );
+
+            /*
+            Production:
+
+            GET /api/fraud/trend?period=30d
+            */
+        });
+
+
+    /* =========================================================
+       KEYBOARD SHORTCUTS
+    ========================================================= */
+
+    document.addEventListener("keydown", event => {
+
+        if (
+            (event.ctrlKey || event.metaKey) &&
+            event.key.toLowerCase() === "k"
+        ) {
+
+            event.preventDefault();
+
+            searchInput.focus();
+        }
+
+        if (event.key === "Escape") {
+            closeTransaction();
+        }
+
+    });
+
+
+    /* =========================================================
+       INITIALIZATION
+    ========================================================= */
+
+    document.addEventListener("DOMContentLoaded", () => {
+
+        updateThreshold();
+
+        setTimeout(() => {
+
+            showToast(
+                "Fraud Intelligence Online",
+                "Real-time transaction monitoring is active."
+            );
+
+        }, 900);
+
+    });
+
+
+    /* =========================================================
+       FUTURE BACKEND DATA MAPPING
+       
+       Expected summary payload:
+
+       {
+           "fraud_detected": 1842,
+           "fraud_prevented": 426800,
+           "detection_accuracy": 0.968,
+           "avg_detection_ms": 42,
+
+           "risk_distribution": {
+               "low": 0.69,
+               "medium": 0.19,
+               "high": 0.10,
+               "critical": 0.02
+           },
+
+           "model": {
+               "name": "Gradient Boosting",
+               "pr_auc": 0.943,
+               "precision": 0.941,
+               "recall": 0.918,
+               "f1": 0.929
+           }
+       }
+
+       ========================================================= */
+</script>
+
+</body>
+</html>

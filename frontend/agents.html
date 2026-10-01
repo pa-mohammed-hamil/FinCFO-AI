@@ -1,0 +1,1455 @@
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>FinCo AI — Advanced AI Agents</title>
+    <meta
+        name="description"
+        content="Autonomous AI agents working together on financial analysis, forecasting, fraud detection, and more."
+    >
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+        :root {
+            --bg: #05060a;
+            --bg-soft: #080a10;
+            --panel: rgba(14, 16, 25, 0.78);
+            --panel-2: rgba(18, 20, 30, 0.92);
+            --border: rgba(255,255,255,.08);
+            --border-hover: rgba(124,92,255,.38);
+
+            --text: #f5f7ff;
+            --muted: #8d93a7;
+            --muted-2: #656b7e;
+
+            --purple: #7c5cff;
+            --purple-2: #9b86ff;
+            --cyan: #22d3ee;
+            --green: #34d399;
+            --yellow: #fbbf24;
+            --red: #fb7185;
+            --blue: #60a5fa;
+            --orange: #fb923c;
+            --pink: #f472b6;
+
+            --sidebar-width: 280px;
+            --radius: 18px;
+
+            --shadow:
+                0 20px 70px rgba(0,0,0,.42),
+                inset 0 1px 0 rgba(255,255,255,.025);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(
+                    circle at 75% 5%,
+                    rgba(124,92,255,.13),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 20% 80%,
+                    rgba(34,211,238,.07),
+                    transparent 25%
+                ),
+                var(--bg);
+
+            color: var(--text);
+            font-family: Inter, sans-serif;
+            font-size: 15.6px;
+            overflow-x: hidden;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* ================================
+           BACKGROUND GRID
+        ================================= */
+
+        .background-grid {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            opacity: .18;
+            background-image:
+                linear-gradient(
+                    var(--border) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    var(--border) 1px,
+                    transparent 1px
+                );
+            background-size: 42px 42px;
+        }
+
+        /* ================================
+           HEADER
+        ================================= */
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 72px;
+            background: var(--panel);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            padding: 0 32px;
+            gap: 24px;
+        }
+
+        .logo {
+            font-size: 21.6px;
+            font-weight: 800;
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #7c5cff, #22d3ee);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .nav-link {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13.2px;
+            font-weight: 600;
+            transition: .2s;
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,.08);
+        }
+
+        .nav-link.active {
+            background: rgba(124,92,255,.15);
+            color: var(--purple);
+        }
+
+        /* ================================
+           MAIN CONTENT
+        ================================= */
+
+        .main {
+            margin-top: 72px;
+            padding: 40px;
+            max-width: 1600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .page-title {
+            font-size: 48px;
+            font-weight: 800;
+            font-family: 'Space Grotesk', sans-serif;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #7c5cff, #22d3ee);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .page-subtitle {
+            font-size: 18px;
+            color: var(--muted);
+            max-width: 700px;
+            margin: 0 auto 32px;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--purple), var(--cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--muted-2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        /* ================================
+           AGENTS GRID
+        ================================= */
+
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .agent-card {
+            padding: 28px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            transition: .3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-hover);
+            box-shadow: 0 30px 80px rgba(0,0,0,.5);
+        }
+
+        .agent-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--agent-color), var(--agent-color-2));
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .agent-icon {
+            width: 64px;
+            height: 64px;
+            display: grid;
+            place-items: center;
+            border-radius: 16px;
+            font-size: 28px;
+            background: linear-gradient(135deg, var(--agent-color), var(--agent-color-2));
+            position: relative;
+        }
+
+        .agent-status {
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            width: 20px;
+            height: 20px;
+            background: var(--green);
+            border: 3px solid var(--panel);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
+        }
+
+        .agent-info h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .agent-type {
+            font-size: 12px;
+            color: var(--muted-2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .agent-description {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .agent-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 12px;
+            background: rgba(255,255,255,.03);
+            border-radius: 10px;
+        }
+
+        .metric-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--agent-color);
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: var(--muted-2);
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .agent-capabilities {
+            margin-bottom: 20px;
+        }
+
+        .capabilities-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--muted-2);
+            margin-bottom: 10px;
+        }
+
+        .capability-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .capability-tag {
+            padding: 4px 10px;
+            background: rgba(255,255,255,.05);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .agent-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            transition: .2s;
+            cursor: pointer;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--agent-color), var(--agent-color-2));
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            transform: scale(1.05);
+        }
+
+        .action-btn.secondary {
+            background: rgba(255,255,255,.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .action-btn.secondary:hover {
+            background: rgba(255,255,255,.08);
+        }
+
+        /* ================================
+           ORCHESTRATOR SECTION
+        ================================= */
+
+        .orchestrator-section {
+            margin-bottom: 48px;
+        }
+
+        .section-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .orchestrator-panel {
+            padding: 40px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .orchestrator-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #7c5cff, #22d3ee, #34d399);
+        }
+
+        .orchestrator-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .orchestrator-icon {
+            width: 96px;
+            height: 96px;
+            margin: 0 auto 20px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, #7c5cff, #22d3ee);
+            border-radius: 24px;
+            font-size: 48px;
+            box-shadow: 0 20px 60px rgba(124,92,255,.4);
+        }
+
+        .orchestrator-header h3 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .orchestrator-header p {
+            font-size: 15px;
+            color: var(--muted);
+        }
+
+        .workflow-diagram {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .workflow-step {
+            padding: 20px;
+            background: rgba(255,255,255,.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+            position: relative;
+        }
+
+        .workflow-step::after {
+            content: '→';
+            position: absolute;
+            right: -24px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            color: var(--border);
+        }
+
+        .workflow-step:last-child::after {
+            display: none;
+        }
+
+        .workflow-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .workflow-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .workflow-desc {
+            font-size: 11px;
+            color: var(--muted-2);
+        }
+
+        /* ================================
+           ACTIVITY FEED
+        ================================= */
+
+        .activity-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .activity-item {
+            padding: 16px;
+            background: rgba(255,255,255,.03);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--activity-color);
+            border-radius: 10px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .activity-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .activity-agent-icon {
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--activity-color), var(--activity-color-2));
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .activity-agent {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .activity-time {
+            margin-left: auto;
+            font-size: 11px;
+            color: var(--muted-2);
+        }
+
+        .activity-message {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .activity-result {
+            margin-top: 8px;
+            padding: 10px;
+            background: rgba(52,211,153,.08);
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--green);
+        }
+
+        /* ================================
+           CONTROL PANEL
+        ================================= */
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+
+        .control-card {
+            padding: 24px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .control-icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 16px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--control-color), var(--control-color-2));
+            border-radius: 12px;
+            font-size: 24px;
+        }
+
+        .control-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .control-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--control-color);
+            margin-bottom: 12px;
+        }
+
+        .control-btn {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255,255,255,.05);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 600;
+            transition: .2s;
+        }
+
+        .control-btn:hover {
+            background: rgba(255,255,255,.1);
+            border-color: var(--border-hover);
+        }
+
+        /* ================================
+           RESPONSIVE
+        ================================= */
+
+        @media (max-width: 768px) {
+            .main {
+                padding: 20px;
+            }
+
+            .page-title {
+                font-size: 36px;
+            }
+
+            .agents-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .workflow-diagram {
+                grid-template-columns: 1fr;
+            }
+
+            .workflow-step::after {
+                content: '↓';
+                right: 50%;
+                top: auto;
+                bottom: -28px;
+                transform: translateX(50%);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="background-grid"></div>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="logo">FinCo AI</div>
+
+        <div class="nav-links">
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+            <a href="copilot.html" class="nav-link">AI Copilot</a>
+            <a href="agents.html" class="nav-link active">AI Agents</a>
+            <a href="ml-models.html" class="nav-link">ML Models</a>
+            <a href="analysis.html" class="nav-link">Analysis</a>
+            <a href="collaboration.html" class="nav-link">Collaboration</a>
+            <a href="financial.html" class="nav-link">Transactions</a>
+            <a href="fraud.html" class="nav-link">Fraud & Risk</a>
+            <a href="forecasting.html" class="nav-link">Forecasting</a>
+            <a href="documents.html" class="nav-link">Documents</a>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+        <!-- PAGE HEADER -->
+        <div class="page-header">
+            <h1 class="page-title">Advanced AI Agents</h1>
+            <p class="page-subtitle">
+                Autonomous agents working collaboratively on financial analysis, forecasting, 
+                fraud detection, and decision-making in real-time
+            </p>
+
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-value" id="activeAgents">8</div>
+                    <div class="stat-label">Active Agents</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="tasksCompleted">1,247</div>
+                    <div class="stat-label">Tasks Completed</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="accuracy">94%</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="uptime">99.8%</div>
+                    <div class="stat-label">Uptime</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTROL PANEL -->
+        <div class="control-panel">
+            
+            <div class="control-card" style="--control-color: #7c5cff; --control-color-2: #9b86ff;">
+                <div class="control-icon">🚀</div>
+                <div class="control-title">System Status</div>
+                <div class="control-value">ONLINE</div>
+                <button class="control-btn" onclick="showToast('System', 'All agents operational')">
+                    View Details
+                </button>
+            </div>
+
+            <div class="control-card" style="--control-color: #22d3ee; --control-color-2: #67e8f9;">
+                <div class="control-icon">⚡</div>
+                <div class="control-title">Processing Speed</div>
+                <div class="control-value">2.4s</div>
+                <button class="control-btn" onclick="showToast('Performance', 'Average response time: 2.4 seconds')">
+                    Optimize
+                </button>
+            </div>
+
+            <div class="control-card" style="--control-color: #34d399; --control-color-2: #6ee7b7;">
+                <div class="control-icon">📊</div>
+                <div class="control-title">Active Tasks</div>
+                <div class="control-value" id="activeTasks">12</div>
+                <button class="control-btn" onclick="viewActiveTasks()">
+                    View Queue
+                </button>
+            </div>
+
+            <div class="control-card" style="--control-color: #fb7185; --control-color-2: #fda4af;">
+                <div class="control-icon">🔔</div>
+                <div class="control-title">Alerts</div>
+                <div class="control-value" id="alertCount">3</div>
+                <button class="control-btn" onclick="viewAlerts()">
+                    View Alerts
+                </button>
+            </div>
+
+        </div>
+
+        <!-- ORCHESTRATOR SECTION -->
+        <div class="orchestrator-section">
+            <h2 class="section-title">Agent Orchestrator</h2>
+
+            <div class="orchestrator-panel">
+                <div class="orchestrator-header">
+                    <div class="orchestrator-icon">🧠</div>
+                    <h3>Central Orchestrator</h3>
+                    <p>
+                        Coordinates all AI agents, routes tasks, manages workflows, and ensures 
+                        optimal collaboration across the entire system
+                    </p>
+                </div>
+
+                <div class="workflow-diagram">
+                    <div class="workflow-step">
+                        <div class="workflow-icon">📥</div>
+                        <div class="workflow-title">Receive Task</div>
+                        <div class="workflow-desc">User request or system event</div>
+                    </div>
+
+                    <div class="workflow-step">
+                        <div class="workflow-icon">🔍</div>
+                        <div class="workflow-title">Analyze Intent</div>
+                        <div class="workflow-desc">Understand task requirements</div>
+                    </div>
+
+                    <div class="workflow-step">
+                        <div class="workflow-icon">🎯</div>
+                        <div class="workflow-title">Route to Agents</div>
+                        <div class="workflow-desc">Assign specialized agents</div>
+                    </div>
+
+                    <div class="workflow-step">
+                        <div class="workflow-icon">🤝</div>
+                        <div class="workflow-title">Coordinate</div>
+                        <div class="workflow-desc">Manage agent collaboration</div>
+                    </div>
+
+                    <div class="workflow-step">
+                        <div class="workflow-icon">✅</div>
+                        <div class="workflow-title">Deliver Result</div>
+                        <div class="workflow-desc">Return completed analysis</div>
+                    </div>
+                </div>
+
+                <div class="activity-feed" id="orchestratorActivity">
+                    <!-- Activity items will be dynamically added here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- AI AGENTS GRID -->
+        <h2 class="section-title">Specialized AI Agents</h2>
+
+        <div class="agents-grid">
+
+            <!-- FRAUD DETECTION AGENT -->
+            <div class="agent-card" style="--agent-color: #fb7185; --agent-color-2: #fda4af;">
+                <div class="agent-header">
+                    <div class="agent-icon">
+                        🛡️
+                        <div class="agent-status"></div>
+                    </div>
+                    <div class="agent-info">
+                        <h3>Fraud Detection Agent</h3>
+                        <div class="agent-type">Security & Risk</div>
+                    </div>
+                </div>
+
+                <p class="agent-description">
+                    Analyzes transactions in real-time to detect fraud patterns, suspicious activities, 
+                    and anomalies using advanced machine learning models.
+                </p>
+
+                <div class="agent-metrics">
+                    <div class="metric">
+                        <div class="metric-value">234</div>
+                        <div class="metric-label">Frauds Detected</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">98.2%</div>
+                        <div class="metric-label">Accuracy</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">1.2s</div>
+                        <div class="metric-label">Avg Response</div>
+                    </div>
+                </div>
+
+                <div class="agent-capabilities">
+                    <div class="capabilities-title">Capabilities</div>
+                    <div class="capability-tags">
+                        <span class="capability-tag">Pattern Recognition</span>
+                        <span class="capability-tag">Anomaly Detection</span>
+                        <span class="capability-tag">Risk Scoring</span>
+                        <span class="capability-tag">Real-time Alerts</span>
+                    </div>
+                </div>
+
+                <div class="agent-actions">
+                    <button class="action-btn primary" onclick="deployAgent('fraud')">
+                        Deploy Agent
+                    </button>
+                    <button class="action-btn secondary" onclick="viewAgentLogs('fraud')">
+                        View Logs
+                    </button>
+                </div>
+            </div>
+
+            <!-- FORECAST AGENT -->
+            <div class="agent-card" style="--agent-color: #22d3ee; --agent-color-2: #67e8f9;">
+                <div class="agent-header">
+                    <div class="agent-icon">
+                        📈
+                        <div class="agent-status"></div>
+                    </div>
+                    <div class="agent-info">
+                        <h3>Forecasting Agent</h3>
+                        <div class="agent-type">Predictive Analytics</div>
+                    </div>
+                </div>
+
+                <p class="agent-description">
+                    Predicts future revenue, expenses, and cash flow using time-series analysis, 
+                    LSTM models, and market trend data.
+                </p>
+
+                <div class="agent-metrics">
+                    <div class="metric">
+                        <div class="metric-value">456</div>
+                        <div class="metric-label">Forecasts Made</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">91.5%</div>
+                        <div class="metric-label">Accuracy</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">3.8s</div>
+                        <div class="metric-label">Avg Response</div>
+                    </div>
+                </div>
+
+                <div class="agent-capabilities">
+                    <div class="capabilities-title">Capabilities</div>
+                    <div class="capability-tags">
+                        <span class="capability-tag">Time Series</span>
+                        <span class="capability-tag">LSTM Models</span>
+                        <span class="capability-tag">Trend Analysis</span>
+                        <span class="capability-tag">Scenario Planning</span>
+                    </div>
+                </div>
+
+                <div class="agent-actions">
+                    <button class="action-btn primary" onclick="deployAgent('forecast')">
+                        Deploy Agent
+                    </button>
+                    <button class="action-btn secondary" onclick="viewAgentLogs('forecast')">
+                        View Logs
+                    </button>
+                </div>
+            </div>
+
+            <!-- DOCUMENT AGENT -->
+            <div class="agent-card" style="--agent-color: #9b86ff; --agent-color-2: #b8a9ff;">
+                <div class="agent-header">
+                    <div class="agent-icon">
+                        📄
+                        <div class="agent-status"></div>
+                    </div>
+                    <div class="agent-info">
+                        <h3>Document Agent</h3>
+                        <div class="agent-type">RAG & Extraction</div>
+                    </div>
+                </div>
+
+                <p class="agent-description">
+                    Extracts, indexes, and retrieves information from financial documents using 
+                    RAG (Retrieval Augmented Generation) and NLP techniques.
+                </p>
+
+                <div class="agent-metrics">
+                    <div class="metric">
+                        <div class="metric-value">1.2K</div>
+                        <div class="metric-label">Docs Processed</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">96.8%</div>
+                        <div class="metric-label">Accuracy</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">2.1s</div>
+                        <div class="metric-label">Avg Response</div>
+                    </div>
+                </div>
+
+                <div class="agent-capabilities">
+                    <div class="capabilities-title">Capabilities</div>
+                    <div class="capability-tags">
+                        <span class="capability-tag">PDF Extraction</span>
+                        <span class="capability-tag">Vector Search</span>
+                        <span class="capability-tag">Semantic Retrieval</span>
+                        <span class="capability-tag">Q&A</span>
+                    </div>
+                </div>
+
+                <div class="agent-actions">
+                    <button class="action-btn primary" onclick="deployAgent('document')">
+                        Deploy Agent
+                    </button>
+                    <button class="action-btn secondary" onclick="viewAgentLogs('document')">
+                        View Logs
+                    </button>
+                </div>
+            </div>
+
+            <!-- RECOMMENDATION AGENT -->
+            <div class="agent-card" style="--agent-color: #34d399; --agent-color-2: #6ee7b7;">
+                <div class="agent-header">
+                    <div class="agent-icon">
+                        💡
+                        <div class="agent-status"></div>
+                    </div>
+                    <div class="agent-info">
+                        <h3>Recommendation Agent</h3>
+                        <div class="agent-type">Decision Support</div>
+                    </div>
+                </div>
+
+                <p class="agent-description">
+                    Generates actionable financial recommendations based on data analysis, 
+                    market conditions, and business objectives.
+                </p>
+
+                <div class="agent-metrics">
+                    <div class="metric">
+                        <div class="metric-value">789</div>
+                        <div class="metric-label">Recommendations</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">89.3%</div>
+                        <div class="metric-label">Adoption Rate</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">4.2s</div>
+                        <div class="metric-label">Avg Response</div>
+                    </div>
+                </div>
+
+                <div class="agent-capabilities">
+                    <div class="capabilities-title">Capabilities</div>
+                    <div class="capability-tags">
+                        <span class="capability-tag">Strategy Analysis</span>
+                        <span class="capability-tag">Optimization</span>
+                        <span class="capability-tag">Impact Prediction</span>
+                        <span class="capability-tag">Prioritization</span>
+                    </div>
+                </div>
+
+                <div class="agent-actions">
+                    <button class="action-btn primary" onclick="deployAgent('recommendation')">
+                        Deploy Agent
+                    </button>
+                    <button class="action-btn secondary" onclick="viewAgentLogs('recommendation')">
+                        View Logs
+                    </button>
+                </div>
+            </div>
+
+            <!-- ANALYTICS AGENT -->
+            <div class="agent-card" style="--agent-color: #fbbf24; --agent-color-2: #fcd34d;">
+                <div class="agent-header">
+                    <div class="agent-icon">
+                        📊
+                        <div class="agent-status"></div>
+                    </div>
+                    <div class="agent-info">
+                        <h3>Analytics Agent</h3>
+                        <div class="agent-type">Data Analysis</div>
+                    </div>
+                </div>
+
+                <p class="agent-description">
+                    Performs deep data analysis, calculates financial metrics, identifies trends, 
+                    and generates insights from complex datasets.
+                </p>
+
+                <div class="agent-metrics">
+                    <div class="metric">
+                        <div class="metric-value">3.4K</div>
+                        <div class="metric-label">Analyses Run</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">94.7%</div>
+                        <div class="metric-label">Accuracy</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">5.6s</div>
+                        <div class="metric-label">Avg Response</div>
+                    </div>
+                </div>
+
+                <div class="agent-capabilities">
+                    <div class="capabilities-title">Capabilities</div>
+                    <div class="capability-tags">
+                        <span class="capability-tag">Statistical Analysis</span>
+                        <span class="capability-tag">KPI Calculation</span>
+                        <span class="capability-tag">Trend Detection</span>
+                        <span class="capability-tag">Benchmarking</span>
+                    </div>
+                </div>
+
+                <div class="agent-actions">
+                    <button class="action-btn primary" onclick="deployAgent('analytics')">
+                        Deploy Agent
+                    </button>
+                    <button class="action-btn secondary" onclick="viewAgentLogs('analytics')">
+                        View Logs
+                    </button>
+                </div>
+            </div>
+
+            <!-- DECISION AGENT -->
+            <div class="agent-card" style="--agent-color: #7c5cff; --agent-color-2: #9b86ff;">
+                <div class="agent-header">
+                    <div class="agent-icon">
+                        🎯
+                        <div class="agent-status"></div>
+                    </div>
+                    <div class="agent-info">
+                        <h3>Decision Agent</h3>
+                        <div class="agent-type">Executive AI</div>
+                    </div>
+                </div>
+
+                <p class="agent-description">
+                    Synthesizes inputs from all agents to make final decisions, prioritize actions, 
+                    and generate executive-level strategic recommendations.
+                </p>
+
+                <div class="agent-metrics">
+                    <div class="metric">
+                        <div class="metric-value">567</div>
+                        <div class="metric-label">Decisions Made</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">92.1%</div>
+                        <div class="metric-label">Success Rate</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">6.8s</div>
+                        <div class="metric-label">Avg Response</div>
+                    </div>
+                </div>
+
+                <div class="agent-capabilities">
+                    <div class="capabilities-title">Capabilities</div>
+                    <div class="capability-tags">
+                        <span class="capability-tag">Multi-Agent Synthesis</span>
+                        <span class="capability-tag">Strategy Formation</span>
+                        <span class="capability-tag">Risk Assessment</span>
+                        <span class="capability-tag">Prioritization</span>
+                    </div>
+                </div>
+
+                <div class="agent-actions">
+                    <button class="action-btn primary" onclick="deployAgent('decision')">
+                        Deploy Agent
+                    </button>
+                    <button class="action-btn secondary" onclick="viewAgentLogs('decision')">
+                        View Logs
+                    </button>
+                </div>
+            </div>
+
+            <!-- CONTEXT BUILDER AGENT -->
+            <div class="agent-card" style="--agent-color: #60a5fa; --agent-color-2: #93c5fd;">
+                <div class="agent-header">
+                    <div class="agent-icon">
+                        🧩
+                        <div class="agent-status"></div>
+                    </div>
+                    <div class="agent-info">
+                        <h3>Context Builder Agent</h3>
+                        <div class="agent-type">Context Management</div>
+                    </div>
+                </div>
+
+                <p class="agent-description">
+                    Gathers and organizes relevant context from databases, documents, and APIs 
+                    to provide comprehensive background for other agents.
+                </p>
+
+                <div class="agent-metrics">
+                    <div class="metric">
+                        <div class="metric-value">2.8K</div>
+                        <div class="metric-label">Contexts Built</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">97.5%</div>
+                        <div class="metric-label">Completeness</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">1.9s</div>
+                        <div class="metric-label">Avg Response</div>
+                    </div>
+                </div>
+
+                <div class="agent-capabilities">
+                    <div class="capabilities-title">Capabilities</div>
+                    <div class="capability-tags">
+                        <span class="capability-tag">Data Gathering</span>
+                        <span class="capability-tag">Context Assembly</span>
+                        <span class="capability-tag">API Integration</span>
+                        <span class="capability-tag">Memory Management</span>
+                    </div>
+                </div>
+
+                <div class="agent-actions">
+                    <button class="action-btn primary" onclick="deployAgent('context')">
+                        Deploy Agent
+                    </button>
+                    <button class="action-btn secondary" onclick="viewAgentLogs('context')">
+                        View Logs
+                    </button>
+                </div>
+            </div>
+
+            <!-- PLANNER AGENT -->
+            <div class="agent-card" style="--agent-color: #fb923c; --agent-color-2: #fdba74;">
+                <div class="agent-header">
+                    <div class="agent-icon">
+                        🗓️
+                        <div class="agent-status"></div>
+                    </div>
+                    <div class="agent-info">
+                        <h3>Planner Agent</h3>
+                        <div class="agent-type">Task Planning</div>
+                    </div>
+                </div>
+
+                <p class="agent-description">
+                    Breaks down complex requests into subtasks, creates execution plans, 
+                    and coordinates task dependencies across multiple agents.
+                </p>
+
+                <div class="agent-metrics">
+                    <div class="metric">
+                        <div class="metric-value">1.5K</div>
+                        <div class="metric-label">Plans Created</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">95.3%</div>
+                        <div class="metric-label">Completion Rate</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">3.2s</div>
+                        <div class="metric-label">Avg Response</div>
+                    </div>
+                </div>
+
+                <div class="agent-capabilities">
+                    <div class="capabilities-title">Capabilities</div>
+                    <div class="capability-tags">
+                        <span class="capability-tag">Task Decomposition</span>
+                        <span class="capability-tag">Dependency Mapping</span>
+                        <span class="capability-tag">Resource Allocation</span>
+                        <span class="capability-tag">Timeline Estimation</span>
+                    </div>
+                </div>
+
+                <div class="agent-actions">
+                    <button class="action-btn primary" onclick="deployAgent('planner')">
+                        Deploy Agent
+                    </button>
+                    <button class="action-btn secondary" onclick="viewAgentLogs('planner')">
+                        View Logs
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div id="toastContainer" style="
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    "></div>
+
+    <script>
+        /* =========================================================
+           AGENT ACTIONS
+        ========================================================= */
+
+        function deployAgent(agentType) {
+            const agentNames = {
+                fraud: 'Fraud Detection Agent',
+                forecast: 'Forecasting Agent',
+                document: 'Document Agent',
+                recommendation: 'Recommendation Agent',
+                analytics: 'Analytics Agent',
+                decision: 'Decision Agent',
+                context: 'Context Builder Agent',
+                planner: 'Planner Agent'
+            };
+
+            showToast('Deploying Agent', `${agentNames[agentType]} is being deployed...`);
+            
+            setTimeout(() => {
+                addOrchestratorActivity(agentNames[agentType], `Deployed and ready for tasks`);
+                showToast('Agent Active', `${agentNames[agentType]} is now processing tasks`);
+                
+                // Update task counter
+                const activeTasksEl = document.getElementById('activeTasks');
+                activeTasksEl.textContent = parseInt(activeTasksEl.textContent) + Math.floor(Math.random() * 3 + 1);
+            }, 1500);
+        }
+
+        function viewAgentLogs(agentType) {
+            showToast('Agent Logs', `Opening logs for ${agentType} agent...`);
+        }
+
+        function viewActiveTasks() {
+            showToast('Active Tasks', 'Showing 12 tasks in queue...');
+        }
+
+        function viewAlerts() {
+            showToast('System Alerts', 'Showing 3 active alerts...');
+        }
+
+        /* =========================================================
+           ORCHESTRATOR ACTIVITY
+        ========================================================= */
+
+        const activityColors = {
+            'Fraud Detection Agent': { color: '#fb7185', color2: '#fda4af', icon: '🛡️' },
+            'Forecasting Agent': { color: '#22d3ee', color2: '#67e8f9', icon: '📈' },
+            'Document Agent': { color: '#9b86ff', color2: '#b8a9ff', icon: '📄' },
+            'Recommendation Agent': { color: '#34d399', color2: '#6ee7b7', icon: '💡' },
+            'Analytics Agent': { color: '#fbbf24', color2: '#fcd34d', icon: '📊' },
+            'Decision Agent': { color: '#7c5cff', color2: '#9b86ff', icon: '🎯' },
+            'Context Builder Agent': { color: '#60a5fa', color2: '#93c5fd', icon: '🧩' },
+            'Planner Agent': { color: '#fb923c', color2: '#fdba74', icon: '🗓️' }
+        };
+
+        function addOrchestratorActivity(agent, message, result = null) {
+            const feed = document.getElementById('orchestratorActivity');
+            const activity = document.createElement('div');
+            activity.className = 'activity-item';
+            
+            const colors = activityColors[agent];
+            activity.style.setProperty('--activity-color', colors.color);
+            activity.style.setProperty('--activity-color-2', colors.color2);
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            
+            activity.innerHTML = `
+                <div class="activity-header">
+                    <div class="activity-agent-icon">${colors.icon}</div>
+                    <div class="activity-agent">${agent}</div>
+                    <div class="activity-time">${timeStr}</div>
+                </div>
+                <div class="activity-message">${message}</div>
+                ${result ? `<div class="activity-result">✓ ${result}</div>` : ''}
+            `;
+            
+            feed.insertBefore(activity, feed.firstChild);
+            
+            // Keep only last 10 activities
+            while (feed.children.length > 10) {
+                feed.removeChild(feed.lastChild);
+            }
+        }
+
+        /* =========================================================
+           SIMULATED ACTIVITY
+        ========================================================= */
+
+        const activities = [
+            { agent: 'Fraud Detection Agent', message: 'Analyzed 234 transactions', result: 'No fraud detected' },
+            { agent: 'Forecasting Agent', message: 'Generated Q4 revenue forecast', result: 'Predicted: $2.4M (±15%)' },
+            { agent: 'Document Agent', message: 'Extracted data from 12 invoices', result: 'Total: $145,230' },
+            { agent: 'Recommendation Agent', message: 'Created cost optimization plan', result: 'Potential savings: $28K/mo' },
+            { agent: 'Analytics Agent', message: 'Calculated financial KPIs', result: 'Profit margin: 32.8%' },
+            { agent: 'Decision Agent', message: 'Prioritized strategic initiatives', result: 'Top 5 actions identified' },
+            { agent: 'Context Builder Agent', message: 'Assembled customer context', result: '87 data points gathered' },
+            { agent: 'Planner Agent', message: 'Created quarterly budget plan', result: '23 tasks scheduled' }
+        ];
+
+        function simulateActivity() {
+            const activity = activities[Math.floor(Math.random() * activities.length)];
+            addOrchestratorActivity(activity.agent, activity.message, activity.result);
+        }
+
+        // Add activity every 5 seconds
+        setInterval(simulateActivity, 5000);
+
+        // Add initial activities
+        for (let i = 0; i < 3; i++) {
+            simulateActivity();
+        }
+
+        /* =========================================================
+           STATS ANIMATION
+        ========================================================= */
+
+        function animateStats() {
+            // Tasks completed
+            const tasksEl = document.getElementById('tasksCompleted');
+            const currentTasks = parseInt(tasksEl.textContent.replace(',', ''));
+            tasksEl.textContent = (currentTasks + Math.floor(Math.random() * 5 + 1)).toLocaleString();
+
+            // Active tasks fluctuation
+            const activeTasksEl = document.getElementById('activeTasks');
+            const delta = Math.floor(Math.random() * 5) - 2;
+            const newValue = Math.max(8, Math.min(20, parseInt(activeTasksEl.textContent) + delta));
+            activeTasksEl.textContent = newValue;
+        }
+
+        setInterval(animateStats, 10000);
+
+        /* =========================================================
+           TOAST NOTIFICATIONS
+        ========================================================= */
+
+        function showToast(title, message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            toast.style.cssText = `
+                padding: 16px 20px;
+                background: rgba(14,16,25,0.95);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 12px;
+                min-width: 300px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            toast.innerHTML = `
+                <div style="font-size: 13.2px; font-weight: 700; margin-bottom: 4px;">${title}</div>
+                <div style="font-size: 12px; color: var(--muted);">${message}</div>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        /* =========================================================
+           INITIALIZATION
+        ========================================================= */
+
+        window.addEventListener('load', () => {
+            showToast('AI Agents Online', 'All 8 specialized agents are active and ready');
+        });
+    </script>
+
+</body>
+</html>

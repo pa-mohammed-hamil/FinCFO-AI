@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>FinCo AI — Real-Time Collaboration</title>
+    <meta
+        name="description"
+        content="Real-time collaboration workspace for financial teams."
+    >
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+        :root {
+            --bg: #05060a;
+            --bg-soft: #080a10;
+            --panel: rgba(14, 16, 25, 0.78);
+            --panel-2: rgba(18, 20, 30, 0.92);
+            --border: rgba(255,255,255,.08);
+            --border-hover: rgba(124,92,255,.38);
+
+            --text: #f5f7ff;
+            --muted: #8d93a7;
+            --muted-2: #656b7e;
+
+            --purple: #7c5cff;
+            --purple-2: #9b86ff;
+            --cyan: #22d3ee;
+            --green: #34d399;
+            --yellow: #fbbf24;
+            --red: #fb7185;
+            --blue: #60a5fa;
+            --orange: #fb923c;
+            --pink: #f472b6;
+
+            --sidebar-width: 280px;
+            --radius: 18px;
+
+            --shadow:
+                0 20px 70px rgba(0,0,0,.42),
+                inset 0 1px 0 rgba(255,255,255,.025);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(
+                    circle at 75% 5%,
+                    rgba(124,92,255,.13),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 20% 80%,
+                    rgba(34,211,238,.07),
+                    transparent 25%
+                ),
+                var(--bg);
+
+            color: var(--text);
+            font-family: Inter, sans-serif;
+            font-size: 15.6px;
+            overflow-x: hidden;
+        }
+
+        button,
+        input,
+        textarea {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* ================================
+           BACKGROUND GRID
+        ================================= */
+
+        .background-grid {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            opacity: .18;
+            background-image:
+                linear-gradient(
+                    var(--border) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    var(--border) 1px,
+                    transparent 1px
+                );
+            background-size: 42px 42px;
+        }
+
+        /* ================================
+           TOP NAV
+        ================================= */
+
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 72px;
+            background: var(--panel);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            padding: 0 32px;
+            gap: 24px;
+        }
+
+        .logo {
+            font-size: 21.6px;
+            font-weight: 800;
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #7c5cff, #22d3ee);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .nav-link {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13.2px;
+            font-weight: 600;
+            transition: .2s;
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,.08);
+        }
+
+        .nav-link.active {
+            background: rgba(124,92,255,.15);
+            color: var(--purple);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,.05);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            transition: .2s;
+        }
+
+        .user-menu:hover {
+            background: rgba(255,255,255,.08);
+            border-color: var(--border-hover);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--purple), var(--cyan));
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* ================================
+           MAIN LAYOUT
+        ================================= */
+
+        .main-container {
+            margin-top: 72px;
+            display: flex;
+            height: calc(100vh - 72px);
+        }
+
+        /* ================================
+           SIDEBAR - TEAM & WORKSPACES
+        ================================= */
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .sidebar-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--muted-2);
+        }
+
+        .add-btn {
+            width: 24px;
+            height: 24px;
+            display: grid;
+            place-items: center;
+            background: rgba(124,92,255,.12);
+            border: none;
+            border-radius: 6px;
+            color: var(--purple);
+            font-size: 16px;
+            transition: .2s;
+        }
+
+        .add-btn:hover {
+            background: rgba(124,92,255,.2);
+            transform: scale(1.05);
+        }
+
+        /* Online Users */
+        .online-users {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            border-radius: 8px;
+            transition: .2s;
+            cursor: pointer;
+        }
+
+        .user-item:hover {
+            background: rgba(255,255,255,.05);
+        }
+
+        .user-item-avatar {
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            position: relative;
+        }
+
+        .user-status {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid var(--panel);
+        }
+
+        .user-status.online {
+            background: var(--green);
+        }
+
+        .user-status.away {
+            background: var(--yellow);
+        }
+
+        .user-status.busy {
+            background: var(--red);
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 13.2px;
+            font-weight: 600;
+            display: block;
+        }
+
+        .user-role {
+            font-size: 11px;
+            color: var(--muted-2);
+        }
+
+        /* Workspaces */
+        .workspace-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .workspace-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(255,255,255,.03);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            transition: .2s;
+            cursor: pointer;
+        }
+
+        .workspace-item:hover {
+            background: rgba(255,255,255,.06);
+            border-color: var(--border-hover);
+        }
+
+        .workspace-item.active {
+            background: rgba(124,92,255,.15);
+            border-color: rgba(124,92,255,.3);
+        }
+
+        .workspace-icon {
+            width: 32px;
+            height: 32px;
+            display: grid;
+            place-items: center;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .workspace-details {
+            flex: 1;
+        }
+
+        .workspace-name {
+            font-size: 12.6px;
+            font-weight: 600;
+            display: block;
+        }
+
+        .workspace-members {
+            font-size: 10.2px;
+            color: var(--muted-2);
+        }
+
+        /* ================================
+           MAIN CONTENT AREA
+        ================================= */
+
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .workspace-header {
+            padding: 20px 32px;
+            background: var(--panel-2);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .workspace-info h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .workspace-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 12.6px;
+            color: var(--muted);
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 13.2px;
+            font-weight: 600;
+            border: none;
+            transition: .2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--purple), #6d4aff);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(124,92,255,.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,.08);
+        }
+
+        /* ================================
+           COLLABORATION WORKSPACE
+        ================================= */
+
+        .workspace-content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            overflow: hidden;
+        }
+
+        .canvas-area {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .canvas-toolbar {
+            padding: 12px 20px;
+            background: var(--bg-soft);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .tool-group {
+            display: flex;
+            gap: 4px;
+            padding: 4px;
+            background: rgba(255,255,255,.03);
+            border-radius: 8px;
+        }
+
+        .tool-btn {
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            color: var(--muted);
+            font-size: 16px;
+            transition: .2s;
+        }
+
+        .tool-btn:hover {
+            background: rgba(255,255,255,.08);
+            color: var(--text);
+        }
+
+        .tool-btn.active {
+            background: rgba(124,92,255,.15);
+            color: var(--purple);
+        }
+
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: auto;
+            background: var(--bg);
+        }
+
+        .canvas {
+            min-height: 100%;
+            padding: 40px;
+        }
+
+        /* Document Cards */
+        .document-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .doc-card {
+            padding: 20px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: .2s;
+            position: relative;
+        }
+
+        .doc-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-hover);
+            box-shadow: 0 10px 40px rgba(0,0,0,.3);
+        }
+
+        .doc-header {
+            display: flex;
+            align-items: start;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .doc-icon {
+            width: 48px;
+            height: 48px;
+            display: grid;
+            place-items: center;
+            border-radius: 10px;
+            font-size: 20px;
+        }
+
+        .doc-title {
+            font-size: 15.6px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .doc-meta {
+            font-size: 11px;
+            color: var(--muted-2);
+        }
+
+        .doc-collaborators {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 12px;
+        }
+
+        .collaborator-avatar {
+            width: 28px;
+            height: 28px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            border: 2px solid var(--panel);
+            font-size: 10px;
+            font-weight: 700;
+            margin-left: -8px;
+        }
+
+        .collaborator-avatar:first-child {
+            margin-left: 0;
+        }
+
+        .editing-now {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 4px 8px;
+            background: rgba(52,211,153,.15);
+            border: 1px solid rgba(52,211,153,.3);
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        /* ================================
+           ACTIVITY FEED
+        ================================= */
+
+        .activity-panel {
+            display: flex;
+            flex-direction: column;
+            background: var(--panel-2);
+            overflow: hidden;
+        }
+
+        .activity-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .activity-tabs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .activity-tab {
+            padding: 8px 14px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            font-size: 12.6px;
+            font-weight: 600;
+            color: var(--muted);
+            transition: .2s;
+        }
+
+        .activity-tab:hover {
+            background: rgba(255,255,255,.05);
+            color: var(--text);
+        }
+
+        .activity-tab.active {
+            background: rgba(124,92,255,.15);
+            color: var(--purple);
+        }
+
+        .activity-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .activity-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .activity-item {
+            padding: 12px;
+            background: rgba(255,255,255,.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .activity-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .activity-avatar {
+            width: 28px;
+            height: 28px;
+            display: grid;
+            place-items: center;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .activity-name {
+            font-size: 12.6px;
+            font-weight: 600;
+        }
+
+        .activity-time {
+            font-size: 10.2px;
+            color: var(--muted-2);
+            margin-left: auto;
+        }
+
+        .activity-action {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .activity-action strong {
+            color: var(--text);
+        }
+
+        /* Chat Messages */
+        .chat-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-message {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-avatar {
+            width: 32px;
+            height: 32px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .chat-content {
+            flex: 1;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .chat-name {
+            font-size: 12.6px;
+            font-weight: 600;
+        }
+
+        .chat-time {
+            font-size: 10.2px;
+            color: var(--muted-2);
+        }
+
+        .chat-text {
+            font-size: 12.6px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        /* Chat Input */
+        .chat-input-container {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255,255,255,.05);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 12.6px;
+            resize: none;
+            max-height: 120px;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: rgba(124,92,255,.5);
+            background: rgba(255,255,255,.08);
+        }
+
+        .chat-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .chat-tools {
+            display: flex;
+            gap: 4px;
+        }
+
+        .chat-tool-btn {
+            width: 28px;
+            height: 28px;
+            display: grid;
+            place-items: center;
+            background: rgba(255,255,255,.05);
+            border: none;
+            border-radius: 6px;
+            color: var(--muted);
+            font-size: 13px;
+            transition: .2s;
+        }
+
+        .chat-tool-btn:hover {
+            background: rgba(255,255,255,.1);
+            color: var(--text);
+        }
+
+        .send-btn {
+            padding: 6px 16px;
+            background: linear-gradient(135deg, var(--purple), #6d4aff);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            transition: .2s;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* ================================
+           CURSOR TRACKING
+        ================================= */
+
+        .cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            transition: transform 0.1s;
+        }
+
+        .cursor-label {
+            position: absolute;
+            top: 24px;
+            left: 0;
+            padding: 4px 8px;
+            background: rgba(0,0,0,.8);
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* ================================
+           RESPONSIVE
+        ================================= */
+
+        @media (max-width: 1024px) {
+            .workspace-content {
+                grid-template-columns: 1fr;
+            }
+
+            .activity-panel {
+                display: none;
+            }
+
+            .sidebar {
+                width: 240px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 72px;
+                bottom: 0;
+                z-index: 50;
+                transition: left 0.3s;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="background-grid"></div>
+
+    <!-- TOP NAV -->
+    <nav class="top-nav">
+        <div class="logo">FinCo AI</div>
+
+        <div class="nav-links">
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+            <a href="copilot.html" class="nav-link">AI Copilot</a>
+            <a href="agents.html" class="nav-link">AI Agents</a>
+            <a href="ml-models.html" class="nav-link">ML Models</a>
+            <a href="analysis.html" class="nav-link">Analysis</a>
+            <a href="collaboration.html" class="nav-link active">Collaboration</a>
+            <a href="financial.html" class="nav-link">Transactions</a>
+            <a href="fraud.html" class="nav-link">Fraud & Risk</a>
+            <a href="forecasting.html" class="nav-link">Forecasting</a>
+            <a href="documents.html" class="nav-link">Documents</a>
+        </div>
+
+        <button class="user-menu">
+            <div class="user-avatar">PA</div>
+            <span style="font-size: 12.6px;">Platform Admin</span>
+        </button>
+    </nav>
+
+    <!-- MAIN CONTAINER -->
+    <div class="main-container">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+
+            <!-- ONLINE USERS -->
+            <div class="sidebar-section">
+                <div class="sidebar-header">
+                    <div class="sidebar-title">Online Now (5)</div>
+                </div>
+
+                <div class="online-users">
+                    <div class="user-item">
+                        <div class="user-item-avatar" style="background: linear-gradient(135deg, #7c5cff, #9b86ff);">
+                            PA
+                            <div class="user-status online"></div>
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">Platform Admin</span>
+                            <span class="user-role">Administrator</span>
+                        </div>
+                    </div>
+
+                    <div class="user-item">
+                        <div class="user-item-avatar" style="background: linear-gradient(135deg, #22d3ee, #67e8f9);">
+                            SK
+                            <div class="user-status online"></div>
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">Sarah Kim</span>
+                            <span class="user-role">Finance Lead</span>
+                        </div>
+                    </div>
+
+                    <div class="user-item">
+                        <div class="user-item-avatar" style="background: linear-gradient(135deg, #34d399, #6ee7b7);">
+                            MJ
+                            <div class="user-status online"></div>
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">Michael Jones</span>
+                            <span class="user-role">Analyst</span>
+                        </div>
+                    </div>
+
+                    <div class="user-item">
+                        <div class="user-item-avatar" style="background: linear-gradient(135deg, #fbbf24, #fcd34d);">
+                            LC
+                            <div class="user-status away"></div>
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">Lisa Chen</span>
+                            <span class="user-role">Controller</span>
+                        </div>
+                    </div>
+
+                    <div class="user-item">
+                        <div class="user-item-avatar" style="background: linear-gradient(135deg, #fb7185, #fda4af);">
+                            DB
+                            <div class="user-status busy"></div>
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">David Brown</span>
+                            <span class="user-role">CFO</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WORKSPACES -->
+            <div class="sidebar-section">
+                <div class="sidebar-header">
+                    <div class="sidebar-title">Workspaces</div>
+                    <button class="add-btn" onclick="showToast('Create Workspace', 'Creating new workspace...')">+</button>
+                </div>
+
+                <div class="workspace-list">
+                    <div class="workspace-item active">
+                        <div class="workspace-icon" style="background: linear-gradient(135deg, #7c5cff, #9b86ff);">📊</div>
+                        <div class="workspace-details">
+                            <span class="workspace-name">Q3 Financial Review</span>
+                            <span class="workspace-members">5 members • 3 editing</span>
+                        </div>
+                    </div>
+
+                    <div class="workspace-item">
+                        <div class="workspace-icon" style="background: linear-gradient(135deg, #22d3ee, #67e8f9);">💰</div>
+                        <div class="workspace-details">
+                            <span class="workspace-name">Budget Planning 2027</span>
+                            <span class="workspace-members">4 members • 1 editing</span>
+                        </div>
+                    </div>
+
+                    <div class="workspace-item">
+                        <div class="workspace-icon" style="background: linear-gradient(135deg, #34d399, #6ee7b7);">📈</div>
+                        <div class="workspace-details">
+                            <span class="workspace-name">Revenue Forecast</span>
+                            <span class="workspace-members">3 members</span>
+                        </div>
+                    </div>
+
+                    <div class="workspace-item">
+                        <div class="workspace-icon" style="background: linear-gradient(135deg, #fb923c, #fdba74);">🔍</div>
+                        <div class="workspace-details">
+                            <span class="workspace-name">Fraud Investigation</span>
+                            <span class="workspace-members">2 members • 1 editing</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- CONTENT AREA -->
+        <div class="content-area">
+
+            <!-- WORKSPACE HEADER -->
+            <div class="workspace-header">
+                <div class="workspace-info">
+                    <h1>Q3 Financial Review</h1>
+                    <div class="workspace-meta">
+                        <div class="live-indicator">
+                            <div class="live-dot"></div>
+                            3 people editing
+                        </div>
+                        <span>•</span>
+                        <span>Last updated 2 min ago</span>
+                        <span>•</span>
+                        <span>12 documents</span>
+                    </div>
+                </div>
+
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="showToast('Share', 'Opening share settings...')">
+                        🔗 Share
+                    </button>
+                    <button class="btn btn-primary" onclick="showToast('Export', 'Exporting workspace...')">
+                        ⬇ Export
+                    </button>
+                </div>
+            </div>
+
+            <!-- WORKSPACE CONTENT -->
+            <div class="workspace-content">
+
+                <!-- CANVAS AREA -->
+                <div class="canvas-area">
+
+                    <div class="canvas-toolbar">
+                        <div class="tool-group">
+                            <button class="tool-btn active" title="Select">
+                                ↖
+                            </button>
+                            <button class="tool-btn" title="Add Text">
+                                T
+                            </button>
+                            <button class="tool-btn" title="Draw">
+                                ✎
+                            </button>
+                            <button class="tool-btn" title="Add Shape">
+                                ▢
+                            </button>
+                        </div>
+
+                        <div class="tool-group">
+                            <button class="tool-btn" title="Add Document">
+                                📄
+                            </button>
+                            <button class="tool-btn" title="Add Chart">
+                                📊
+                            </button>
+                            <button class="tool-btn" title="Add Table">
+                                ▦
+                            </button>
+                        </div>
+
+                        <div style="margin-left: auto; display: flex; gap: 8px;">
+                            <button class="tool-btn" title="Zoom Out" onclick="zoomCanvas(-0.1)">
+                                −
+                            </button>
+                            <span style="font-size: 12px; color: var(--muted); align-self: center;" id="zoomLevel">100%</span>
+                            <button class="tool-btn" title="Zoom In" onclick="zoomCanvas(0.1)">
+                                +
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="canvas-container" id="canvasContainer">
+                        <div class="canvas" id="canvas">
+
+                            <div class="document-grid">
+
+                                <div class="doc-card">
+                                    <div class="editing-now">● Sarah editing</div>
+                                    <div class="doc-header">
+                                        <div class="doc-icon" style="background: linear-gradient(135deg, #7c5cff, #9b86ff);">
+                                            📊
+                                        </div>
+                                        <div>
+                                            <div class="doc-title">Q3 Revenue Report</div>
+                                            <div class="doc-meta">Updated 2 min ago</div>
+                                        </div>
+                                    </div>
+                                    <div class="doc-collaborators">
+                                        <div class="collaborator-avatar" style="background: linear-gradient(135deg, #22d3ee, #67e8f9);">SK</div>
+                                        <div class="collaborator-avatar" style="background: linear-gradient(135deg, #34d399, #6ee7b7);">MJ</div>
+                                        <div class="collaborator-avatar" style="background: linear-gradient(135deg, #7c5cff, #9b86ff);">PA</div>
+                                    </div>
+                                </div>
+
+                                <div class="doc-card">
+                                    <div class="editing-now">● Michael editing</div>
+                                    <div class="doc-header">
+                                        <div class="doc-icon" style="background: linear-gradient(135deg, #22d3ee, #67e8f9);">
+                                            💰
+                                        </div>
+                                        <div>
+                                            <div class="doc-title">Expense Analysis</div>
+                                            <div class="doc-meta">Updated 8 min ago</div>
+                                        </div>
+                                    </div>
+                                    <div class="doc-collaborators">
+                                        <div class="collaborator-avatar" style="background: linear-gradient(135deg, #34d399, #6ee7b7);">MJ</div>
+                                        <div class="collaborator-avatar" style="background: linear-gradient(135deg, #fbbf24, #fcd34d);">LC</div>
+                                    </div>
+                                </div>
+
+                                <div class="doc-card">
+                                    <div class="doc-header">
+                                        <div class="doc-icon" style="background: linear-gradient(135deg, #34d399, #6ee7b7);">
+                                            📈
+                                        </div>
+                                        <div>
+                                            <div class="doc-title">Profit Margins</div>
+                                            <div class="doc-meta">Updated 15 min ago</div>
+                                        </div>
+                                    </div>
+                                    <div class="doc-collaborators">
+                                        <div class="collaborator-avatar" style="background: linear-gradient(135deg, #fb7185, #fda4af);">DB</div>
+                                        <div class="collaborator-avatar" style="background: linear-gradient(135deg, #7c5cff, #9b86ff);">PA</div>
+                                    </div>
+                                </div>
+
+                                <div class="doc-card">
+                                    <div class="editing-now">● Platform editing</div>
+                                    <div class="doc-header">
+                                        <div class="doc-icon" style="background: linear-gradient(135deg, #fbbf24, #fcd34d);">
+                                            🔍
+                                        </div>
+                                        <div>
+                                            <div class="doc-title">Risk Assessment</div>
+                                            <div class="doc-meta">Updated 22 min ago</div>
+                                        </div>
+                                    </div>
+                                    <div class="doc-collaborators">
+                                        <div class="collaborator-avatar" style="background: linear-gradient(135deg, #7c5cff, #9b86ff);">PA</div>
+                                        <div class="collaborator-avatar" style="background: linear-gradient(135deg, #22d3ee, #67e8f9);">SK</div>
+                                        <div class="collaborator-avatar" style="background: linear-gradient(135deg, #fb7185, #fda4af);">DB</div>
+                                    </div>
+                                </div>
+
+                                <div class="doc-card">
+                                    <div class="doc-header">
+                                        <div class="doc-icon" style="background: linear-gradient(135deg, #fb7185, #fda4af);">
+                                            📝
+                                        </div>
+                                        <div>
+                                            <div class="doc-title">Meeting Notes</div>
+                                            <div class="doc-meta">Updated 1 hour ago</div>
+                                        </div>
+                                    </div>
+                                    <div class="doc-collaborators">
+                                        <div class="collaborator-avatar" style="background: linear-gradient(135deg, #fbbf24, #fcd34d);">LC</div>
+                                        <div class="collaborator-avatar" style="background: linear-gradient(135deg, #34d399, #6ee7b7);">MJ</div>
+                                    </div>
+                                </div>
+
+                                <div class="doc-card">
+                                    <div class="doc-header">
+                                        <div class="doc-icon" style="background: linear-gradient(135deg, #f472b6, #fb92cf);">
+                                            📋
+                                        </div>
+                                        <div>
+                                            <div class="doc-title">Action Items</div>
+                                            <div class="doc-meta">Updated 2 hours ago</div>
+                                        </div>
+                                    </div>
+                                    <div class="doc-collaborators">
+                                        <div class="collaborator-avatar" style="background: linear-gradient(135deg, #22d3ee, #67e8f9);">SK</div>
+                                        <div class="collaborator-avatar" style="background: linear-gradient(135deg, #fb7185, #fda4af);">DB</div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ACTIVITY PANEL -->
+                <div class="activity-panel">
+
+                    <div class="activity-header">
+                        <div class="activity-tabs">
+                            <button class="activity-tab active" onclick="switchTab('activity')">Activity</button>
+                            <button class="activity-tab" onclick="switchTab('chat')">Chat</button>
+                            <button class="activity-tab" onclick="switchTab('comments')">Comments</button>
+                        </div>
+                    </div>
+
+                    <div class="activity-content" id="activityContent">
+
+                        <!-- ACTIVITY FEED -->
+                        <div class="activity-feed" id="activityFeed">
+
+                            <div class="activity-item">
+                                <div class="activity-user">
+                                    <div class="activity-avatar" style="background: linear-gradient(135deg, #22d3ee, #67e8f9);">
+                                        SK
+                                    </div>
+                                    <span class="activity-name">Sarah Kim</span>
+                                    <span class="activity-time">2 min ago</span>
+                                </div>
+                                <div class="activity-action">
+                                    Edited <strong>Q3 Revenue Report</strong>
+                                </div>
+                            </div>
+
+                            <div class="activity-item">
+                                <div class="activity-user">
+                                    <div class="activity-avatar" style="background: linear-gradient(135deg, #34d399, #6ee7b7);">
+                                        MJ
+                                    </div>
+                                    <span class="activity-name">Michael Jones</span>
+                                    <span class="activity-time">5 min ago</span>
+                                </div>
+                                <div class="activity-action">
+                                    Added a comment on <strong>Expense Analysis</strong>
+                                </div>
+                            </div>
+
+                            <div class="activity-item">
+                                <div class="activity-user">
+                                    <div class="activity-avatar" style="background: linear-gradient(135deg, #7c5cff, #9b86ff);">
+                                        PA
+                                    </div>
+                                    <span class="activity-name">Platform Admin</span>
+                                    <span class="activity-time">8 min ago</span>
+                                </div>
+                                <div class="activity-action">
+                                    Shared <strong>Risk Assessment</strong> with the team
+                                </div>
+                            </div>
+
+                            <div class="activity-item">
+                                <div class="activity-user">
+                                    <div class="activity-avatar" style="background: linear-gradient(135deg, #fbbf24, #fcd34d);">
+                                        LC
+                                    </div>
+                                    <span class="activity-name">Lisa Chen</span>
+                                    <span class="activity-time">12 min ago</span>
+                                </div>
+                                <div class="activity-action">
+                                    Created <strong>Meeting Notes</strong>
+                                </div>
+                            </div>
+
+                            <div class="activity-item">
+                                <div class="activity-user">
+                                    <div class="activity-avatar" style="background: linear-gradient(135deg, #fb7185, #fda4af);">
+                                        DB
+                                    </div>
+                                    <span class="activity-name">David Brown</span>
+                                    <span class="activity-time">20 min ago</span>
+                                </div>
+                                <div class="activity-action">
+                                    Approved changes in <strong>Profit Margins</strong>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- CHAT -->
+                        <div class="chat-messages" id="chatMessages" style="display: none;">
+
+                            <div class="chat-message">
+                                <div class="chat-avatar" style="background: linear-gradient(135deg, #22d3ee, #67e8f9);">
+                                    SK
+                                </div>
+                                <div class="chat-content">
+                                    <div class="chat-header">
+                                        <span class="chat-name">Sarah Kim</span>
+                                        <span class="chat-time">10:34 AM</span>
+                                    </div>
+                                    <div class="chat-text">
+                                        I've updated the revenue projections based on the latest data. Can someone review?
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="chat-message">
+                                <div class="chat-avatar" style="background: linear-gradient(135deg, #34d399, #6ee7b7);">
+                                    MJ
+                                </div>
+                                <div class="chat-content">
+                                    <div class="chat-header">
+                                        <span class="chat-name">Michael Jones</span>
+                                        <span class="chat-time">10:36 AM</span>
+                                    </div>
+                                    <div class="chat-text">
+                                        Looking at it now. The expense analysis is also ready for review.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="chat-message">
+                                <div class="chat-avatar" style="background: linear-gradient(135deg, #fb7185, #fda4af);">
+                                    DB
+                                </div>
+                                <div class="chat-content">
+                                    <div class="chat-header">
+                                        <span class="chat-name">David Brown</span>
+                                        <span class="chat-time">10:38 AM</span>
+                                    </div>
+                                    <div class="chat-text">
+                                        Great work team! Let's finalize this by end of day.
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- CHAT INPUT -->
+                    <div class="chat-input-container">
+                        <textarea 
+                            class="chat-input" 
+                            placeholder="Type a message..."
+                            rows="2"
+                            id="chatInput"
+                        ></textarea>
+                        <div class="chat-actions">
+                            <div class="chat-tools">
+                                <button class="chat-tool-btn" title="Attach file">📎</button>
+                                <button class="chat-tool-btn" title="Add emoji">😊</button>
+                                <button class="chat-tool-btn" title="Mention">@</button>
+                            </div>
+                            <button class="send-btn" onclick="sendMessage()">Send</button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div id="toastContainer" style="
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    "></div>
+
+    <script>
+        /* =========================================================
+           TAB SWITCHING
+        ========================================================= */
+
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.activity-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Show/hide content
+            const activityFeed = document.getElementById('activityFeed');
+            const chatMessages = document.getElementById('chatMessages');
+
+            if (tab === 'activity' || tab === 'comments') {
+                activityFeed.style.display = 'flex';
+                chatMessages.style.display = 'none';
+            } else if (tab === 'chat') {
+                activityFeed.style.display = 'none';
+                chatMessages.style.display = 'flex';
+            }
+        }
+
+        /* =========================================================
+           CHAT FUNCTIONALITY
+        ========================================================= */
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+
+            if (!text) return;
+
+            const chatMessages = document.getElementById('chatMessages');
+            const newMessage = document.createElement('div');
+            newMessage.className = 'chat-message';
+            newMessage.innerHTML = `
+                <div class="chat-avatar" style="background: linear-gradient(135deg, #7c5cff, #9b86ff);">
+                    PA
+                </div>
+                <div class="chat-content">
+                    <div class="chat-header">
+                        <span class="chat-name">Platform Admin</span>
+                        <span class="chat-time">${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <div class="chat-text">
+                        ${text}
+                    </div>
+                </div>
+            `;
+
+            chatMessages.appendChild(newMessage);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            input.value = '';
+            
+            showToast('Message Sent', 'Your message was delivered');
+
+            // Add to activity feed
+            addActivity('Platform Admin', 'PA', 'Sent a message in chat');
+        }
+
+        /* =========================================================
+           ACTIVITY FEED
+        ========================================================= */
+
+        function addActivity(name, initials, action) {
+            const activityFeed = document.getElementById('activityFeed');
+            const newActivity = document.createElement('div');
+            newActivity.className = 'activity-item';
+            newActivity.innerHTML = `
+                <div class="activity-user">
+                    <div class="activity-avatar" style="background: linear-gradient(135deg, #7c5cff, #9b86ff);">
+                        ${initials}
+                    </div>
+                    <span class="activity-name">${name}</span>
+                    <span class="activity-time">Just now</span>
+                </div>
+                <div class="activity-action">
+                    ${action}
+                </div>
+            `;
+
+            activityFeed.insertBefore(newActivity, activityFeed.firstChild);
+        }
+
+        /* =========================================================
+           CANVAS ZOOM
+        ========================================================= */
+
+        let currentZoom = 1.0;
+
+        function zoomCanvas(delta) {
+            currentZoom = Math.max(0.5, Math.min(2.0, currentZoom + delta));
+            const canvas = document.getElementById('canvas');
+            canvas.style.transform = `scale(${currentZoom})`;
+            canvas.style.transformOrigin = 'top left';
+            
+            document.getElementById('zoomLevel').textContent = `${Math.round(currentZoom * 100)}%`;
+        }
+
+        /* =========================================================
+           REAL-TIME CURSOR SIMULATION
+        ========================================================= */
+
+        const cursors = [
+            { name: 'Sarah Kim', color: '#22d3ee', x: 0, y: 0 },
+            { name: 'Michael Jones', color: '#34d399', x: 0, y: 0 }
+        ];
+
+        // Simulate cursor movement
+        setInterval(() => {
+            cursors.forEach((cursor, index) => {
+                cursor.x = Math.random() * 80 + 10;
+                cursor.y = Math.random() * 80 + 10;
+                
+                const cursorEl = document.getElementById(`cursor-${index}`);
+                if (cursorEl) {
+                    cursorEl.style.left = `${cursor.x}%`;
+                    cursorEl.style.top = `${cursor.y}%`;
+                }
+            });
+        }, 2000);
+
+        // Create cursor elements
+        cursors.forEach((cursor, index) => {
+            const canvasContainer = document.getElementById('canvasContainer');
+            const cursorEl = document.createElement('div');
+            cursorEl.id = `cursor-${index}`;
+            cursorEl.className = 'cursor';
+            cursorEl.style.background = cursor.color;
+            cursorEl.innerHTML = `<div class="cursor-label" style="background: ${cursor.color};">${cursor.name}</div>`;
+            canvasContainer.appendChild(cursorEl);
+        });
+
+        /* =========================================================
+           LIVE ACTIVITY SIMULATION
+        ========================================================= */
+
+        const activities = [
+            { name: 'Sarah Kim', initials: 'SK', action: 'Updated Q3 Revenue Report' },
+            { name: 'Michael Jones', initials: 'MJ', action: 'Added a chart to Expense Analysis' },
+            { name: 'Lisa Chen', initials: 'LC', action: 'Commented on Meeting Notes' },
+            { name: 'David Brown', initials: 'DB', action: 'Reviewed Risk Assessment' }
+        ];
+
+        setInterval(() => {
+            const activity = activities[Math.floor(Math.random() * activities.length)];
+            addActivity(activity.name, activity.initials, activity.action);
+        }, 15000); // New activity every 15 seconds
+
+        /* =========================================================
+           TOAST NOTIFICATIONS
+        ========================================================= */
+
+        function showToast(title, message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            toast.style.cssText = `
+                padding: 16px 20px;
+                background: rgba(14,16,25,0.95);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 12px;
+                min-width: 300px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            toast.innerHTML = `
+                <div style="font-size: 13.2px; font-weight: 700; margin-bottom: 4px;">${title}</div>
+                <div style="font-size: 12px; color: var(--muted);">${message}</div>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        /* =========================================================
+           ENTER KEY FOR CHAT
+        ========================================================= */
+
+        document.getElementById('chatInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        /* =========================================================
+           INITIAL LOAD
+        ========================================================= */
+
+        window.addEventListener('load', () => {
+            showToast('Welcome', 'Real-time collaboration is active');
+        });
+    </script>
+
+</body>
+</html>

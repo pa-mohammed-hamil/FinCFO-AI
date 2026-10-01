@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>FinCo AI — Financial Analysis & Prediction</title>
+    <meta
+        name="description"
+        content="Upload financial data, predict profit/loss, get AI insights and downloadable reports."
+    >
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+        :root {
+            --bg: #05060a;
+            --bg-soft: #080a10;
+            --panel: rgba(14, 16, 25, 0.78);
+            --panel-2: rgba(18, 20, 30, 0.92);
+            --border: rgba(255,255,255,.08);
+            --border-hover: rgba(124,92,255,.38);
+
+            --text: #f5f7ff;
+            --muted: #8d93a7;
+            --muted-2: #656b7e;
+
+            --purple: #7c5cff;
+            --purple-2: #9b86ff;
+            --cyan: #22d3ee;
+            --green: #34d399;
+            --yellow: #fbbf24;
+            --red: #fb7185;
+            --blue: #60a5fa;
+
+            --sidebar-width: 260px;
+            --radius: 18px;
+
+            --shadow:
+                0 20px 70px rgba(0,0,0,.42),
+                inset 0 1px 0 rgba(255,255,255,.025);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(
+                    circle at 75% 5%,
+                    rgba(124,92,255,.13),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 20% 80%,
+                    rgba(34,211,238,.07),
+                    transparent 25%
+                ),
+                var(--bg);
+
+            color: var(--text);
+            font-family: Inter, sans-serif;
+            font-size: 15.6px;
+            overflow-x: hidden;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* ================================
+           BACKGROUND GRID
+        ================================= */
+
+        .background-grid {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            opacity: .18;
+            background-image:
+                linear-gradient(
+                    var(--border) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    var(--border) 1px,
+                    transparent 1px
+                );
+            background-size: 42px 42px;
+        }
+
+        /* ================================
+           HEADER
+        ================================= */
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 72px;
+            background: var(--panel);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            padding: 0 32px;
+            gap: 24px;
+        }
+
+        .logo {
+            font-size: 21.6px;
+            font-weight: 800;
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #7c5cff, #22d3ee);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .nav-link {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13.2px;
+            font-weight: 600;
+            transition: .2s;
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,.08);
+        }
+
+        .nav-link.active {
+            background: rgba(124,92,255,.15);
+            color: var(--purple);
+        }
+
+        /* ================================
+           MAIN CONTENT
+        ================================= */
+
+        .main {
+            margin-top: 72px;
+            padding: 40px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .page-title {
+            font-size: 43.2px;
+            font-weight: 800;
+            font-family: 'Space Grotesk', sans-serif;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #7c5cff, #22d3ee);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .page-subtitle {
+            font-size: 16.8px;
+            color: var(--muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ================================
+           UPLOAD SECTION
+        ================================= */
+
+        .upload-container {
+            max-width: 800px;
+            margin: 0 auto 40px;
+        }
+
+        .upload-zone {
+            padding: 60px 40px;
+            background: var(--panel);
+            border: 2px dashed rgba(124,92,255,.3);
+            border-radius: 20px;
+            text-align: center;
+            transition: .3s;
+            cursor: pointer;
+        }
+
+        .upload-zone:hover {
+            border-color: rgba(124,92,255,.6);
+            background: rgba(124,92,255,.05);
+            transform: translateY(-2px);
+        }
+
+        .upload-zone.dragover {
+            border-color: var(--cyan);
+            background: rgba(34,211,238,.08);
+        }
+
+        .upload-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--purple), var(--cyan));
+            border-radius: 20px;
+            font-size: 36px;
+        }
+
+        .upload-zone h3 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .upload-zone p {
+            font-size: 14.4px;
+            color: var(--muted);
+            margin-bottom: 24px;
+        }
+
+        .file-types {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .file-type {
+            padding: 6px 12px;
+            background: rgba(255,255,255,.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .upload-btn {
+            padding: 14px 32px;
+            background: linear-gradient(135deg, var(--purple), #6d4aff);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 15.6px;
+            font-weight: 700;
+            transition: .3s;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(124,92,255,.5);
+        }
+
+        /* ================================
+           UPLOADED FILES
+        ================================= */
+
+        .uploaded-files {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .file-icon {
+            width: 48px;
+            height: 48px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--cyan), #67e8f9);
+            border-radius: 12px;
+            font-size: 20px;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-size: 14.4px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .file-meta {
+            font-size: 12px;
+            color: var(--muted-2);
+        }
+
+        .file-status {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .file-status.processing {
+            background: rgba(251,191,36,.15);
+            color: var(--yellow);
+        }
+
+        .file-status.completed {
+            background: rgba(52,211,153,.15);
+            color: var(--green);
+        }
+
+        .analyze-btn {
+            padding: 8px 18px;
+            background: linear-gradient(135deg, var(--purple), #6d4aff);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 12.6px;
+            font-weight: 600;
+            transition: .2s;
+        }
+
+        .analyze-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* ================================
+           ANALYSIS RESULTS
+        ================================= */
+
+        .results-container {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .results-header h2 {
+            font-size: 33.6px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .result-card {
+            padding: 24px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .result-icon {
+            width: 48px;
+            height: 48px;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            font-size: 20px;
+        }
+
+        .result-title {
+            font-size: 16.8px;
+            font-weight: 700;
+        }
+
+        .prediction-value {
+            font-size: 43.2px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .prediction-value.profit {
+            color: var(--green);
+        }
+
+        .prediction-value.loss {
+            color: var(--red);
+        }
+
+        .prediction-label {
+            font-size: 13.2px;
+            color: var(--muted);
+            margin-bottom: 20px;
+        }
+
+        .confidence-bar {
+            height: 8px;
+            background: rgba(255,255,255,.08);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--purple), var(--cyan));
+            border-radius: 4px;
+            transition: width 1s ease-out;
+        }
+
+        .confidence-label {
+            font-size: 11px;
+            color: var(--muted-2);
+        }
+
+        /* ================================
+           INSIGHTS SECTION
+        ================================= */
+
+        .insights-section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .insight-card {
+            padding: 20px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-left: 4px solid;
+            border-radius: 12px;
+        }
+
+        .insight-card.positive {
+            border-left-color: var(--green);
+        }
+
+        .insight-card.negative {
+            border-left-color: var(--red);
+        }
+
+        .insight-card.warning {
+            border-left-color: var(--yellow);
+        }
+
+        .insight-card.info {
+            border-left-color: var(--cyan);
+        }
+
+        .insight-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .insight-icon {
+            font-size: 20px;
+        }
+
+        .insight-title {
+            font-size: 14.4px;
+            font-weight: 700;
+        }
+
+        .insight-text {
+            font-size: 13.2px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* ================================
+           RECOMMENDATIONS
+        ================================= */
+
+        .recommendations-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .recommendation-item {
+            padding: 16px 20px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: start;
+            gap: 16px;
+        }
+
+        .rec-number {
+            width: 32px;
+            height: 32px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--purple), var(--cyan));
+            border-radius: 8px;
+            font-size: 14.4px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .rec-content {
+            flex: 1;
+        }
+
+        .rec-title {
+            font-size: 14.4px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .rec-text {
+            font-size: 13.2px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .rec-impact {
+            padding: 4px 10px;
+            background: rgba(52,211,153,.15);
+            border-radius: 6px;
+            font-size: 10.2px;
+            font-weight: 700;
+            color: var(--green);
+            margin-top: 8px;
+            display: inline-block;
+        }
+
+        /* ================================
+           DOWNLOAD SECTION
+        ================================= */
+
+        .download-section {
+            text-align: center;
+            padding: 40px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            margin-top: 40px;
+        }
+
+        .download-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--purple), var(--cyan));
+            border-radius: 20px;
+            font-size: 36px;
+        }
+
+        .download-section h3 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .download-section p {
+            font-size: 14.4px;
+            color: var(--muted);
+            margin-bottom: 24px;
+        }
+
+        .download-options {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .download-btn {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--purple), #6d4aff);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 14.4px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: .3s;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(124,92,255,.5);
+        }
+
+        .download-btn.secondary {
+            background: rgba(255,255,255,.08);
+            border: 1px solid var(--border);
+        }
+
+        .download-btn.secondary:hover {
+            background: rgba(255,255,255,.12);
+            box-shadow: none;
+        }
+
+        /* ================================
+           RESPONSIVE
+        ================================= */
+
+        @media (max-width: 768px) {
+            .main {
+                padding: 20px;
+            }
+
+            .page-title {
+                font-size: 33.6px;
+            }
+
+            .upload-zone {
+                padding: 40px 20px;
+            }
+
+            .results-grid,
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .download-options {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="background-grid"></div>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="logo">FinCo AI</div>
+
+        <div class="nav-links">
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+            <a href="copilot.html" class="nav-link">AI Copilot</a>
+            <a href="agents.html" class="nav-link">AI Agents</a>
+            <a href="ml-models.html" class="nav-link">ML Models</a>
+            <a href="analysis.html" class="nav-link active">Analysis</a>
+            <a href="collaboration.html" class="nav-link">Collaboration</a>
+            <a href="financial.html" class="nav-link">Transactions</a>
+            <a href="fraud.html" class="nav-link">Fraud & Risk</a>
+            <a href="forecasting.html" class="nav-link">Forecasting</a>
+            <a href="documents.html" class="nav-link">Documents</a>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+        <!-- PAGE HEADER -->
+        <div class="page-header">
+            <h1 class="page-title">Financial Analysis & Prediction</h1>
+            <p class="page-subtitle">
+                Upload your financial data (sales, income, expenses) and get AI-powered profit/loss predictions, 
+                insights, and downloadable PDF reports
+            </p>
+        </div>
+
+        <!-- UPLOAD SECTION -->
+        <div class="upload-container">
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">📊</div>
+                <h3>Upload Financial Data</h3>
+                <p>Drag and drop your files here, or click to browse</p>
+
+                <div class="file-types">
+                    <span class="file-type">CSV</span>
+                    <span class="file-type">EXCEL</span>
+                    <span class="file-type">PDF</span>
+                    <span class="file-type">JSON</span>
+                </div>
+
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    Choose Files
+                </button>
+                <input type="file" id="fileInput" hidden multiple accept=".csv,.xlsx,.xls,.pdf,.json">
+            </div>
+
+            <div class="uploaded-files" id="uploadedFiles"></div>
+        </div>
+
+        <!-- ANALYSIS RESULTS -->
+        <div class="results-container" id="resultsContainer">
+
+            <div class="results-header">
+                <h2>Analysis Complete ✓</h2>
+                <p style="color: var(--muted); font-size: 14.4px;">
+                    Based on your uploaded data, here's what we found
+                </p>
+            </div>
+
+            <!-- PREDICTION CARDS -->
+            <div class="results-grid">
+
+                <!-- PROFIT/LOSS PREDICTION -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="result-icon" style="background: linear-gradient(135deg, var(--green), #6ee7b7);">
+                            💰
+                        </div>
+                        <div class="result-title">Profit/Loss Prediction</div>
+                    </div>
+
+                    <div class="prediction-value profit" id="predictionValue">
+                        $487,250
+                    </div>
+                    <div class="prediction-label" id="predictionLabel">
+                        Expected Profit (Next Quarter)
+                    </div>
+
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="confidenceFill" style="width: 0%;"></div>
+                    </div>
+                    <div class="confidence-label">
+                        <span id="confidenceText">Confidence: 87%</span> • High Accuracy
+                    </div>
+                </div>
+
+                <!-- KEY METRICS -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="result-icon" style="background: linear-gradient(135deg, var(--cyan), #67e8f9);">
+                            📈
+                        </div>
+                        <div class="result-title">Key Metrics</div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 16px;">
+                        <div>
+                            <div style="font-size: 11px; color: var(--muted-2); margin-bottom: 4px;">REVENUE GROWTH</div>
+                            <div style="font-size: 24px; font-weight: 700; color: var(--green);">+24.3%</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 11px; color: var(--muted-2); margin-bottom: 4px;">PROFIT MARGIN</div>
+                            <div style="font-size: 24px; font-weight: 700;">32.8%</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 11px; color: var(--muted-2); margin-bottom: 4px;">BURN RATE</div>
+                            <div style="font-size: 24px; font-weight: 700; color: var(--yellow);">$142K/mo</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RISK ASSESSMENT -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="result-icon" style="background: linear-gradient(135deg, var(--purple), #9b86ff);">
+                            🛡️
+                        </div>
+                        <div class="result-title">Risk Assessment</div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 33.6px; font-weight: 700; color: var(--green); margin-bottom: 8px;">
+                            LOW
+                        </div>
+                        <div style="font-size: 13.2px; color: var(--muted);">
+                            Overall Financial Risk Score
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                            <span style="color: var(--muted);">Market Risk</span>
+                            <span style="color: var(--green); font-weight: 700;">Low</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                            <span style="color: var(--muted);">Liquidity Risk</span>
+                            <span style="color: var(--green); font-weight: 700;">Low</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                            <span style="color: var(--muted);">Operational Risk</span>
+                            <span style="color: var(--yellow); font-weight: 700;">Medium</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- INSIGHTS -->
+            <div class="insights-section">
+                <h2 class="section-title">Key Insights</h2>
+
+                <div class="insights-grid">
+
+                    <div class="insight-card positive">
+                        <div class="insight-header">
+                            <span class="insight-icon">✓</span>
+                            <span class="insight-title">Strong Revenue Growth</span>
+                        </div>
+                        <p class="insight-text">
+                            Revenue increased by 24.3% compared to last quarter, driven by new customer acquisitions 
+                            and increased average order value.
+                        </p>
+                    </div>
+
+                    <div class="insight-card positive">
+                        <div class="insight-header">
+                            <span class="insight-icon">✓</span>
+                            <span class="insight-title">Healthy Profit Margins</span>
+                        </div>
+                        <p class="insight-text">
+                            Profit margin of 32.8% is above industry average (28%), indicating efficient cost management 
+                            and strong pricing power.
+                        </p>
+                    </div>
+
+                    <div class="insight-card warning">
+                        <div class="insight-header">
+                            <span class="insight-icon">⚠</span>
+                            <span class="insight-title">Rising Operating Costs</span>
+                        </div>
+                        <p class="insight-text">
+                            Operating expenses increased by 15% quarter-over-quarter, primarily due to marketing and 
+                            personnel costs. Monitor closely.
+                        </p>
+                    </div>
+
+                    <div class="insight-card info">
+                        <div class="insight-header">
+                            <span class="insight-icon">ℹ</span>
+                            <span class="insight-title">Seasonal Trends Detected</span>
+                        </div>
+                        <p class="insight-text">
+                            Historical data shows 18% revenue increase in Q4. Plan inventory and staffing accordingly 
+                            to maximize opportunity.
+                        </p>
+                    </div>
+
+                    <div class="insight-card positive">
+                        <div class="insight-header">
+                            <span class="insight-icon">✓</span>
+                            <span class="insight-title">Cash Flow Positive</span>
+                        </div>
+                        <p class="insight-text">
+                            Strong positive cash flow of $287K this quarter. Sufficient runway for 18+ months at 
+                            current burn rate.
+                        </p>
+                    </div>
+
+                    <div class="insight-card negative">
+                        <div class="insight-header">
+                            <span class="insight-icon">✕</span>
+                            <span class="insight-title">Customer Churn Risk</span>
+                        </div>
+                        <p class="insight-text">
+                            Customer retention rate dropped to 82% from 89%. Focus on customer success initiatives 
+                            to reduce churn.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- WHY PROFIT/LOSS -->
+            <div class="insights-section">
+                <h2 class="section-title">Why This Prediction?</h2>
+
+                <div class="result-card" style="padding: 32px;">
+                    <div style="display: grid; gap: 24px;">
+                        
+                        <div>
+                            <h4 style="font-size: 16.8px; font-weight: 700; margin-bottom: 12px; color: var(--green);">
+                                ✓ Factors Contributing to Profit:
+                            </h4>
+                            <ul style="padding-left: 24px; color: var(--muted); line-height: 1.8; font-size: 13.2px;">
+                                <li>Strong revenue growth (+24.3%) exceeds cost increases (+15%)</li>
+                                <li>High gross margin (65%) on core products</li>
+                                <li>Efficient customer acquisition cost (CAC) of $280 vs LTV of $2,400</li>
+                                <li>Successful product line expansion generating $120K additional monthly revenue</li>
+                                <li>Reduced operational waste saving $45K per month</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 style="font-size: 16.8px; font-weight: 700; margin-bottom: 12px; color: var(--yellow);">
+                                ⚠ Risk Factors to Monitor:
+                            </h4>
+                            <ul style="padding-left: 24px; color: var(--muted); line-height: 1.8; font-size: 13.2px;">
+                                <li>Increasing customer churn rate (18% → 21%)</li>
+                                <li>Rising marketing costs (+22% QoQ) with declining ROI</li>
+                                <li>Seasonal revenue fluctuations (Q4 peak, Q1 dip)</li>
+                                <li>Dependency on top 3 customers (42% of revenue)</li>
+                                <li>Delayed payments affecting cash conversion cycle</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 style="font-size: 16.8px; font-weight: 700; margin-bottom: 12px; color: var(--cyan);">
+                                📊 How We Calculated This:
+                            </h4>
+                            <ul style="padding-left: 24px; color: var(--muted); line-height: 1.8; font-size: 13.2px;">
+                                <li><strong>ML Algorithm:</strong> Ensemble model combining LSTM, Random Forest, and XGBoost</li>
+                                <li><strong>Data Points:</strong> Analyzed 18 months of historical transactions, expenses, and revenue</li>
+                                <li><strong>Variables:</strong> 47 features including seasonality, market trends, and operational metrics</li>
+                                <li><strong>Validation:</strong> 87% accuracy on test data with 12% mean absolute error</li>
+                                <li><strong>Confidence Interval:</strong> Predicted profit range: $420K - $554K (95% confidence)</li>
+                            </ul>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- RECOMMENDATIONS -->
+            <div class="insights-section">
+                <h2 class="section-title">AI Recommendations</h2>
+
+                <div class="recommendations-list">
+
+                    <div class="recommendation-item">
+                        <div class="rec-number">1</div>
+                        <div class="rec-content">
+                            <div class="rec-title">Reduce Customer Churn</div>
+                            <p class="rec-text">
+                                Implement proactive customer success program. Reach out to at-risk customers 
+                                before they churn. Focus on customers in month 3-6 of lifecycle.
+                            </p>
+                            <span class="rec-impact">💰 Potential Impact: +$85K/quarter</span>
+                        </div>
+                    </div>
+
+                    <div class="recommendation-item">
+                        <div class="rec-number">2</div>
+                        <div class="rec-content">
+                            <div class="rec-title">Optimize Marketing Spend</div>
+                            <p class="rec-text">
+                                Reallocate budget from underperforming channels to high-ROI channels. 
+                                Digital ads showing 3.2x ROI vs events at 0.8x ROI.
+                            </p>
+                            <span class="rec-impact">💰 Potential Impact: +$42K/quarter</span>
+                        </div>
+                    </div>
+
+                    <div class="recommendation-item">
+                        <div class="rec-number">3</div>
+                        <div class="rec-content">
+                            <div class="rec-title">Diversify Revenue Sources</div>
+                            <p class="rec-text">
+                                Reduce dependency on top 3 customers. Launch targeted campaigns to acquire 
+                                mid-market customers. Aim for <30% revenue from any single customer.
+                            </p>
+                            <span class="rec-impact">🛡️ Risk Reduction: High</span>
+                        </div>
+                    </div>
+
+                    <div class="recommendation-item">
+                        <div class="rec-number">4</div>
+                        <div class="rec-content">
+                            <div class="rec-title">Improve Cash Collection</div>
+                            <p class="rec-text">
+                                Average payment period is 47 days vs industry standard 30 days. Implement 
+                                early payment discounts (2% 10 net 30) and automated follow-ups.
+                            </p>
+                            <span class="rec-impact">💰 Potential Impact: $125K cash freed</span>
+                        </div>
+                    </div>
+
+                    <div class="recommendation-item">
+                        <div class="rec-number">5</div>
+                        <div class="rec-content">
+                            <div class="rec-title">Prepare for Q4 Peak</div>
+                            <p class="rec-text">
+                                Historical data shows 18% revenue spike in Q4. Scale inventory by 25%, 
+                                add temporary staff, and increase marketing budget by 15% in Q3 for lead generation.
+                            </p>
+                            <span class="rec-impact">💰 Potential Impact: +$156K additional revenue</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- PROBLEMS & SOLUTIONS -->
+            <div class="insights-section">
+                <h2 class="section-title">Problems Identified & Solutions</h2>
+
+                <div class="result-card" style="padding: 32px;">
+                    <div style="display: grid; gap: 28px;">
+
+                        <div style="padding: 20px; background: rgba(251,113,133,.05); border-left: 4px solid var(--red); border-radius: 8px;">
+                            <h4 style="font-size: 16.8px; font-weight: 700; margin-bottom: 8px; color: var(--red);">
+                                🔴 Problem: Rising Customer Acquisition Cost (CAC)
+                            </h4>
+                            <p style="font-size: 13.2px; color: var(--muted); margin-bottom: 12px;">
+                                CAC increased from $210 to $280 (33% increase) while customer LTV remained stable. 
+                                This reduces payback period efficiency.
+                            </p>
+                            <div style="padding: 16px; background: rgba(52,211,153,.05); border-radius: 8px;">
+                                <strong style="color: var(--green); font-size: 13.2px;">✓ Solution:</strong>
+                                <ul style="padding-left: 20px; margin-top: 8px; color: var(--muted); font-size: 12.6px; line-height: 1.6;">
+                                    <li>Implement referral program (customers acquired at 60% lower CAC)</li>
+                                    <li>Double down on content marketing (organic leads 4x cheaper)</li>
+                                    <li>Optimize conversion funnel (current drop-off at demo stage: 45%)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div style="padding: 20px; background: rgba(251,113,133,.05); border-left: 4px solid var(--red); border-radius: 8px;">
+                            <h4 style="font-size: 16.8px; font-weight: 700; margin-bottom: 8px; color: var(--red);">
+                                🔴 Problem: Inventory Management Issues
+                            </h4>
+                            <p style="font-size: 13.2px; color: var(--muted); margin-bottom: 12px;">
+                                Stock-outs occurred 23 times last quarter, losing $67K in potential revenue. 
+                                Excess inventory tied up $89K in cash.
+                            </p>
+                            <div style="padding: 16px; background: rgba(52,211,153,.05); border-radius: 8px;">
+                                <strong style="color: var(--green); font-size: 13.2px;">✓ Solution:</strong>
+                                <ul style="padding-left: 20px; margin-top: 8px; color: var(--muted); font-size: 12.6px; line-height: 1.6;">
+                                    <li>Implement AI-powered demand forecasting (reduce stock-outs by 80%)</li>
+                                    <li>Adopt just-in-time inventory for slow-moving items</li>
+                                    <li>Set automated reorder points based on lead times and velocity</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div style="padding: 20px; background: rgba(251,113,133,.05); border-left: 4px solid var(--red); border-radius: 8px;">
+                            <h4 style="font-size: 16.8px; font-weight: 700; margin-bottom: 8px; color: var(--red);">
+                                🔴 Problem: Low Employee Productivity
+                            </h4>
+                            <p style="font-size: 13.2px; color: var(--muted); margin-bottom: 12px;">
+                                Revenue per employee is $142K vs industry benchmark of $180K. 21% gap indicates 
+                                potential productivity issues.
+                            </p>
+                            <div style="padding: 16px; background: rgba(52,211,153,.05); border-radius: 8px;">
+                                <strong style="color: var(--green); font-size: 13.2px;">✓ Solution:</strong>
+                                <ul style="padding-left: 20px; margin-top: 8px; color: var(--muted); font-size: 12.6px; line-height: 1.6;">
+                                    <li>Automate repetitive tasks (save 15 hours/week per employee)</li>
+                                    <li>Provide training programs focused on high-value skills</li>
+                                    <li>Implement performance-based incentives tied to revenue goals</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- DOWNLOAD SECTION -->
+            <div class="download-section">
+                <div class="download-icon">📥</div>
+                <h3>Download Complete Report</h3>
+                <p>
+                    Get a comprehensive PDF guide with all insights, predictions, recommendations, 
+                    and action steps
+                </p>
+
+                <div class="download-options">
+                    <button class="download-btn" onclick="downloadPDF('detailed')">
+                        📄 Download Detailed Report (PDF)
+                    </button>
+                    <button class="download-btn secondary" onclick="downloadPDF('summary')">
+                        📊 Download Executive Summary
+                    </button>
+                    <button class="download-btn secondary" onclick="downloadPDF('data')">
+                        📈 Export Raw Data (CSV)
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div id="toastContainer" style="
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    "></div>
+
+    <script>
+        /* =========================================================
+           FILE UPLOAD
+        ========================================================= */
+
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadedFiles = document.getElementById('uploadedFiles');
+        const resultsContainer = document.getElementById('resultsContainer');
+
+        // Drag and drop
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            const files = e.target.files;
+            handleFiles(files);
+        });
+
+        // Handle uploaded files
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                addFileToList(file);
+            });
+        }
+
+        function addFileToList(file) {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            
+            const fileSize = (file.size / 1024).toFixed(1);
+            const fileExt = file.name.split('.').pop().toUpperCase();
+            
+            fileItem.innerHTML = `
+                <div class="file-icon">📄</div>
+                <div class="file-info">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-meta">${fileSize} KB • ${fileExt}</div>
+                </div>
+                <div class="file-status processing">Processing...</div>
+                <button class="analyze-btn" onclick="analyzeFile(this)">
+                    Analyze
+                </button>
+            `;
+            
+            uploadedFiles.appendChild(fileItem);
+            
+            // Simulate processing
+            setTimeout(() => {
+                const status = fileItem.querySelector('.file-status');
+                status.className = 'file-status completed';
+                status.textContent = 'Ready';
+                
+                showToast('File Processed', `${file.name} is ready for analysis`);
+            }, 1500 + Math.random() * 1000);
+        }
+
+        /* =========================================================
+           ANALYZE FILE
+        ========================================================= */
+
+        function analyzeFile(btn) {
+            const fileItem = btn.closest('.file-item');
+            const fileName = fileItem.querySelector('.file-name').textContent;
+            
+            showToast('Analyzing...', `Running AI analysis on ${fileName}`);
+            
+            // Simulate analysis
+            setTimeout(() => {
+                showToast('Analysis Complete', 'Generating insights and predictions');
+                
+                // Show results
+                setTimeout(() => {
+                    resultsContainer.style.display = 'block';
+                    resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    
+                    // Animate confidence bar
+                    setTimeout(() => {
+                        document.getElementById('confidenceFill').style.width = '87%';
+                    }, 300);
+                    
+                    showToast('Success', 'Financial analysis complete!');
+                }, 500);
+                
+            }, 2000);
+        }
+
+        /* =========================================================
+           DOWNLOAD PDF
+        ========================================================= */
+
+        function downloadPDF(type) {
+            const titles = {
+                'detailed': 'Detailed Financial Analysis Report',
+                'summary': 'Executive Summary Report',
+                'data': 'Raw Data Export'
+            };
+            
+            showToast('Generating Report', `Creating ${titles[type]}...`);
+            
+            // Simulate PDF generation
+            setTimeout(() => {
+                // In production, this would call backend API to generate actual PDF
+                const blob = new Blob([generateReportContent(type)], { type: 'application/pdf' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `FinCo-AI-Analysis-${type}-${new Date().toISOString().split('T')[0]}.pdf`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                
+                showToast('Download Started', `${titles[type]} is downloading`);
+            }, 1500);
+        }
+
+        function generateReportContent(type) {
+            // This is a placeholder. In production, backend would generate actual PDF
+            return `
+FinCo AI Financial Analysis Report
+===================================
+
+Report Type: ${type}
+Generated: ${new Date().toLocaleString()}
+
+PROFIT/LOSS PREDICTION
+Predicted Profit: $487,250
+Confidence: 87%
+Time Period: Next Quarter
+
+KEY INSIGHTS
+• Strong Revenue Growth: +24.3%
+• Healthy Profit Margins: 32.8%
+• Rising Operating Costs: +15%
+• Cash Flow Positive: $287K
+
+RECOMMENDATIONS
+1. Reduce Customer Churn (+$85K potential)
+2. Optimize Marketing Spend (+$42K potential)
+3. Diversify Revenue Sources (Risk Reduction)
+4. Improve Cash Collection ($125K cash freed)
+5. Prepare for Q4 Peak (+$156K potential)
+
+PROBLEMS & SOLUTIONS
+• Rising CAC: Implement referral program
+• Inventory Issues: AI-powered forecasting
+• Low Productivity: Automation & training
+
+For detailed analysis, visit: finco-ai.com/analysis
+            `.trim();
+        }
+
+        /* =========================================================
+           TOAST NOTIFICATIONS
+        ========================================================= */
+
+        function showToast(title, message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            toast.style.cssText = `
+                padding: 16px 20px;
+                background: rgba(14,16,25,0.95);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 12px;
+                min-width: 300px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            toast.innerHTML = `
+                <div style="font-size: 13.2px; font-weight: 700; margin-bottom: 4px;">${title}</div>
+                <div style="font-size: 12px; color: var(--muted);">${message}</div>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        /* =========================================================
+           DEMO DATA
+        ========================================================= */
+
+        // Randomize prediction values for demo
+        function randomizePrediction() {
+            const isProfit = Math.random() > 0.3;
+            const value = Math.floor(Math.random() * 500000 + 200000);
+            const confidence = Math.floor(Math.random() * 20 + 75);
+            
+            const predictionValue = document.getElementById('predictionValue');
+            const predictionLabel = document.getElementById('predictionLabel');
+            const confidenceFill = document.getElementById('confidenceFill');
+            const confidenceText = document.getElementById('confidenceText');
+            
+            if (isProfit) {
+                predictionValue.className = 'prediction-value profit';
+                predictionValue.textContent = `$${value.toLocaleString()}`;
+                predictionLabel.textContent = 'Expected Profit (Next Quarter)';
+            } else {
+                predictionValue.className = 'prediction-value loss';
+                predictionValue.textContent = `-$${value.toLocaleString()}`;
+                predictionLabel.textContent = 'Expected Loss (Next Quarter)';
+            }
+            
+            confidenceFill.style.width = `${confidence}%`;
+            confidenceText.textContent = `Confidence: ${confidence}%`;
+        }
+    </script>
+
+</body>
+</html>

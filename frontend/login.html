@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="description"
+        content="FinCo AI secure login — Intelligent Financial Operations Platform"
+    >
+
+    <title>Login | FinCo AI</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        /* =========================================
+           RESET
+        ========================================= */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #05060a;
+            --panel: rgba(15, 18, 27, .78);
+            --panel-2: rgba(255,255,255,.035);
+
+            --text: #f7f8fb;
+            --muted: #8d96a8;
+            --muted-2: #687183;
+
+            --primary: #7c5cff;
+            --primary-light: #a78bfa;
+            --cyan: #22d3ee;
+            --green: #34d399;
+            --red: #fb7185;
+
+            --border: rgba(255,255,255,.08);
+            --border-hover: rgba(167,139,250,.38);
+
+            --shadow:
+                0 35px 100px rgba(0,0,0,.55);
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background:
+                radial-gradient(
+                    circle at 15% 20%,
+                    rgba(124,92,255,.13),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 85% 75%,
+                    rgba(34,211,238,.08),
+                    transparent 28%
+                ),
+                var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        button,
+        input {
+            font-family: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+
+        /* =========================================
+           BACKGROUND
+        ========================================= */
+
+        .background {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .grid {
+            position: absolute;
+            inset: 0;
+
+            background-image:
+                linear-gradient(
+                    rgba(255,255,255,.025) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,.025) 1px,
+                    transparent 1px
+                );
+
+            background-size: 55px 55px;
+
+            mask-image:
+                linear-gradient(
+                    to bottom,
+                    black,
+                    transparent 90%
+                );
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: .35;
+            animation: float 10s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 300px;
+            height: 300px;
+            background: #6d4aff;
+            left: -100px;
+            top: -80px;
+        }
+
+        .orb-2 {
+            width: 260px;
+            height: 260px;
+            background: #0891b2;
+            right: -90px;
+            bottom: -70px;
+            animation-delay: -3s;
+        }
+
+        .orb-3 {
+            width: 180px;
+            height: 180px;
+            background: #8b5cf6;
+            right: 25%;
+            top: 15%;
+            opacity: .13;
+            animation-delay: -6s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate3d(0,0,0);
+            }
+
+            50% {
+                transform: translate3d(
+                    25px,
+                    -25px,
+                    0
+                );
+            }
+        }
+
+
+        /* =========================================
+           PAGE
+        ========================================= */
+
+        .page {
+            position: relative;
+            z-index: 2;
+
+            min-height: 100vh;
+
+            display: grid;
+            grid-template-columns:
+                minmax(0, 1fr)
+                minmax(440px, 540px);
+
+            align-items: center;
+
+            max-width: 1380px;
+            margin: auto;
+
+            padding: 45px 55px;
+            gap: 70px;
+        }
+
+
+        /* =========================================
+           BRAND / LEFT PANEL
+        ========================================= */
+
+        .brand-area {
+            padding: 20px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 65px;
+        }
+
+        .brand-icon {
+            width: 47px;
+            height: 47px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 15px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--primary),
+                    #4f46e5
+                );
+
+            box-shadow:
+                0 12px 35px rgba(124,92,255,.3);
+
+            font-family: "Space Grotesk";
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .brand-name {
+            font-family: "Space Grotesk";
+            font-size: 25.2px;
+            font-weight: 700;
+            letter-spacing: -.5px;
+        }
+
+        .brand-name span {
+            color: var(--primary-light);
+        }
+
+
+        /* =========================================
+           HERO COPY
+        ========================================= */
+
+        .hero {
+            max-width: 650px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+
+            padding: 7px 11px;
+
+            border-radius: 999px;
+
+            background:
+                rgba(124,92,255,.09);
+
+            border:
+                1px solid rgba(124,92,255,.2);
+
+            color: #b6aaff;
+
+            font-size: 10.8px;
+            font-weight: 700;
+
+            letter-spacing: 1.3px;
+            text-transform: uppercase;
+
+            margin-bottom: 22px;
+        }
+
+        .eyebrow-dot {
+            width: 6px;
+            height: 6px;
+
+            border-radius: 50%;
+
+            background: var(--green);
+
+            box-shadow:
+                0 0 12px var(--green);
+        }
+
+        .hero h1 {
+            font-family: "Space Grotesk";
+
+            font-size:
+                clamp(
+                    42px,
+                    5vw,
+                    70px
+                );
+
+            line-height: 1.01;
+
+            letter-spacing: -3px;
+
+            margin-bottom: 22px;
+        }
+
+        .gradient {
+            background:
+                linear-gradient(
+                    90deg,
+                    #ffffff,
+                    #b7a9ff 50%,
+                    #67e8f9
+                );
+
+            -webkit-background-clip: text;
+            background-clip: text;
+
+            color: transparent;
+        }
+
+        .hero-description {
+            max-width: 580px;
+
+            color: var(--muted);
+
+            font-size: 16.8px;
+            line-height: 1.8;
+        }
+
+
+        /* =========================================
+           FEATURE LIST
+        ========================================= */
+
+        .features {
+            margin-top: 35px;
+
+            display: grid;
+            grid-template-columns:
+                repeat(2, minmax(150px, 1fr));
+
+            gap: 12px;
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            color: #aeb6c5;
+
+            font-size: 13.2px;
+        }
+
+        .feature-icon {
+            width: 29px;
+            height: 29px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 9px;
+
+            background:
+                rgba(255,255,255,.04);
+
+            border:
+                1px solid var(--border);
+
+            color: #a99aff;
+        }
+
+
+        /* =========================================
+           LOGIN CARD
+        ========================================= */
+
+        .login-wrapper {
+            width: 100%;
+        }
+
+        .login-card {
+            position: relative;
+
+            padding: 36px;
+
+            border-radius: 27px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(21,24,35,.86),
+                    rgba(10,12,18,.9)
+                );
+
+            border:
+                1px solid var(--border);
+
+            box-shadow: var(--shadow);
+
+            backdrop-filter: blur(30px);
+
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: "";
+
+            position: absolute;
+
+            width: 240px;
+            height: 240px;
+
+            right: -130px;
+            top: -140px;
+
+            border-radius: 50%;
+
+            background:
+                radial-gradient(
+                    circle,
+                    rgba(124,92,255,.25),
+                    transparent 68%
+                );
+
+            pointer-events: none;
+        }
+
+        .login-card::after {
+            content: "";
+
+            position: absolute;
+
+            left: 20%;
+            right: 20%;
+            bottom: 0;
+
+            height: 1px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    transparent,
+                    rgba(167,139,250,.4),
+                    transparent
+                );
+        }
+
+
+        /* =========================================
+           LOGIN HEADER
+        ========================================= */
+
+        .login-header {
+            position: relative;
+
+            margin-bottom: 28px;
+        }
+
+        .login-header h2 {
+            font-family: "Space Grotesk";
+
+            font-size: 32.4px;
+
+            letter-spacing: -.8px;
+
+            margin-bottom: 7px;
+        }
+
+        .login-header p {
+            color: var(--muted);
+
+            font-size: 13.2px;
+
+            line-height: 1.6;
+        }
+
+
+        /* =========================================
+           FORM
+        ========================================= */
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: flex;
+            justify-content: space-between;
+
+            margin-bottom: 8px;
+
+            color: #c1c8d4;
+
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+
+            left: 13px;
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            color: #667083;
+
+            font-size: 15.6px;
+
+            pointer-events: none;
+        }
+
+        .form-input {
+            width: 100%;
+
+            height: 48px;
+
+            padding:
+                0 44px
+                0 40px;
+
+            outline: none;
+
+            border:
+                1px solid
+                rgba(255,255,255,.08);
+
+            border-radius: 12px;
+
+            background:
+                rgba(255,255,255,.035);
+
+            color: white;
+
+            font-size: 13.2px;
+
+            transition:
+                border-color .2s,
+                background .2s,
+                box-shadow .2s;
+        }
+
+        .form-input::placeholder {
+            color: #555e6d;
+        }
+
+        .form-input:hover {
+            border-color:
+                rgba(255,255,255,.13);
+        }
+
+        .form-input:focus {
+            border-color:
+                var(--border-hover);
+
+            background:
+                rgba(124,92,255,.035);
+
+            box-shadow:
+                0 0 0 3px
+                rgba(124,92,255,.07);
+        }
+
+        .password-toggle {
+            position: absolute;
+
+            right: 11px;
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            width: 30px;
+            height: 30px;
+
+            border: 0;
+
+            background: transparent;
+
+            color: #697385;
+
+            border-radius: 8px;
+
+            transition: .2s;
+        }
+
+        .password-toggle:hover {
+            color: white;
+
+            background:
+                rgba(255,255,255,.05);
+        }
+
+        .field-error {
+            display: none;
+
+            margin-top: 6px;
+
+            color: var(--red);
+
+            font-size: 10.8px;
+        }
+
+        .field-error.show {
+            display: block;
+        }
+
+
+        /* =========================================
+           FORM OPTIONS
+        ========================================= */
+
+        .form-options {
+            display: flex;
+
+            justify-content: space-between;
+            align-items: center;
+
+            margin: 2px 0 21px;
+        }
+
+        .remember {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            color: var(--muted);
+
+            font-size: 10.8px;
+
+            cursor: pointer;
+        }
+
+        .remember input {
+            appearance: none;
+
+            width: 15px;
+            height: 15px;
+
+            border-radius: 5px;
+
+            border:
+                1px solid
+                rgba(255,255,255,.12);
+
+            background:
+                rgba(255,255,255,.03);
+
+            position: relative;
+
+            cursor: pointer;
+        }
+
+        .remember input:checked {
+            background: var(--primary);
+
+            border-color:
+                var(--primary);
+        }
+
+        .remember input:checked::after {
+            content: "✓";
+
+            position: absolute;
+
+            left: 50%;
+            top: 50%;
+
+            transform:
+                translate(-50%,-50%);
+
+            color: white;
+
+            font-size: 10.8px;
+            font-weight: 800;
+        }
+
+        .forgot {
+            color: #a89bff;
+
+            font-size: 10.8px;
+            font-weight: 600;
+        }
+
+        .forgot:hover {
+            color: white;
+        }
+
+
+        /* =========================================
+           LOGIN BUTTON
+        ========================================= */
+
+        .login-button {
+            position: relative;
+
+            width: 100%;
+            height: 49px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+
+            border: 0;
+
+            border-radius: 12px;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #7c5cff,
+                    #5845d7
+                );
+
+            font-size: 13.2px;
+            font-weight: 700;
+
+            box-shadow:
+                0 12px 30px
+                rgba(124,92,255,.22);
+
+            overflow: hidden;
+
+            transition:
+                transform .2s,
+                box-shadow .2s;
+        }
+
+        .login-button::before {
+            content: "";
+
+            position: absolute;
+
+            top: 0;
+            bottom: 0;
+
+            width: 80px;
+
+            left: -100px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    transparent,
+                    rgba(255,255,255,.22),
+                    transparent
+                );
+
+            transform: skewX(-20deg);
+
+            transition: left .6s ease;
+        }
+
+        .login-button:hover::before {
+            left: 110%;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 16px 40px
+                rgba(124,92,255,.32);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .login-button.loading {
+            pointer-events: none;
+            opacity: .8;
+        }
+
+        .spinner {
+            display: none;
+
+            width: 15px;
+            height: 15px;
+
+            border:
+                2px solid
+                rgba(255,255,255,.3);
+
+            border-top-color: white;
+
+            border-radius: 50%;
+
+            animation:
+                spin .7s linear infinite;
+        }
+
+        .loading .spinner {
+            display: block;
+        }
+
+        .loading .button-text {
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+
+        /* =========================================
+           DIVIDER
+        ========================================= */
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+
+            margin: 23px 0;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+
+            height: 1px;
+
+            flex: 1;
+
+            background:
+                rgba(255,255,255,.07);
+        }
+
+        .divider span {
+            color: #596272;
+
+            font-size: 9.6px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px;
+        }
+
+
+        /* =========================================
+           SSO
+        ========================================= */
+
+        .sso-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 9px;
+        }
+
+        .sso-button {
+            height: 43px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+
+            border:
+                1px solid
+                rgba(255,255,255,.08);
+
+            border-radius: 11px;
+
+            background:
+                rgba(255,255,255,.025);
+
+            color: #b5bdc9;
+
+            font-size: 10.8px;
+            font-weight: 600;
+
+            transition: .2s;
+        }
+
+        .sso-button:hover {
+            color: white;
+
+            border-color:
+                rgba(255,255,255,.15);
+
+            background:
+                rgba(255,255,255,.05);
+        }
+
+        .sso-icon {
+            font-size: 15.6px;
+            font-weight: 800;
+        }
+
+
+        /* =========================================
+           REGISTER
+        ========================================= */
+
+        .register {
+            margin-top: 23px;
+
+            text-align: center;
+
+            color: var(--muted);
+
+            font-size: 10.8px;
+        }
+
+        .register a {
+            color: #a99aff;
+
+            font-weight: 700;
+        }
+
+        .register a:hover {
+            color: white;
+        }
+
+
+        /* =========================================
+           SECURITY
+        ========================================= */
+
+        .security {
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            gap: 7px;
+
+            margin-top: 22px;
+
+            color: #586171;
+
+            font-size: 9.6px;
+        }
+
+        .security-icon {
+            color: var(--green);
+
+            font-size: 13.2px;
+        }
+
+
+        /* =========================================
+           STATUS MESSAGE
+        ========================================= */
+
+        .status-message {
+            display: none;
+
+            margin-bottom: 16px;
+
+            padding: 10px 12px;
+
+            border-radius: 10px;
+
+            font-size: 10.8px;
+
+            line-height: 1.5;
+        }
+
+        .status-message.error {
+            display: block;
+
+            color: #fda4af;
+
+            background:
+                rgba(251,113,133,.07);
+
+            border:
+                1px solid
+                rgba(251,113,133,.14);
+        }
+
+        .status-message.success {
+            display: block;
+
+            color: #86efac;
+
+            background:
+                rgba(52,211,153,.07);
+
+            border:
+                1px solid
+                rgba(52,211,153,.14);
+        }
+
+
+        /* =========================================
+           RESPONSIVE
+        ========================================= */
+
+        @media (max-width: 1000px) {
+
+            .page {
+                grid-template-columns: 1fr;
+
+                max-width: 580px;
+
+                padding:
+                    35px 24px 55px;
+
+                gap: 20px;
+            }
+
+            .brand-area {
+                padding: 0;
+            }
+
+            .brand {
+                margin-bottom: 45px;
+            }
+
+            .hero {
+                display: none;
+            }
+
+            .login-wrapper {
+                margin-top: 5px;
+            }
+        }
+
+
+        @media (max-width: 520px) {
+
+            .page {
+                padding:
+                    20px 14px 35px;
+            }
+
+            .login-card {
+                padding: 25px 20px;
+                border-radius: 21px;
+            }
+
+            .brand {
+                margin-bottom: 25px;
+            }
+
+            .brand-icon {
+                width: 42px;
+                height: 42px;
+            }
+
+            .login-header h2 {
+                font-size: 28.8px;
+            }
+
+            .sso-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+
+    <!-- =========================================
+         BACKGROUND
+    ========================================== -->
+
+    <div class="background">
+
+        <div class="grid"></div>
+
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+
+    </div>
+
+
+    <!-- =========================================
+         PAGE
+    ========================================== -->
+
+    <main class="page">
+
+
+        <!-- =====================================
+             LEFT BRAND AREA
+        ====================================== -->
+
+        <section class="brand-area">
+
+            <div class="brand">
+
+                <div class="brand-icon">
+                    F
+                </div>
+
+                <div class="brand-name">
+                    FinCo <span>AI</span>
+                </div>
+
+            </div>
+
+
+            <div class="hero">
+
+                <div class="eyebrow">
+
+                    <span class="eyebrow-dot"></span>
+
+                    Intelligent Financial Platform
+
+                </div>
+
+
+                <h1>
+
+                    Finance,
+                    <br>
+
+                    <span class="gradient">
+                        powered by intelligence.
+                    </span>
+
+                </h1>
+
+
+                <p class="hero-description">
+
+                    One intelligent platform for financial analytics,
+                    fraud detection, forecasting, document intelligence
+                    and autonomous AI-powered decision making.
+
+                </p>
+
+
+                <div class="features">
+
+                    <div class="feature">
+
+                        <div class="feature-icon">
+                            ✦
+                        </div>
+
+                        GenAI Financial Copilot
+
+                    </div>
+
+
+                    <div class="feature">
+
+                        <div class="feature-icon">
+                            ⚡
+                        </div>
+
+                        Real-time Fraud Detection
+
+                    </div>
+
+
+                    <div class="feature">
+
+                        <div class="feature-icon">
+                            ↗
+                        </div>
+
+                        Predictive Forecasting
+
+                    </div>
+
+
+                    <div class="feature">
+
+                        <div class="feature-icon">
+                            ◈
+                        </div>
+
+                        RAG Document Intelligence
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================
+             LOGIN
+        ====================================== -->
+
+        <section class="login-wrapper">
+
+            <div class="login-card">
+
+
+                <!-- HEADER -->
+
+                <div class="login-header">
+
+                    <h2>
+                        Welcome back
+                    </h2>
+
+                    <p>
+                        Sign in to access your FinCo AI workspace.
+                    </p>
+
+                </div>
+
+
+                <!-- STATUS -->
+
+                <div
+                    class="status-message"
+                    id="statusMessage"
+                ></div>
+
+
+                <!-- FORM -->
+
+                <form
+                    id="loginForm"
+                    novalidate
+                >
+
+
+                    <!-- EMAIL -->
+
+                    <div class="form-group">
+
+                        <label
+                            class="form-label"
+                            for="email"
+                        >
+                            Email address
+                        </label>
+
+                        <div class="input-wrapper">
+
+                            <span class="input-icon">
+                                @
+                            </span>
+
+                            <input
+                                class="form-input"
+                                type="email"
+                                id="email"
+                                name="email"
+                                placeholder="you@company.com"
+                                autocomplete="email"
+                                required
+                            >
+
+                        </div>
+
+                        <div
+                            class="field-error"
+                            id="emailError"
+                        >
+                            Please enter a valid email address.
+                        </div>
+
+                    </div>
+
+
+                    <!-- PASSWORD -->
+
+                    <div class="form-group">
+
+                        <label
+                            class="form-label"
+                            for="password"
+                        >
+                            <span>Password</span>
+                        </label>
+
+                        <div class="input-wrapper">
+
+                            <span class="input-icon">
+                                ◉
+                            </span>
+
+                            <input
+                                class="form-input"
+                                type="password"
+                                id="password"
+                                name="password"
+                                placeholder="Enter your password"
+                                autocomplete="current-password"
+                                minlength="6"
+                                required
+                            >
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                id="passwordToggle"
+                                aria-label="Show password"
+                            >
+                                ◉
+                            </button>
+
+                        </div>
+
+                        <div
+                            class="field-error"
+                            id="passwordError"
+                        >
+                            Password must contain at least 6 characters.
+                        </div>
+
+                    </div>
+
+
+                    <!-- OPTIONS -->
+
+                    <div class="form-options">
+
+                        <label class="remember">
+
+                            <input
+                                type="checkbox"
+                                id="remember"
+                                name="remember"
+                            >
+
+                            Remember me
+
+                        </label>
+
+
+                        <a
+                            href="index.html"
+                            class="forgot"
+                            id="forgotPassword"
+                        >
+                            Forgot password?
+                        </a>
+
+                    </div>
+
+
+                    <!-- LOGIN -->
+
+                    <button
+                        type="submit"
+                        class="login-button"
+                        id="loginButton"
+                    >
+
+                        <span class="button-text">
+                            Sign in to FinCo AI →
+                        </span>
+
+                        <span class="spinner"></span>
+
+                    </button>
+
+
+                </form>
+
+
+                <!-- DIVIDER -->
+
+                <div class="divider">
+
+                    <span>
+                        or continue with
+                    </span>
+
+                </div>
+
+
+                <!-- SSO -->
+
+                <div class="sso-grid">
+
+                    <button
+                        type="button"
+                        class="sso-button"
+                        id="googleLogin"
+                    >
+
+                        <span class="sso-icon">
+                            G
+                        </span>
+
+                        Google
+
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="sso-button"
+                        id="microsoftLogin"
+                    >
+
+                        <span class="sso-icon">
+                            ▦
+                        </span>
+
+                        Microsoft
+
+                    </button>
+
+                </div>
+
+
+                <!-- REGISTER -->
+
+                <div class="register">
+
+                    Don't have an account?
+
+                    <a
+                        href="#"
+                        id="createAccount"
+                    >
+                        Create workspace
+                    </a>
+
+                </div>
+
+
+                <!-- SECURITY -->
+
+                <div class="security">
+
+                    <span class="security-icon">
+                        ✓
+                    </span>
+
+                    Secure authentication · Encrypted connection
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script>
+
+        /* =========================================
+           ELEMENTS
+        ========================================== */
+
+        const loginForm =
+            document.getElementById("loginForm");
+
+        const email =
+            document.getElementById("email");
+
+        const password =
+            document.getElementById("password");
+
+        const remember =
+            document.getElementById("remember");
+
+        const passwordToggle =
+            document.getElementById("passwordToggle");
+
+        const loginButton =
+            document.getElementById("loginButton");
+
+        const statusMessage =
+            document.getElementById("statusMessage");
+
+        const emailError =
+            document.getElementById("emailError");
+
+        const passwordError =
+            document.getElementById("passwordError");
+
+
+        /* =========================================
+           PASSWORD VISIBILITY
+        ========================================== */
+
+        passwordToggle.addEventListener(
+            "click",
+            () => {
+
+                const isPassword =
+                    password.type === "password";
+
+                password.type =
+                    isPassword
+                        ? "text"
+                        : "password";
+
+                passwordToggle.textContent =
+                    isPassword
+                        ? "◉"
+                        : "◌";
+
+                passwordToggle.setAttribute(
+                    "aria-label",
+                    isPassword
+                        ? "Hide password"
+                        : "Show password"
+                );
+
+            }
+        );
+
+
+        /* =========================================
+           VALIDATION
+        ========================================== */
+
+        function validateEmail(value) {
+
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+                .test(value);
+
+        }
+
+
+        function validateForm() {
+
+            let valid = true;
+
+            emailError.classList.remove("show");
+            passwordError.classList.remove("show");
+
+            email.style.borderColor = "";
+            password.style.borderColor = "";
+
+
+            if (!validateEmail(email.value.trim())) {
+
+                emailError.classList.add("show");
+
+                email.style.borderColor =
+                    "rgba(251,113,133,.5)";
+
+                valid = false;
+
+            }
+
+
+            if (password.value.length < 6) {
+
+                passwordError.classList.add("show");
+
+                password.style.borderColor =
+                    "rgba(251,113,133,.5)";
+
+                valid = false;
+
+            }
+
+
+            return valid;
+
+        }
+
+
+        /* =========================================
+           STATUS
+        ========================================== */
+
+        function showStatus(
+            message,
+            type
+        ) {
+
+            statusMessage.textContent =
+                message;
+
+            statusMessage.className =
+                `status-message ${type}`;
+
+        }
+
+
+        function clearStatus() {
+
+            statusMessage.textContent = "";
+
+            statusMessage.className =
+                "status-message";
+
+        }
+
+
+        /* =========================================
+           LOGIN
+        ========================================== */
+
+        loginForm.addEventListener(
+            "submit",
+            async event => {
+
+                event.preventDefault();
+
+                clearStatus();
+
+                if (!validateForm()) {
+                    return;
+                }
+
+
+                loginButton.classList.add(
+                    "loading"
+                );
+
+
+                /*
+                 * DEMO AUTHENTICATION
+                 *
+                 * Replace this section with:
+                 *
+                 * fetch("/api/auth/login", {
+                 *     method: "POST",
+                 *     headers: {
+                 *         "Content-Type":
+                 *             "application/json"
+                 *     },
+                 *     body: JSON.stringify({
+                 *         email: email.value,
+                 *         password: password.value
+                 *     })
+                 * })
+                 *
+                 * for your FastAPI backend.
+                 */
+
+
+                await new Promise(
+                    resolve =>
+                        setTimeout(resolve, 1200)
+                );
+
+
+                loginButton.classList.remove(
+                    "loading"
+                );
+
+
+                /*
+                 * DEMO LOGIN
+                 *
+                 * Any valid email/password
+                 * combination passes.
+                 */
+
+                if (
+                    email.value.trim() &&
+                    password.value.length >= 6
+                ) {
+
+                    if (remember.checked) {
+
+                        localStorage.setItem(
+                            "finco_remember_email",
+                            email.value.trim()
+                        );
+
+                    } else {
+
+                        localStorage.removeItem(
+                            "finco_remember_email"
+                        );
+
+                    }
+
+
+                    showStatus(
+                        "Authentication successful. Opening your FinCo AI workspace...",
+                        "success"
+                    );
+
+
+                    setTimeout(() => {
+
+                        /*
+                         * Connect this to:
+                         *
+                         * dashboard.html
+                         */
+
+                        window.location.href =
+                            "index.html";
+
+                    }, 800);
+
+                }
+
+            }
+        );
+
+
+        /* =========================================
+           REMEMBERED EMAIL
+        ========================================== */
+
+        const savedEmail =
+            localStorage.getItem(
+                "finco_remember_email"
+            );
+
+        if (savedEmail) {
+
+            email.value =
+                savedEmail;
+
+            remember.checked =
+                true;
+
+        }
+
+
+        /* =========================================
+           FORGOT PASSWORD
+        ========================================== */
+
+        document
+            .getElementById("forgotPassword")
+            .addEventListener(
+                "click",
+                event => {
+
+                    event.preventDefault();
+
+                    const emailValue =
+                        email.value.trim();
+
+                    if (
+                        emailValue &&
+                        validateEmail(emailValue)
+                    ) {
+
+                        showStatus(
+                            `Password reset instructions will be sent to ${emailValue}.`,
+                            "success"
+                        );
+
+                    } else {
+
+                        showStatus(
+                            "Enter your email address first to request a password reset.",
+                            "error"
+                        );
+
+                        email.focus();
+
+                    }
+
+                }
+            );
+
+
+        /* =========================================
+           GOOGLE LOGIN
+        ========================================== */
+
+        document
+            .getElementById("googleLogin")
+            .addEventListener(
+                "click",
+                () => {
+
+                    showStatus(
+                        "Google authentication is ready to connect to your OAuth provider.",
+                        "success"
+                    );
+
+                }
+            );
+
+
+        /* =========================================
+           MICROSOFT LOGIN
+        ========================================== */
+
+        document
+            .getElementById("microsoftLogin")
+            .addEventListener(
+                "click",
+                () => {
+
+                    showStatus(
+                        "Microsoft authentication is ready to connect to your OAuth provider.",
+                        "success"
+                    );
+
+                }
+            );
+
+
+        /* =========================================
+           CREATE ACCOUNT
+        ========================================== */
+
+        document
+            .getElementById("createAccount")
+            .addEventListener(
+                "click",
+                event => {
+
+                    event.preventDefault();
+
+                    window.location.href =
+                        "register.html";
+
+                }
+            );
+
+
+        /* =========================================
+           LIVE INPUT CLEANUP
+        ========================================== */
+
+        email.addEventListener(
+            "input",
+            () => {
+
+                emailError.classList.remove(
+                    "show"
+                );
+
+                email.style.borderColor =
+                    "";
+
+                clearStatus();
+
+            }
+        );
+
+
+        password.addEventListener(
+            "input",
+            () => {
+
+                passwordError.classList.remove(
+                    "show"
+                );
+
+                password.style.borderColor =
+                    "";
+
+                clearStatus();
+
+            }
+        );
+
+
+        /* =========================================
+           KEYBOARD UX
+        ========================================== */
+
+        document.addEventListener(
+            "keydown",
+            event => {
+
+                if (
+                    event.key === "/" &&
+                    document.activeElement.tagName !==
+                    "INPUT"
+                ) {
+
+                    email.focus();
+
+                }
+
+            }
+        );
+
+    </script>
+
+</body>
+</html>

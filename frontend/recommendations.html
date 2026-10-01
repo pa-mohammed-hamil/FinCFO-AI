@@ -1,0 +1,4276 @@
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Recommendations | FinCo AI</title>
+
+    <meta
+        name="description"
+        content="FinCo AI intelligent financial recommendations powered by ML, GenAI, RAG and autonomous decision agents."
+    >
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+        :root {
+            --bg: #05060a;
+            --bg-soft: #090b12;
+            --panel: rgba(15,18,28,.80);
+            --panel-solid: #10131d;
+            --panel-2: #131722;
+
+            --border: rgba(255,255,255,.08);
+            --border-hover: rgba(255,255,255,.16);
+
+            --text: #f5f7fb;
+            --muted: #8e96a8;
+            --muted-2: #687184;
+
+            --purple: #7c5cff;
+            --purple-light: #a99aff;
+            --cyan: #22d3ee;
+            --green: #34d399;
+            --yellow: #fbbf24;
+            --red: #fb7185;
+            --orange: #fb923c;
+            --blue: #60a5fa;
+
+            --sidebar-width: 250px;
+            --topbar-height: 76px;
+
+            --radius: 18px;
+            --shadow: 0 25px 80px rgba(0,0,0,.35);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(
+                    circle at 75% 0%,
+                    rgba(124,92,255,.12),
+                    transparent 27%
+                ),
+                radial-gradient(
+                    circle at 10% 45%,
+                    rgba(34,211,238,.05),
+                    transparent 25%
+                ),
+                var(--bg);
+            color: var(--text);
+            font-family: Inter, sans-serif;
+            overflow-x: hidden;
+        }
+
+        button,
+        input,
+        select,
+        textarea {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        ::selection {
+            background: rgba(124,92,255,.35);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #272d3b;
+            border-radius: 20px;
+        }
+
+        /* =========================================================
+           BACKGROUND
+        ========================================================= */
+
+        .background-grid {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: .17;
+            background-image:
+                linear-gradient(
+                    rgba(255,255,255,.025) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,.025) 1px,
+                    transparent 1px
+                );
+            background-size: 50px 50px;
+            mask-image:
+                linear-gradient(
+                    to bottom,
+                    black,
+                    transparent 85%
+                );
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            pointer-events: none;
+            opacity: .1;
+        }
+
+        .orb-one {
+            width: 300px;
+            height: 300px;
+            background: var(--purple);
+            top: 15%;
+            right: 5%;
+        }
+
+        .orb-two {
+            width: 250px;
+            height: 250px;
+            background: var(--cyan);
+            bottom: 5%;
+            left: 12%;
+        }
+
+        /* =========================================================
+           SIDEBAR
+        ========================================================= */
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            z-index: 100;
+            padding: 22px 16px;
+            display: flex;
+            flex-direction: column;
+
+            background: rgba(7,9,15,.9);
+            backdrop-filter: blur(25px);
+            border-right: 1px solid var(--border);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 4px 9px 28px;
+        }
+
+        .brand-logo {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    #5740d8
+                );
+
+            box-shadow:
+                0 8px 30px rgba(124,92,255,.3);
+
+            font-family: "Space Grotesk", sans-serif;
+            font-weight: 800;
+        }
+
+        .brand-name {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 21.6px;
+            font-weight: 700;
+        }
+
+        .brand-ai {
+            color: var(--purple-light);
+        }
+
+        .nav-label {
+            color: var(--muted-2);
+            font-size: 12px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 0 11px;
+            margin: 12px 0 9px;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-item {
+            min-height: 43px;
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            border-radius: 11px;
+
+            color: var(--muted);
+            font-size: 15.6px;
+            font-weight: 500;
+
+            transition: .2s ease;
+        }
+
+        .nav-item:hover {
+            color: white;
+            background: rgba(255,255,255,.045);
+        }
+
+        .nav-item.active {
+            color: white;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(124,92,255,.20),
+                    rgba(124,92,255,.05)
+                );
+
+            border: 1px solid rgba(124,92,255,.18);
+        }
+
+        .nav-icon {
+            width: 20px;
+            text-align: center;
+            font-size: 19.2px;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            min-width: 22px;
+            height: 20px;
+            padding: 0 6px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 999px;
+
+            background: rgba(124,92,255,.13);
+            color: #b9adff;
+
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+        }
+
+        .system-card {
+            padding: 14px;
+
+            border-radius: 15px;
+
+            background: rgba(255,255,255,.025);
+            border: 1px solid var(--border);
+        }
+
+        .system-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .system-title {
+            color: var(--muted);
+            font-size: 13.2px;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            color: var(--green);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 12px currentColor;
+        }
+
+        .system-bar {
+            height: 5px;
+            overflow: hidden;
+            border-radius: 99px;
+            background: rgba(255,255,255,.06);
+        }
+
+        .system-bar span {
+            display: block;
+            width: 99.8%;
+            height: 100%;
+            background: var(--green);
+            border-radius: inherit;
+        }
+
+        .system-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+
+            color: var(--muted-2);
+            font-size: 10.8px;
+        }
+
+        /* =========================================================
+           MAIN / TOPBAR
+        ========================================================= */
+
+        .main {
+            min-height: 100vh;
+            margin-left: var(--sidebar-width);
+        }
+
+        .topbar {
+            height: var(--topbar-height);
+
+            position: sticky;
+            top: 0;
+            z-index: 80;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 32px;
+
+            background: rgba(5,6,10,.72);
+            backdrop-filter: blur(22px);
+
+            border-bottom: 1px solid var(--border);
+        }
+
+        .top-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .page-title {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 19.2px;
+            font-weight: 600;
+        }
+
+        .breadcrumb {
+            margin-top: 2px;
+            color: var(--muted-2);
+            font-size: 14.4px;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            width: 38px;
+            height: 38px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 11px;
+
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.025);
+
+            color: var(--muted);
+
+            transition: .2s;
+        }
+
+        .icon-btn:hover {
+            color: white;
+            border-color: var(--border-hover);
+            background: rgba(255,255,255,.06);
+        }
+
+        .notification {
+            position: relative;
+        }
+
+        .notification::after {
+            content: "";
+
+            position: absolute;
+            top: 8px;
+            right: 8px;
+
+            width: 6px;
+            height: 6px;
+
+            border-radius: 50%;
+
+            background: var(--red);
+            border: 2px solid #080a10;
+        }
+
+        .user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            padding-left: 10px;
+            margin-left: 4px;
+
+            border-left: 1px solid var(--border);
+        }
+
+        .avatar {
+            width: 34px;
+            height: 34px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #312e81,
+                    #7c3aed
+                );
+
+            font-size: 13.2px;
+            font-weight: 700;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .user-name {
+            font-size: 13.2px;
+            font-weight: 600;
+        }
+
+        .user-role {
+            color: var(--muted-2);
+            font-size: 10.8px;
+        }
+
+        /* =========================================================
+           CONTENT
+        ========================================================= */
+
+        .content {
+            max-width: 1800px;
+            margin: auto;
+            padding: 32px;
+        }
+
+        .hero {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+
+            padding: 6px 10px;
+            margin-bottom: 13px;
+
+            border-radius: 999px;
+
+            background: rgba(124,92,255,.08);
+            border: 1px solid rgba(124,92,255,.16);
+
+            color: #b5aaff;
+
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .7px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            max-width: 720px;
+
+            font-family: "Space Grotesk", sans-serif;
+
+            font-size: clamp(28px,3vw,43px);
+            line-height: 1.05;
+            letter-spacing: -1.5px;
+
+            margin-bottom: 11px;
+        }
+
+        .hero p {
+            max-width: 700px;
+
+            color: var(--muted);
+
+            font-size: 15.6px;
+            line-height: 1.7;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 9px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            height: 40px;
+            padding: 0 15px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+
+            border-radius: 11px;
+
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.035);
+
+            color: #dce1ea;
+
+            font-size: 13.2px;
+            font-weight: 600;
+
+            transition: .2s;
+        }
+
+        .btn:hover {
+            background: rgba(255,255,255,.07);
+            border-color: var(--border-hover);
+        }
+
+        .btn-primary {
+            color: white;
+            border-color: transparent;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    #6245e9
+                );
+
+            box-shadow:
+                0 8px 25px rgba(124,92,255,.2);
+        }
+
+        .btn-success {
+            color: #8af0c7;
+            background: rgba(52,211,153,.07);
+            border-color: rgba(52,211,153,.15);
+        }
+
+        /* =========================================================
+           KPI
+        ========================================================= */
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(18,21,32,.91),
+                    rgba(10,12,19,.83)
+                );
+
+            border-radius: var(--radius);
+
+            box-shadow: var(--shadow);
+        }
+
+        .kpi-card {
+            position: relative;
+            overflow: hidden;
+            padding: 19px;
+        }
+
+        .kpi-card::after {
+            content: "";
+
+            position: absolute;
+            right: -40px;
+            bottom: -45px;
+
+            width: 90px;
+            height: 90px;
+
+            border-radius: 50%;
+
+            background: var(--accent);
+
+            filter: blur(35px);
+            opacity: .14;
+        }
+
+        .kpi-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            margin-bottom: 15px;
+        }
+
+        .kpi-label {
+            color: var(--muted);
+            font-size: 13.2px;
+        }
+
+        .kpi-icon {
+            width: 33px;
+            height: 33px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 10px;
+
+            background: color-mix(
+                in srgb,
+                var(--accent) 10%,
+                transparent
+            );
+
+            border: 1px solid color-mix(
+                in srgb,
+                var(--accent) 16%,
+                transparent
+            );
+
+            color: var(--accent);
+        }
+
+        .kpi-value {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 32.4px;
+            font-weight: 700;
+            letter-spacing: -.7px;
+        }
+
+        .kpi-bottom {
+            display: flex;
+            gap: 7px;
+            align-items: center;
+
+            margin-top: 8px;
+
+            font-size: 12px;
+        }
+
+        .positive {
+            color: var(--green);
+        }
+
+        .negative {
+            color: var(--red);
+        }
+
+        .neutral {
+            color: var(--muted);
+        }
+
+        /* =========================================================
+           MAIN GRID
+        ========================================================= */
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: minmax(0,1.55fr) minmax(330px,.85fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 18px 20px 0;
+        }
+
+        .card-title {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 16.8px;
+            font-weight: 600;
+        }
+
+        .card-subtitle {
+            margin-top: 4px;
+            color: var(--muted-2);
+            font-size: 12px;
+        }
+
+        /* =========================================================
+           RECOMMENDATION SCORE
+        ========================================================= */
+
+        .score-card {
+            min-height: 380px;
+        }
+
+        .score-body {
+            padding: 20px;
+        }
+
+        .score-overview {
+            display: grid;
+            grid-template-columns: 190px 1fr;
+            gap: 25px;
+            align-items: center;
+        }
+
+        .score-ring-wrap {
+            display: grid;
+            place-items: center;
+        }
+
+        .score-ring {
+            width: 170px;
+            height: 170px;
+
+            display: grid;
+            place-items: center;
+
+            position: relative;
+
+            border-radius: 50%;
+
+            background:
+                conic-gradient(
+                    var(--purple) 0 91%,
+                    rgba(255,255,255,.06) 91% 100%
+                );
+
+            box-shadow:
+                0 0 45px rgba(124,92,255,.08);
+        }
+
+        .score-ring::before {
+            content: "";
+
+            position: absolute;
+
+            width: 125px;
+            height: 125px;
+
+            border-radius: 50%;
+
+            background: #10131d;
+            border: 1px solid var(--border);
+        }
+
+        .score-center {
+            position: relative;
+            text-align: center;
+        }
+
+        .score-number {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 40.8px;
+            font-weight: 700;
+        }
+
+        .score-label {
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 10.8px;
+        }
+
+        .score-details h3 {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 20.4px;
+            margin-bottom: 7px;
+        }
+
+        .score-details p {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .score-bars {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 13px;
+        }
+
+        .score-bar-row {
+            display: grid;
+            grid-template-columns: 105px 1fr 40px;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .score-bar-label {
+            color: var(--muted);
+            font-size: 10.8px;
+        }
+
+        .bar {
+            height: 6px;
+            overflow: hidden;
+            border-radius: 20px;
+            background: rgba(255,255,255,.06);
+        }
+
+        .bar span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+        }
+
+        .bar-value {
+            color: #dfe3eb;
+            font-size: 10.8px;
+            text-align: right;
+        }
+
+        /* =========================================================
+           AI DECISION CARD
+        ========================================================= */
+
+        .decision-card {
+            min-height: 380px;
+        }
+
+        .decision-body {
+            padding: 20px;
+        }
+
+        .decision-banner {
+            padding: 15px;
+            border-radius: 13px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(52,211,153,.08),
+                    rgba(34,211,238,.025)
+                );
+
+            border: 1px solid rgba(52,211,153,.13);
+
+            margin-bottom: 15px;
+        }
+
+        .decision-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            color: var(--green);
+
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .decision-banner h3 {
+            margin-top: 8px;
+
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 20.4px;
+        }
+
+        .decision-banner p {
+            margin-top: 6px;
+
+            color: var(--muted);
+            font-size: 10.8px;
+            line-height: 1.55;
+        }
+
+        .decision-list {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .decision-row {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+
+            padding: 10px;
+
+            border-radius: 9px;
+
+            background: rgba(255,255,255,.025);
+            border: 1px solid var(--border);
+        }
+
+        .decision-icon {
+            width: 27px;
+            height: 27px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 8px;
+
+            background: rgba(124,92,255,.09);
+            color: var(--purple-light);
+
+            font-size: 13.2px;
+        }
+
+        .decision-text {
+            flex: 1;
+        }
+
+        .decision-name {
+            font-size: 10.8px;
+            font-weight: 600;
+        }
+
+        .decision-meta {
+            margin-top: 3px;
+            color: var(--muted-2);
+            font-size: 9.6px;
+        }
+
+        .confidence {
+            color: var(--green);
+            font-size: 10.8px;
+            font-weight: 700;
+        }
+
+        /* =========================================================
+           RECOMMENDATION QUEUE
+        ========================================================= */
+
+        .recommendations-card {
+            overflow: hidden;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+
+            padding: 16px 20px;
+
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+
+            margin-top: 16px;
+        }
+
+        .search {
+            position: relative;
+            flex: 1;
+            max-width: 320px;
+        }
+
+        .search input {
+            width: 100%;
+            height: 35px;
+
+            padding: 0 12px 0 34px;
+
+            outline: none;
+
+            border: 1px solid var(--border);
+            border-radius: 9px;
+
+            background: rgba(255,255,255,.025);
+            color: var(--text);
+
+            font-size: 12px;
+        }
+
+        .search input:focus {
+            border-color: rgba(124,92,255,.45);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+
+            color: var(--muted-2);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 7px;
+        }
+
+        .select {
+            height: 32px;
+
+            padding: 0 10px;
+
+            outline: none;
+
+            border-radius: 8px;
+            border: 1px solid var(--border);
+
+            background: rgba(255,255,255,.03);
+            color: var(--muted);
+
+            font-size: 12px;
+        }
+
+        .select option {
+            background: #10131d;
+        }
+
+        .recommendation-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .recommendation {
+            display: grid;
+            grid-template-columns: 44px minmax(0,1fr) auto;
+            gap: 13px;
+            align-items: center;
+
+            padding: 17px 20px;
+
+            border-bottom: 1px solid rgba(255,255,255,.045);
+
+            transition: .18s;
+        }
+
+        .recommendation:hover {
+            background: rgba(255,255,255,.025);
+        }
+
+        .recommendation:last-child {
+            border-bottom: 0;
+        }
+
+        .recommendation-icon {
+            width: 40px;
+            height: 40px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 12px;
+
+            font-size: 18px;
+        }
+
+        .recommendation-icon.green {
+            color: var(--green);
+            background: rgba(52,211,153,.08);
+            border: 1px solid rgba(52,211,153,.13);
+        }
+
+        .recommendation-icon.purple {
+            color: var(--purple-light);
+            background: rgba(124,92,255,.09);
+            border: 1px solid rgba(124,92,255,.14);
+        }
+
+        .recommendation-icon.cyan {
+            color: var(--cyan);
+            background: rgba(34,211,238,.07);
+            border: 1px solid rgba(34,211,238,.13);
+        }
+
+        .recommendation-icon.yellow {
+            color: var(--yellow);
+            background: rgba(251,191,36,.07);
+            border: 1px solid rgba(251,191,36,.13);
+        }
+
+        .recommendation-icon.blue {
+            color: var(--blue);
+            background: rgba(96,165,250,.07);
+            border: 1px solid rgba(96,165,250,.13);
+        }
+
+        .recommendation-title {
+            font-size: 13.2px;
+            font-weight: 700;
+        }
+
+        .recommendation-description {
+            max-width: 760px;
+            margin-top: 5px;
+
+            color: var(--muted);
+            font-size: 10.8px;
+            line-height: 1.5;
+        }
+
+        .recommendation-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 7px;
+        }
+
+        .tag {
+            padding: 4px 7px;
+
+            border-radius: 999px;
+
+            background: rgba(255,255,255,.035);
+            border: 1px solid var(--border);
+
+            color: var(--muted-2);
+
+            font-size: 8.4px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+        .tag.high {
+            color: #ffadb9;
+            background: rgba(251,113,133,.07);
+            border-color: rgba(251,113,133,.13);
+        }
+
+        .tag.medium {
+            color: #fbd888;
+            background: rgba(251,191,36,.07);
+            border-color: rgba(251,191,36,.13);
+        }
+
+        .tag.impact {
+            color: #8ceac2;
+            background: rgba(52,211,153,.07);
+            border-color: rgba(52,211,153,.13);
+        }
+
+        .recommendation-right {
+            min-width: 105px;
+            text-align: right;
+        }
+
+        .impact-value {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 19.2px;
+            font-weight: 700;
+        }
+
+        .impact-label {
+            margin-top: 3px;
+            color: var(--muted-2);
+            font-size: 9.6px;
+        }
+
+        .recommendation-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 5px;
+            margin-top: 9px;
+        }
+
+        .mini-btn {
+            height: 27px;
+            padding: 0 8px;
+
+            border-radius: 7px;
+
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.025);
+
+            color: var(--muted);
+
+            font-size: 9.6px;
+        }
+
+        .mini-btn:hover {
+            color: white;
+            background: rgba(255,255,255,.06);
+        }
+
+        .mini-btn.primary {
+            color: #fff;
+            background: rgba(124,92,255,.15);
+            border-color: rgba(124,92,255,.22);
+        }
+
+        /* =========================================================
+           LOWER GRID
+        ========================================================= */
+
+        .lower-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .small-card {
+            min-height: 275px;
+            padding-bottom: 20px;
+        }
+
+        /* =========================================================
+           AGENT PIPELINE
+        ========================================================= */
+
+        .agent-body {
+            padding: 20px;
+        }
+
+        .agent-pipeline {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 13px;
+        }
+
+        .agent-pipeline::before {
+            content: "";
+
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            bottom: 15px;
+
+            width: 1px;
+
+            background:
+                linear-gradient(
+                    to bottom,
+                    var(--purple),
+                    rgba(124,92,255,.08)
+                );
+        }
+
+        .agent-step {
+            position: relative;
+
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .agent-node {
+            position: relative;
+            z-index: 2;
+
+            width: 31px;
+            height: 31px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 50%;
+
+            background: #121520;
+            border: 1px solid rgba(124,92,255,.3);
+
+            color: var(--purple-light);
+
+            font-size: 12px;
+        }
+
+        .agent-info {
+            flex: 1;
+        }
+
+        .agent-name {
+            font-size: 10.8px;
+            font-weight: 700;
+        }
+
+        .agent-status {
+            margin-top: 3px;
+            color: var(--muted-2);
+            font-size: 9.6px;
+        }
+
+        .agent-time {
+            color: var(--green);
+            font-size: 9.6px;
+            font-weight: 600;
+        }
+
+        /* =========================================================
+           EXPECTED IMPACT
+        ========================================================= */
+
+        .impact-body {
+            padding: 20px;
+        }
+
+        .impact-total {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 34.8px;
+            font-weight: 700;
+        }
+
+        .impact-caption {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 10.8px;
+        }
+
+        .impact-items {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 19px;
+        }
+
+        .impact-item {
+            display: grid;
+            grid-template-columns: 90px 1fr 45px;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .impact-item span {
+            color: var(--muted);
+            font-size: 9.6px;
+        }
+
+        .impact-progress {
+            height: 5px;
+            border-radius: 99px;
+            overflow: hidden;
+            background: rgba(255,255,255,.06);
+        }
+
+        .impact-progress span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--green);
+        }
+
+        .impact-percent {
+            text-align: right;
+            color: #dce1ea !important;
+        }
+
+        /* =========================================================
+           FEEDBACK
+        ========================================================= */
+
+        .feedback-body {
+            padding: 20px;
+        }
+
+        .feedback-header {
+            display: flex;
+            gap: 11px;
+            align-items: center;
+        }
+
+        .feedback-icon {
+            width: 38px;
+            height: 38px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 11px;
+
+            color: var(--purple-light);
+            background: rgba(124,92,255,.09);
+            border: 1px solid rgba(124,92,255,.15);
+        }
+
+        .feedback-title {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .feedback-subtitle {
+            margin-top: 4px;
+            color: var(--muted-2);
+            font-size: 9.6px;
+        }
+
+        .stars {
+            display: flex;
+            gap: 6px;
+            margin-top: 20px;
+        }
+
+        .star {
+            width: 34px;
+            height: 34px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 9px;
+
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.025);
+
+            color: var(--muted-2);
+
+            transition: .15s;
+        }
+
+        .star:hover,
+        .star.selected {
+            color: var(--yellow);
+            border-color: rgba(251,191,36,.25);
+            background: rgba(251,191,36,.08);
+        }
+
+        .feedback-text {
+            width: 100%;
+            min-height: 65px;
+
+            margin-top: 12px;
+            padding: 10px;
+
+            resize: vertical;
+
+            border-radius: 9px;
+
+            outline: none;
+
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.025);
+
+            color: var(--text);
+
+            font-size: 10.8px;
+        }
+
+        .feedback-text:focus {
+            border-color: rgba(124,92,255,.4);
+        }
+
+        /* =========================================================
+           MODAL
+        ========================================================= */
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 500;
+
+            display: none;
+            place-items: center;
+
+            padding: 20px;
+
+            background: rgba(0,0,0,.72);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-backdrop.show {
+            display: grid;
+        }
+
+        .modal {
+            width: min(650px,100%);
+            max-height: 90vh;
+            overflow-y: auto;
+
+            border-radius: 20px;
+
+            background: #0d1018;
+            border: 1px solid var(--border-hover);
+
+            box-shadow:
+                0 30px 100px rgba(0,0,0,.65);
+
+            animation: modalIn .2s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px) scale(.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 20px;
+
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 19.2px;
+            font-weight: 700;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-description {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.65;
+        }
+
+        .modal-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .modal-stat {
+            padding: 13px;
+
+            border-radius: 11px;
+
+            background: rgba(255,255,255,.025);
+            border: 1px solid var(--border);
+        }
+
+        .modal-stat-label {
+            color: var(--muted-2);
+            font-size: 9.6px;
+        }
+
+        .modal-stat-value {
+            margin-top: 5px;
+            font-size: 14.4px;
+            font-weight: 700;
+        }
+
+        .reason-box {
+            margin-top: 15px;
+            padding: 14px;
+
+            border-radius: 11px;
+
+            background: rgba(124,92,255,.06);
+            border: 1px solid rgba(124,92,255,.13);
+        }
+
+        .reason-title {
+            color: var(--purple-light);
+            font-size: 10.8px;
+            font-weight: 700;
+        }
+
+        .reason-text {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 10.8px;
+            line-height: 1.55;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+
+            padding: 0 20px 20px;
+        }
+
+        /* =========================================================
+           TOAST
+        ========================================================= */
+
+        .toast-container {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            z-index: 900;
+
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            min-width: 275px;
+            max-width: 370px;
+
+            padding: 13px 15px;
+
+            border-radius: 12px;
+
+            background: rgba(16,19,29,.95);
+            border: 1px solid var(--border-hover);
+
+            backdrop-filter: blur(20px);
+
+            box-shadow:
+                0 15px 50px rgba(0,0,0,.4);
+
+            animation: toastIn .25s ease;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .toast-title {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .toast-text {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 10.8px;
+            line-height: 1.45;
+        }
+
+        /* =========================================================
+           MOBILE
+        ========================================================= */
+
+        .mobile-menu {
+            display: none;
+
+            width: 38px;
+            height: 38px;
+
+            place-items: center;
+
+            border-radius: 10px;
+            border: 1px solid var(--border);
+
+            background: rgba(255,255,255,.025);
+            color: var(--muted);
+        }
+
+        .sidebar-overlay {
+            display: none;
+        }
+
+        @media (max-width:1200px) {
+
+            .kpi-grid {
+                grid-template-columns: repeat(2,1fr);
+            }
+
+            .lower-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+        }
+
+        @media (max-width:980px) {
+
+            :root {
+                --sidebar-width: 0px;
+            }
+
+            .sidebar {
+                width: 250px;
+                transform: translateX(-100%);
+                transition: transform .25s ease;
+                box-shadow: 20px 0 60px rgba(0,0,0,.5);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 90;
+                background: rgba(0,0,0,.6);
+                backdrop-filter: blur(3px);
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+            }
+
+            .mobile-menu {
+                display: grid;
+            }
+
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+        @media (max-width:700px) {
+
+            .content {
+                padding: 20px 15px 30px;
+            }
+
+            .topbar {
+                padding: 0 15px;
+            }
+
+            .hero {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .hero-actions {
+                width: 100%;
+            }
+
+            .hero-actions .btn {
+                flex: 1;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 9px;
+            }
+
+            .kpi-card {
+                padding: 14px;
+            }
+
+            .kpi-value {
+                font-size: 25.2px;
+            }
+
+            .score-overview {
+                grid-template-columns: 1fr;
+            }
+
+            .score-details {
+                text-align: center;
+            }
+
+            .lower-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .user-info {
+                display: none;
+            }
+
+            .breadcrumb {
+                display: none;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search {
+                max-width: none;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+
+            .filter-group .select {
+                flex: 1;
+            }
+
+            .recommendation {
+                grid-template-columns: 40px minmax(0,1fr);
+            }
+
+            .recommendation-right {
+                grid-column: 2;
+                text-align: left;
+            }
+
+            .recommendation-actions {
+                justify-content: flex-start;
+            }
+
+        }
+
+        @media (max-width:430px) {
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h1 {
+                font-size: 33.6px;
+            }
+
+            .top-actions .icon-btn:nth-child(2) {
+                display: none;
+            }
+
+            .score-ring {
+                width: 150px;
+                height: 150px;
+            }
+
+            .score-ring::before {
+                width: 110px;
+                height: 110px;
+            }
+
+            .score-bar-row {
+                grid-template-columns: 85px 1fr 35px;
+            }
+
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="background-grid"></div>
+<div class="orb orb-one"></div>
+<div class="orb orb-two"></div>
+
+<!-- =========================================================
+     SIDEBAR
+========================================================= -->
+
+<aside class="sidebar" id="sidebar">
+
+    <div class="brand">
+        <div class="brand-logo">F</div>
+
+        <div class="brand-name">
+            FinCo <span class="brand-ai">AI</span>
+        </div>
+    </div>
+
+    <div class="nav-label">Workspace</div>
+
+    <nav class="nav">
+
+        <a class="nav-item" href="index.html">
+            <span class="nav-icon">⌂</span>
+            Dashboard
+        </a>
+
+        <a class="nav-item" href="financial.html">
+            <span class="nav-icon">◈</span>
+            Financial
+        </a>
+
+        <a class="nav-item" href="fraud.html">
+            <span class="nav-icon">◉</span>
+            Fraud Intelligence
+            <span class="nav-badge">24</span>
+        </a>
+
+        <a class="nav-item" href="forecasting.html">
+            <span class="nav-icon">⌁</span>
+            Forecasting
+        </a>
+
+        <a class="nav-item" href="documents.html">
+            <span class="nav-icon">▤</span>
+            Documents
+        </a>
+
+        <a class="nav-item" href="copilot.html">
+            <span class="nav-icon">✦</span>
+            AI Copilot
+        </a>
+
+        <a class="nav-item active" href="recommendations.html">
+            <span class="nav-icon">◇</span>
+            Recommendations
+            <span class="nav-badge">12</span>
+        </a>
+
+        <a class="nav-item" href="alerts.html">
+            <span class="nav-icon">⚠</span>
+            Alerts
+            <span class="nav-badge">7</span>
+        </a>
+
+    </nav>
+
+    <div class="nav-label">System</div>
+
+    <nav class="nav">
+
+        <a class="nav-item" href="balance-sheet.html">
+            <span class="nav-icon">📋</span>
+            Balance Sheet
+        </a>
+
+        <a class="nav-item" href="dashboard.html">
+            <span class="nav-icon">⚙</span>
+            Settings
+        </a>
+
+        <a class="nav-item" href="recommendations.html">
+            <span class="nav-icon">?</span>
+            Help Center
+        </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+
+        <div class="system-card">
+
+            <div class="system-top">
+
+                <span class="system-title">
+                    AI Platform Health
+                </span>
+
+                <span class="system-status">
+                    <span class="status-dot"></span>
+                    Operational
+                </span>
+
+            </div>
+
+            <div class="system-bar">
+                <span></span>
+            </div>
+
+            <div class="system-meta">
+                <span>All services healthy</span>
+                <span>99.8%</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</aside>
+
+<div
+    class="sidebar-overlay"
+    id="sidebarOverlay"
+></div>
+
+<!-- =========================================================
+     MAIN
+========================================================= -->
+
+<main class="main">
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+        <div class="top-left">
+
+            <button
+                class="mobile-menu"
+                id="mobileMenu"
+                aria-label="Open navigation"
+            >
+                ☰
+            </button>
+
+            <div>
+
+                <div class="page-title">
+                    AI Recommendations
+                </div>
+
+                <div class="breadcrumb">
+                    Intelligence &nbsp;/&nbsp; Decision Center
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="top-actions">
+
+            <button
+                class="icon-btn"
+                onclick="showToast(
+                    'Search',
+                    'Recommendation search is ready.'
+                )"
+            >
+                ⌕
+            </button>
+
+            <button
+                class="icon-btn notification"
+                onclick="showToast(
+                    'Notifications',
+                    '7 alerts and 12 recommendations need attention.'
+                )"
+            >
+                ♢
+            </button>
+
+            <div class="user">
+
+                <div class="avatar">
+                    PA
+                </div>
+
+                <div class="user-info">
+
+                    <span class="user-name">
+                        FinCo Admin
+                    </span>
+
+                    <span class="user-role">
+                        Decision Analyst
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </header>
+
+    <!-- =====================================================
+         CONTENT
+    ====================================================== -->
+
+    <section class="content">
+
+        <!-- HERO -->
+
+        <div class="hero">
+
+            <div>
+
+                <div class="eyebrow">
+                    <span>✦</span>
+                    Autonomous Decision Intelligence
+                </div>
+
+                <h1>
+                    Turn financial signals
+                    into smarter decisions.
+                </h1>
+
+                <p>
+                    FinCo AI combines financial analytics,
+                    forecasting, fraud intelligence, RAG context
+                    and agentic reasoning to recommend the next
+                    best action for your business.
+                </p>
+
+            </div>
+
+            <div class="hero-actions">
+
+                <button
+                    class="btn"
+                    onclick="refreshRecommendations()"
+                >
+                    ↻ Refresh
+                </button>
+
+                <button
+                    class="btn btn-success"
+                    onclick="approveAllHighImpact()"
+                >
+                    ✓ Review High Impact
+                </button>
+
+                <button
+                    class="btn btn-primary"
+                    onclick="generateRecommendations()"
+                >
+                    ✦ Generate Recommendations
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- =====================================================
+             KPIs
+        ====================================================== -->
+
+        <div class="kpi-grid">
+
+            <div
+                class="card kpi-card"
+                style="--accent:var(--purple);"
+            >
+
+                <div class="kpi-top">
+
+                    <span class="kpi-label">
+                        Active Recommendations
+                    </span>
+
+                    <span class="kpi-icon">
+                        ◇
+                    </span>
+
+                </div>
+
+                <div class="kpi-value" id="activeRecommendations">
+                    12
+                </div>
+
+                <div class="kpi-bottom positive">
+                    ↑ 3
+                    <span class="neutral">
+                        since yesterday
+                    </span>
+                </div>
+
+            </div>
+
+            <div
+                class="card kpi-card"
+                style="--accent:var(--green);"
+            >
+
+                <div class="kpi-top">
+
+                    <span class="kpi-label">
+                        Expected Value
+                    </span>
+
+                    <span class="kpi-icon">
+                        $
+                    </span>
+
+                </div>
+
+                <div class="kpi-value">
+                    $284.6K
+                </div>
+
+                <div class="kpi-bottom positive">
+                    ↑ 18.7%
+                    <span class="neutral">
+                        projected impact
+                    </span>
+                </div>
+
+            </div>
+
+            <div
+                class="card kpi-card"
+                style="--accent:var(--cyan);"
+            >
+
+                <div class="kpi-top">
+
+                    <span class="kpi-label">
+                        AI Confidence
+                    </span>
+
+                    <span class="kpi-icon">
+                        ◎
+                    </span>
+
+                </div>
+
+                <div class="kpi-value">
+                    93.4%
+                </div>
+
+                <div class="kpi-bottom positive">
+                    ↑ 2.1%
+                    <span class="neutral">
+                        model confidence
+                    </span>
+                </div>
+
+            </div>
+
+            <div
+                class="card kpi-card"
+                style="--accent:var(--yellow);"
+            >
+
+                <div class="kpi-top">
+
+                    <span class="kpi-label">
+                        Actions Executed
+                    </span>
+
+                    <span class="kpi-icon">
+                        ✓
+                    </span>
+
+                </div>
+
+                <div class="kpi-value">
+                    847
+                </div>
+
+                <div class="kpi-bottom positive">
+                    ↑ 12.4%
+                    <span class="neutral">
+                        this month
+                    </span>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- =====================================================
+             SCORE + DECISION
+        ====================================================== -->
+
+        <div class="main-grid">
+
+            <!-- RECOMMENDATION SCORE -->
+
+            <section class="card score-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <div class="card-title">
+                            Decision Intelligence Score
+                        </div>
+
+                        <div class="card-subtitle">
+                            Overall quality of current AI recommendations
+                        </div>
+
+                    </div>
+
+                    <button
+                        class="icon-btn"
+                        onclick="showToast(
+                            'Score refreshed',
+                            'Decision intelligence metrics are up to date.'
+                        )"
+                    >
+                        ↻
+                    </button>
+
+                </div>
+
+                <div class="score-body">
+
+                    <div class="score-overview">
+
+                        <div class="score-ring-wrap">
+
+                            <div class="score-ring">
+
+                                <div class="score-center">
+
+                                    <div class="score-number">
+                                        91
+                                    </div>
+
+                                    <div class="score-label">
+                                        / 100 SCORE
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="score-details">
+
+                            <h3>
+                                Excellent decision quality
+                            </h3>
+
+                            <p>
+                                Recommendations are strongly supported
+                                by transaction patterns, forecasting
+                                signals, historical behavior and
+                                retrieved financial context.
+                            </p>
+
+                            <div class="score-bars">
+
+                                <div class="score-bar-row">
+
+                                    <span class="score-bar-label">
+                                        Financial Impact
+                                    </span>
+
+                                    <div class="bar">
+                                        <span
+                                            style="
+                                            width:94%;
+                                            background:var(--green);
+                                            "
+                                        ></span>
+                                    </div>
+
+                                    <span class="bar-value">
+                                        94
+                                    </span>
+
+                                </div>
+
+                                <div class="score-bar-row">
+
+                                    <span class="score-bar-label">
+                                        Confidence
+                                    </span>
+
+                                    <div class="bar">
+                                        <span
+                                            style="
+                                            width:93%;
+                                            background:var(--purple);
+                                            "
+                                        ></span>
+                                    </div>
+
+                                    <span class="bar-value">
+                                        93
+                                    </span>
+
+                                </div>
+
+                                <div class="score-bar-row">
+
+                                    <span class="score-bar-label">
+                                        Evidence
+                                    </span>
+
+                                    <div class="bar">
+                                        <span
+                                            style="
+                                            width:96%;
+                                            background:var(--cyan);
+                                            "
+                                        ></span>
+                                    </div>
+
+                                    <span class="bar-value">
+                                        96
+                                    </span>
+
+                                </div>
+
+                                <div class="score-bar-row">
+
+                                    <span class="score-bar-label">
+                                        Risk Alignment
+                                    </span>
+
+                                    <div class="bar">
+                                        <span
+                                            style="
+                                            width:88%;
+                                            background:var(--yellow);
+                                            "
+                                        ></span>
+                                    </div>
+
+                                    <span class="bar-value">
+                                        88
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- AI DECISION -->
+
+            <section class="card decision-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <div class="card-title">
+                            AI Decision Engine
+                        </div>
+
+                        <div class="card-subtitle">
+                            Current autonomous reasoning pipeline
+                        </div>
+
+                    </div>
+
+                    <span
+                        style="
+                        color:var(--green);
+                        font-size: 10.8px;
+                        font-weight:700;
+                        "
+                    >
+                        ● ONLINE
+                    </span>
+
+                </div>
+
+                <div class="decision-body">
+
+                    <div class="decision-banner">
+
+                        <div class="decision-status">
+                            <span class="status-dot"></span>
+                            Decision Ready
+                        </div>
+
+                        <h3>
+                            4 high-impact actions identified
+                        </h3>
+
+                        <p>
+                            The agentic decision engine has prioritized
+                            recommendations based on expected value,
+                            confidence, urgency and operational risk.
+                        </p>
+
+                    </div>
+
+                    <div class="decision-list">
+
+                        <div class="decision-row">
+
+                            <div class="decision-icon">
+                                $
+                            </div>
+
+                            <div class="decision-text">
+
+                                <div class="decision-name">
+                                    Reduce operating expense
+                                </div>
+
+                                <div class="decision-meta">
+                                    Financial Agent
+                                </div>
+
+                            </div>
+
+                            <div class="confidence">
+                                96%
+                            </div>
+
+                        </div>
+
+                        <div class="decision-row">
+
+                            <div class="decision-icon">
+                                ⌁
+                            </div>
+
+                            <div class="decision-text">
+
+                                <div class="decision-name">
+                                    Increase cash reserve
+                                </div>
+
+                                <div class="decision-meta">
+                                    Forecast Agent
+                                </div>
+
+                            </div>
+
+                            <div class="confidence">
+                                94%
+                            </div>
+
+                        </div>
+
+                        <div class="decision-row">
+
+                            <div class="decision-icon">
+                                ⚠
+                            </div>
+
+                            <div class="decision-text">
+
+                                <div class="decision-name">
+                                    Investigate fraud cluster
+                                </div>
+
+                                <div class="decision-meta">
+                                    Fraud Agent
+                                </div>
+
+                            </div>
+
+                            <div class="confidence">
+                                98%
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+        <!-- =====================================================
+             RECOMMENDATIONS
+        ====================================================== -->
+
+        <section class="card recommendations-card">
+
+            <div class="card-header">
+
+                <div>
+
+                    <div class="card-title">
+                        AI Recommendation Queue
+                    </div>
+
+                    <div class="card-subtitle">
+                        Prioritized actions generated from current financial intelligence
+                    </div>
+
+                </div>
+
+                <button
+                    class="btn"
+                    onclick="exportRecommendations()"
+                >
+                    ↓ Export
+                </button>
+
+            </div>
+
+            <div class="toolbar">
+
+                <div class="search">
+
+                    <span class="search-icon">
+                        ⌕
+                    </span>
+
+                    <input
+                        id="recommendationSearch"
+                        type="search"
+                        placeholder="Search recommendations..."
+                    >
+
+                </div>
+
+                <div class="filter-group">
+
+                    <select
+                        class="select"
+                        id="priorityFilter"
+                    >
+                        <option value="all">
+                            All Priorities
+                        </option>
+
+                        <option value="high">
+                            High Impact
+                        </option>
+
+                        <option value="medium">
+                            Medium
+                        </option>
+
+                        <option value="low">
+                            Low
+                        </option>
+                    </select>
+
+                    <select
+                        class="select"
+                        id="categoryFilter"
+                    >
+                        <option value="all">
+                            All Categories
+                        </option>
+
+                        <option value="financial">
+                            Financial
+                        </option>
+
+                        <option value="fraud">
+                            Fraud
+                        </option>
+
+                        <option value="forecast">
+                            Forecast
+                        </option>
+
+                        <option value="cashflow">
+                            Cash Flow
+                        </option>
+                    </select>
+
+                </div>
+
+            </div>
+
+            <div
+                class="recommendation-list"
+                id="recommendationList"
+            >
+
+                <!-- Recommendation 1 -->
+
+                <article
+                    class="recommendation"
+                    data-priority="high"
+                    data-category="financial"
+                >
+
+                    <div class="recommendation-icon green">
+                        $
+                    </div>
+
+                    <div>
+
+                        <div class="recommendation-title">
+                            Reduce operating expenses by 6–8%
+                        </div>
+
+                        <div class="recommendation-description">
+                            Expense analysis indicates several recurring
+                            cost categories are trending above their
+                            historical baseline. Optimizing these areas
+                            could improve monthly operating margin.
+                        </div>
+
+                        <div class="recommendation-meta">
+
+                            <span class="tag high">
+                                High Impact
+                            </span>
+
+                            <span class="tag impact">
+                                Financial Agent
+                            </span>
+
+                            <span class="tag">
+                                96% Confidence
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="recommendation-right">
+
+                        <div class="impact-value positive">
+                            +$72.4K
+                        </div>
+
+                        <div class="impact-label">
+                            Estimated monthly value
+                        </div>
+
+                        <div class="recommendation-actions">
+
+                            <button
+                                class="mini-btn"
+                                onclick="viewRecommendation(
+                                    'Reduce operating expenses by 6–8%',
+                                    '$72.4K',
+                                    '96%',
+                                    'Financial Agent',
+                                    'Expense trend analysis identifies recurring categories above the historical operating baseline.'
+                                )"
+                            >
+                                View
+                            </button>
+
+                            <button
+                                class="mini-btn primary"
+                                onclick="approveRecommendation(this)"
+                            >
+                                Approve
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+                <!-- Recommendation 2 -->
+
+                <article
+                    class="recommendation"
+                    data-priority="high"
+                    data-category="cashflow"
+                >
+
+                    <div class="recommendation-icon purple">
+                        ⌁
+                    </div>
+
+                    <div>
+
+                        <div class="recommendation-title">
+                            Increase cash reserve by $120K
+                        </div>
+
+                        <div class="recommendation-description">
+                            Forecasting models indicate elevated cash-flow
+                            pressure during the next 45 days. Increasing
+                            liquid reserves can improve resilience against
+                            the projected volatility.
+                        </div>
+
+                        <div class="recommendation-meta">
+
+                            <span class="tag high">
+                                High Impact
+                            </span>
+
+                            <span class="tag impact">
+                                Forecast Agent
+                            </span>
+
+                            <span class="tag">
+                                94% Confidence
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="recommendation-right">
+
+                        <div class="impact-value positive">
+                            +18.4%
+                        </div>
+
+                        <div class="impact-label">
+                            Liquidity resilience
+                        </div>
+
+                        <div class="recommendation-actions">
+
+                            <button
+                                class="mini-btn"
+                                onclick="viewRecommendation(
+                                    'Increase cash reserve by $120K',
+                                    '+18.4%',
+                                    '94%',
+                                    'Forecast Agent',
+                                    'Cash-flow forecasting identifies increased liquidity pressure over the next 45 days.'
+                                )"
+                            >
+                                View
+                            </button>
+
+                            <button
+                                class="mini-btn primary"
+                                onclick="approveRecommendation(this)"
+                            >
+                                Approve
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+                <!-- Recommendation 3 -->
+
+                <article
+                    class="recommendation"
+                    data-priority="high"
+                    data-category="fraud"
+                >
+
+                    <div class="recommendation-icon cyan">
+                        ⚠
+                    </div>
+
+                    <div>
+
+                        <div class="recommendation-title">
+                            Investigate emerging fraud cluster
+                        </div>
+
+                        <div class="recommendation-description">
+                            Eighteen transactions share unusual device,
+                            geographic and transaction-velocity patterns.
+                            Immediate investigation is recommended before
+                            additional exposure occurs.
+                        </div>
+
+                        <div class="recommendation-meta">
+
+                            <span class="tag high">
+                                Critical
+                            </span>
+
+                            <span class="tag impact">
+                                Fraud Agent
+                            </span>
+
+                            <span class="tag">
+                                98% Confidence
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="recommendation-right">
+
+                        <div class="impact-value positive">
+                            $42.8K
+                        </div>
+
+                        <div class="impact-label">
+                            Exposure avoided
+                        </div>
+
+                        <div class="recommendation-actions">
+
+                            <button
+                                class="mini-btn"
+                                onclick="viewRecommendation(
+                                    'Investigate emerging fraud cluster',
+                                    '$42.8K',
+                                    '98%',
+                                    'Fraud Agent',
+                                    'A coordinated anomaly pattern was detected across device fingerprint, location and transaction velocity features.'
+                                )"
+                            >
+                                View
+                            </button>
+
+                            <button
+                                class="mini-btn primary"
+                                onclick="approveRecommendation(this)"
+                            >
+                                Investigate
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+                <!-- Recommendation 4 -->
+
+                <article
+                    class="recommendation"
+                    data-priority="medium"
+                    data-category="forecast"
+                >
+
+                    <div class="recommendation-icon yellow">
+                        ↗
+                    </div>
+
+                    <div>
+
+                        <div class="recommendation-title">
+                            Prepare for next-month revenue acceleration
+                        </div>
+
+                        <div class="recommendation-description">
+                            Revenue forecasting indicates approximately
+                            6.2% growth next month. Increasing operational
+                            capacity now could reduce the risk of missed
+                            demand.
+                        </div>
+
+                        <div class="recommendation-meta">
+
+                            <span class="tag medium">
+                                Medium
+                            </span>
+
+                            <span class="tag impact">
+                                Forecast Agent
+                            </span>
+
+                            <span class="tag">
+                                91% Confidence
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="recommendation-right">
+
+                        <div class="impact-value positive">
+                            +6.2%
+                        </div>
+
+                        <div class="impact-label">
+                            Revenue growth
+                        </div>
+
+                        <div class="recommendation-actions">
+
+                            <button
+                                class="mini-btn"
+                                onclick="viewRecommendation(
+                                    'Prepare for next-month revenue acceleration',
+                                    '+6.2%',
+                                    '91%',
+                                    'Forecast Agent',
+                                    'Revenue forecasting models indicate continued positive momentum during the next forecast period.'
+                                )"
+                            >
+                                View
+                            </button>
+
+                            <button
+                                class="mini-btn primary"
+                                onclick="approveRecommendation(this)"
+                            >
+                                Approve
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+                <!-- Recommendation 5 -->
+
+                <article
+                    class="recommendation"
+                    data-priority="medium"
+                    data-category="financial"
+                >
+
+                    <div class="recommendation-icon blue">
+                        ◈
+                    </div>
+
+                    <div>
+
+                        <div class="recommendation-title">
+                            Rebalance short-term investment allocation
+                        </div>
+
+                        <div class="recommendation-description">
+                            Portfolio analytics indicate that a portion of
+                            idle cash could be reallocated while maintaining
+                            the target liquidity buffer.
+                        </div>
+
+                        <div class="recommendation-meta">
+
+                            <span class="tag medium">
+                                Medium
+                            </span>
+
+                            <span class="tag impact">
+                                Financial Agent
+                            </span>
+
+                            <span class="tag">
+                                89% Confidence
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="recommendation-right">
+
+                        <div class="impact-value positive">
+                            +$31.8K
+                        </div>
+
+                        <div class="impact-label">
+                            Estimated annual value
+                        </div>
+
+                        <div class="recommendation-actions">
+
+                            <button
+                                class="mini-btn"
+                                onclick="viewRecommendation(
+                                    'Rebalance short-term investment allocation',
+                                    '+$31.8K',
+                                    '89%',
+                                    'Financial Agent',
+                                    'Portfolio and liquidity analysis suggests idle cash can be optimized without breaching the target reserve.'
+                                )"
+                            >
+                                View
+                            </button>
+
+                            <button
+                                class="mini-btn primary"
+                                onclick="approveRecommendation(this)"
+                            >
+                                Approve
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+            </div>
+
+        </section>
+
+        <!-- =====================================================
+             LOWER CARDS
+        ====================================================== -->
+
+        <div class="lower-grid">
+
+            <!-- AGENT PIPELINE -->
+
+            <section class="card small-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <div class="card-title">
+                            Recommendation Agent Pipeline
+                        </div>
+
+                        <div class="card-subtitle">
+                            Multi-agent reasoning workflow
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="agent-body">
+
+                    <div class="agent-pipeline">
+
+                        <div class="agent-step">
+
+                            <div class="agent-node">
+                                1
+                            </div>
+
+                            <div class="agent-info">
+
+                                <div class="agent-name">
+                                    Data Analysis Agent
+                                </div>
+
+                                <div class="agent-status">
+                                    Transaction + financial signals
+                                </div>
+
+                            </div>
+
+                            <div class="agent-time">
+                                18ms
+                            </div>
+
+                        </div>
+
+                        <div class="agent-step">
+
+                            <div class="agent-node">
+                                2
+                            </div>
+
+                            <div class="agent-info">
+
+                                <div class="agent-name">
+                                    Forecast Agent
+                                </div>
+
+                                <div class="agent-status">
+                                    Predictive signals evaluated
+                                </div>
+
+                            </div>
+
+                            <div class="agent-time">
+                                32ms
+                            </div>
+
+                        </div>
+
+                        <div class="agent-step">
+
+                            <div class="agent-node">
+                                3
+                            </div>
+
+                            <div class="agent-info">
+
+                                <div class="agent-name">
+                                    RAG Research Agent
+                                </div>
+
+                                <div class="agent-status">
+                                    Financial context retrieved
+                                </div>
+
+                            </div>
+
+                            <div class="agent-time">
+                                47ms
+                            </div>
+
+                        </div>
+
+                        <div class="agent-step">
+
+                            <div class="agent-node">
+                                4
+                            </div>
+
+                            <div class="agent-info">
+
+                                <div class="agent-name">
+                                    Decision Agent
+                                </div>
+
+                                <div class="agent-status">
+                                    Action prioritized
+                                </div>
+
+                            </div>
+
+                            <div class="agent-time">
+                                21ms
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- EXPECTED IMPACT -->
+
+            <section class="card small-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <div class="card-title">
+                            Expected Business Impact
+                        </div>
+
+                        <div class="card-subtitle">
+                            Estimated value from current recommendations
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="impact-body">
+
+                    <div class="impact-total">
+                        $284.6K
+                    </div>
+
+                    <div class="impact-caption">
+                        Estimated monthly financial impact
+                    </div>
+
+                    <div class="impact-items">
+
+                        <div class="impact-item">
+
+                            <span>
+                                Cost savings
+                            </span>
+
+                            <div class="impact-progress">
+                                <span style="width:82%;"></span>
+                            </div>
+
+                            <span class="impact-percent">
+                                82%
+                            </span>
+
+                        </div>
+
+                        <div class="impact-item">
+
+                            <span>
+                                Fraud prevention
+                            </span>
+
+                            <div class="impact-progress">
+                                <span
+                                    style="
+                                    width:76%;
+                                    background:var(--red);
+                                    "
+                                ></span>
+                            </div>
+
+                            <span class="impact-percent">
+                                76%
+                            </span>
+
+                        </div>
+
+                        <div class="impact-item">
+
+                            <span>
+                                Revenue growth
+                            </span>
+
+                            <div class="impact-progress">
+                                <span
+                                    style="
+                                    width:64%;
+                                    background:var(--cyan);
+                                    "
+                                ></span>
+                            </div>
+
+                            <span class="impact-percent">
+                                64%
+                            </span>
+
+                        </div>
+
+                        <div class="impact-item">
+
+                            <span>
+                                Liquidity
+                            </span>
+
+                            <div class="impact-progress">
+                                <span
+                                    style="
+                                    width:58%;
+                                    background:var(--purple);
+                                    "
+                                ></span>
+                            </div>
+
+                            <span class="impact-percent">
+                                58%
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- FEEDBACK -->
+
+            <section class="card small-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <div class="card-title">
+                            Recommendation Feedback
+                        </div>
+
+                        <div class="card-subtitle">
+                            Help improve the decision engine
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="feedback-body">
+
+                    <div class="feedback-header">
+
+                        <div class="feedback-icon">
+                            ✦
+                        </div>
+
+                        <div>
+
+                            <div class="feedback-title">
+                                How useful are FinCo recommendations?
+                            </div>
+
+                            <div class="feedback-subtitle">
+                                Your feedback improves future ranking.
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div
+                        class="stars"
+                        id="stars"
+                    >
+
+                        <button
+                            class="star"
+                            data-rating="1"
+                        >
+                            ★
+                        </button>
+
+                        <button
+                            class="star"
+                            data-rating="2"
+                        >
+                            ★
+                        </button>
+
+                        <button
+                            class="star"
+                            data-rating="3"
+                        >
+                            ★
+                        </button>
+
+                        <button
+                            class="star"
+                            data-rating="4"
+                        >
+                            ★
+                        </button>
+
+                        <button
+                            class="star"
+                            data-rating="5"
+                        >
+                            ★
+                        </button>
+
+                    </div>
+
+                    <textarea
+                        class="feedback-text"
+                        id="feedbackText"
+                        placeholder="Optional feedback..."
+                    ></textarea>
+
+                    <button
+                        class="btn btn-primary"
+                        style="
+                        width:100%;
+                        margin-top:9px;
+                        "
+                        onclick="submitFeedback()"
+                    >
+                        Submit Feedback
+                    </button>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </section>
+
+</main>
+
+<!-- =========================================================
+     DETAIL MODAL
+========================================================= -->
+
+<div
+    class="modal-backdrop"
+    id="recommendationModal"
+    onclick="closeModal(event)"
+>
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <div class="modal-title">
+                    Recommendation Analysis
+                </div>
+
+                <div
+                    style="
+                    color:var(--muted-2);
+                    font-size: 10.8px;
+                    margin-top:4px;
+                    "
+                >
+                    AI decision explanation
+                </div>
+
+            </div>
+
+            <button
+                class="icon-btn"
+                onclick="closeRecommendation()"
+            >
+                ×
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <h3
+                id="modalRecommendationTitle"
+                style="
+                font-family:'Space Grotesk',sans-serif;
+                font-size: 18px;
+                "
+            >
+                —
+            </h3>
+
+            <p
+                class="modal-description"
+                id="modalRecommendationDescription"
+                style="margin-top:8px;"
+            >
+                —
+            </p>
+
+            <div class="modal-grid">
+
+                <div class="modal-stat">
+
+                    <div class="modal-stat-label">
+                        Expected Impact
+                    </div>
+
+                    <div
+                        class="modal-stat-value positive"
+                        id="modalImpact"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+                <div class="modal-stat">
+
+                    <div class="modal-stat-label">
+                        AI Confidence
+                    </div>
+
+                    <div
+                        class="modal-stat-value"
+                        id="modalConfidence"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+                <div class="modal-stat">
+
+                    <div class="modal-stat-label">
+                        Responsible Agent
+                    </div>
+
+                    <div
+                        class="modal-stat-value"
+                        id="modalAgent"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+                <div class="modal-stat">
+
+                    <div class="modal-stat-label">
+                        Evidence
+                    </div>
+
+                    <div class="modal-stat-value">
+                        RAG + ML + Analytics
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="reason-box">
+
+                <div class="reason-title">
+                    ✦ Why FinCo AI recommends this
+                </div>
+
+                <div
+                    class="reason-text"
+                    id="modalReason"
+                >
+                    —
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="modal-actions">
+
+            <button
+                class="btn"
+                onclick="closeRecommendation()"
+            >
+                Close
+            </button>
+
+            <button
+                class="btn btn-primary"
+                onclick="approveModalRecommendation()"
+            >
+                Approve Recommendation
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- =========================================================
+     TOAST
+========================================================= -->
+
+<div
+    class="toast-container"
+    id="toastContainer"
+></div>
+
+<script>
+
+    /* =========================================================
+       FinCo AI — Recommendations Frontend
+
+       Production API mapping:
+
+       GET  /api/recommendations
+       GET  /api/recommendations/summary
+       GET  /api/recommendations/impact
+       GET  /api/recommendations/agents
+
+       POST /api/recommendations/generate
+       POST /api/recommendations/{id}/approve
+       POST /api/recommendations/{id}/reject
+       POST /api/recommendations/{id}/execute
+       POST /api/recommendations/feedback
+
+       POST /api/decision-engine/run
+
+       Example:
+
+       const response = await fetch(
+           "/api/recommendations"
+       );
+
+       const data = await response.json();
+
+       ========================================================= */
+
+
+    /* =========================================================
+       MOBILE NAVIGATION
+    ========================================================= */
+
+    const mobileMenu =
+        document.getElementById("mobileMenu");
+
+    const sidebar =
+        document.getElementById("sidebar");
+
+    const sidebarOverlay =
+        document.getElementById("sidebarOverlay");
+
+    mobileMenu?.addEventListener("click", () => {
+
+        sidebar.classList.add("open");
+        sidebarOverlay.classList.add("show");
+
+    });
+
+    sidebarOverlay?.addEventListener("click", () => {
+
+        sidebar.classList.remove("open");
+        sidebarOverlay.classList.remove("show");
+
+    });
+
+
+    /* =========================================================
+       TOAST
+    ========================================================= */
+
+    function showToast(title, message) {
+
+        const container =
+            document.getElementById("toastContainer");
+
+        const toast =
+            document.createElement("div");
+
+        toast.className = "toast";
+
+        toast.innerHTML = `
+            <div class="toast-title">
+                ${escapeHtml(title)}
+            </div>
+
+            <div class="toast-text">
+                ${escapeHtml(message)}
+            </div>
+        `;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+
+            toast.style.opacity = "0";
+            toast.style.transform = "translateY(8px)";
+            toast.style.transition = ".2s";
+
+            setTimeout(() => {
+                toast.remove();
+            }, 220);
+
+        }, 3500);
+    }
+
+
+    /* =========================================================
+       HTML ESCAPE
+    ========================================================= */
+
+    function escapeHtml(value) {
+
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+
+    /* =========================================================
+       GENERATE RECOMMENDATIONS
+    ========================================================= */
+
+    function generateRecommendations() {
+
+        showToast(
+            "Decision Engine Started",
+            "FinCo AI is analyzing financial signals and generating recommendations..."
+        );
+
+        setTimeout(() => {
+
+            document
+                .getElementById("activeRecommendations")
+                .textContent = "15";
+
+            showToast(
+                "Recommendations Generated",
+                "3 new high-value recommendations are ready for review."
+            );
+
+        }, 1500);
+
+        /*
+        Production:
+
+        POST /api/recommendations/generate
+
+        Example request:
+
+        {
+            "scope": "all",
+            "include_forecast": true,
+            "include_fraud": true,
+            "include_rag": true
+        }
+
+        Expected response:
+
+        {
+            "recommendations": [...],
+            "count": 15,
+            "generation_time_ms": 124
+        }
+        */
+    }
+
+
+    /* =========================================================
+       REFRESH
+    ========================================================= */
+
+    function refreshRecommendations() {
+
+        showToast(
+            "Refreshing Intelligence",
+            "Fetching the latest recommendations..."
+        );
+
+        setTimeout(() => {
+
+            showToast(
+                "Updated",
+                "Recommendation scores and business impact are current."
+            );
+
+        }, 850);
+
+        /*
+        Production:
+
+        GET /api/recommendations/summary
+        GET /api/recommendations
+        GET /api/recommendations/impact
+        */
+    }
+
+
+    /* =========================================================
+       FILTER
+    ========================================================= */
+
+    const search =
+        document.getElementById("recommendationSearch");
+
+    const priorityFilter =
+        document.getElementById("priorityFilter");
+
+    const categoryFilter =
+        document.getElementById("categoryFilter");
+
+
+    function filterRecommendations() {
+
+        const query =
+            search.value.toLowerCase().trim();
+
+        const priority =
+            priorityFilter.value;
+
+        const category =
+            categoryFilter.value;
+
+        const recommendations =
+            document.querySelectorAll(
+                ".recommendation"
+            );
+
+        recommendations.forEach(item => {
+
+            const text =
+                item.textContent.toLowerCase();
+
+            const itemPriority =
+                item.dataset.priority;
+
+            const itemCategory =
+                item.dataset.category;
+
+            const matchesSearch =
+                !query || text.includes(query);
+
+            const matchesPriority =
+                priority === "all" ||
+                itemPriority === priority;
+
+            const matchesCategory =
+                category === "all" ||
+                itemCategory === category;
+
+            item.style.display =
+                matchesSearch &&
+                matchesPriority &&
+                matchesCategory
+                    ? ""
+                    : "none";
+
+        });
+    }
+
+
+    search.addEventListener(
+        "input",
+        filterRecommendations
+    );
+
+    priorityFilter.addEventListener(
+        "change",
+        filterRecommendations
+    );
+
+    categoryFilter.addEventListener(
+        "change",
+        filterRecommendations
+    );
+
+
+    /* =========================================================
+       VIEW RECOMMENDATION
+    ========================================================= */
+
+    const recommendationModal =
+        document.getElementById(
+            "recommendationModal"
+        );
+
+
+    function viewRecommendation(
+        title,
+        impact,
+        confidence,
+        agent,
+        reason
+    ) {
+
+        document
+            .getElementById(
+                "modalRecommendationTitle"
+            )
+            .textContent = title;
+
+        document
+            .getElementById(
+                "modalRecommendationDescription"
+            )
+            .textContent =
+            "FinCo AI generated this recommendation after combining financial analytics, machine-learning predictions, contextual evidence and agentic reasoning.";
+
+        document
+            .getElementById("modalImpact")
+            .textContent = impact;
+
+        document
+            .getElementById("modalConfidence")
+            .textContent = confidence;
+
+        document
+            .getElementById("modalAgent")
+            .textContent = agent;
+
+        document
+            .getElementById("modalReason")
+            .textContent = reason;
+
+        recommendationModal.classList.add("show");
+
+        document.body.style.overflow = "hidden";
+    }
+
+
+    function closeRecommendation() {
+
+        recommendationModal.classList.remove("show");
+
+        document.body.style.overflow = "";
+    }
+
+
+    function closeModal(event) {
+
+        if (
+            event.target === recommendationModal
+        ) {
+            closeRecommendation();
+        }
+
+    }
+
+
+    /* =========================================================
+       APPROVE
+    ========================================================= */
+
+    function approveRecommendation(button) {
+
+        const recommendation =
+            button
+                .closest(".recommendation");
+
+        const title =
+            recommendation
+                .querySelector(
+                    ".recommendation-title"
+                )
+                .textContent;
+
+        button.textContent = "Approved";
+        button.disabled = true;
+
+        button.style.opacity = ".65";
+
+        showToast(
+            "Recommendation Approved",
+            title
+        );
+
+        /*
+        Production:
+
+        POST /api/recommendations/{id}/approve
+
+        Backend should record:
+
+        - user_id
+        - recommendation_id
+        - timestamp
+        - decision
+        - model_version
+        - confidence
+        */
+    }
+
+
+    function approveModalRecommendation() {
+
+        const title =
+            document
+                .getElementById(
+                    "modalRecommendationTitle"
+                )
+                .textContent;
+
+        closeRecommendation();
+
+        showToast(
+            "Recommendation Approved",
+            `${title} has been approved for execution.`
+        );
+    }
+
+
+    /* =========================================================
+       REVIEW HIGH IMPACT
+    ========================================================= */
+
+    function approveAllHighImpact() {
+
+        const items =
+            document.querySelectorAll(
+                '.recommendation[data-priority="high"]'
+            );
+
+        showToast(
+            "High-Impact Review",
+            `${items.length} high-impact recommendations are ready for review.`
+        );
+
+        /*
+        Intentionally does NOT automatically execute
+        financial actions.
+
+        Production systems should require explicit
+        human approval for material financial decisions.
+        */
+    }
+
+
+    /* =========================================================
+       EXPORT
+    ========================================================= */
+
+    function exportRecommendations() {
+
+        const rows = [
+            [
+                "Recommendation",
+                "Category",
+                "Priority",
+                "Confidence",
+                "Expected Impact"
+            ],
+            [
+                "Reduce operating expenses by 6-8%",
+                "Financial",
+                "High",
+                "96%",
+                "$72.4K"
+            ],
+            [
+                "Increase cash reserve by $120K",
+                "Cash Flow",
+                "High",
+                "94%",
+                "+18.4%"
+            ],
+            [
+                "Investigate emerging fraud cluster",
+                "Fraud",
+                "Critical",
+                "98%",
+                "$42.8K"
+            ],
+            [
+                "Prepare for revenue acceleration",
+                "Forecast",
+                "Medium",
+                "91%",
+                "+6.2%"
+            ]
+        ];
+
+        const csv =
+            rows
+                .map(row => row.join(","))
+                .join("\n");
+
+        const blob =
+            new Blob(
+                [csv],
+                {
+                    type:
+                        "text/csv;charset=utf-8;"
+                }
+            );
+
+        const url =
+            URL.createObjectURL(blob);
+
+        const link =
+            document.createElement("a");
+
+        link.href = url;
+        link.download =
+            "finco-ai-recommendations.csv";
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        link.remove();
+
+        URL.revokeObjectURL(url);
+
+        showToast(
+            "Export Complete",
+            "Recommendation report has been exported."
+        );
+    }
+
+
+    /* =========================================================
+       STAR FEEDBACK
+    ========================================================= */
+
+    let selectedRating = 0;
+
+    document
+        .querySelectorAll(".star")
+        .forEach(star => {
+
+            star.addEventListener(
+                "click",
+                () => {
+
+                    selectedRating =
+                        Number(
+                            star.dataset.rating
+                        );
+
+                    document
+                        .querySelectorAll(".star")
+                        .forEach(item => {
+
+                            item.classList.toggle(
+                                "selected",
+                                Number(
+                                    item.dataset.rating
+                                ) <= selectedRating
+                            );
+
+                        });
+
+                }
+            );
+
+        });
+
+
+    /* =========================================================
+       FEEDBACK SUBMISSION
+    ========================================================= */
+
+    function submitFeedback() {
+
+        if (!selectedRating) {
+
+            showToast(
+                "Rating Required",
+                "Please select a rating first."
+            );
+
+            return;
+        }
+
+        const text =
+            document
+                .getElementById("feedbackText")
+                .value
+                .trim();
+
+        showToast(
+            "Feedback Submitted",
+            "Thank you. Your feedback will improve future recommendations."
+        );
+
+        /*
+        Production:
+
+        POST /api/recommendations/feedback
+
+        {
+            "rating": selectedRating,
+            "comment": text
+        }
+        */
+
+        document
+            .getElementById("feedbackText")
+            .value = "";
+    }
+
+
+    /* =========================================================
+       KEYBOARD SHORTCUTS
+    ========================================================= */
+
+    document.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                (event.ctrlKey || event.metaKey) &&
+                event.key.toLowerCase() === "k"
+            ) {
+
+                event.preventDefault();
+
+                search.focus();
+            }
+
+            if (event.key === "Escape") {
+                closeRecommendation();
+            }
+
+        }
+    );
+
+
+    /* =========================================================
+       INITIALIZATION
+    ========================================================= */
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        () => {
+
+            setTimeout(() => {
+
+                showToast(
+                    "Decision Intelligence Online",
+                    "FinCo AI has 12 recommendations ready for review."
+                );
+
+            }, 900);
+
+        }
+    );
+
+</script>
+
+</body>
+</html>

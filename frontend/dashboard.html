@@ -1,0 +1,4582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>FinCo AI — Dashboard</title>
+    <meta
+        name="description"
+        content="FinCo AI intelligent financial operations dashboard."
+    >
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+        :root {
+            --bg: #05060a;
+            --bg-soft: #080a10;
+            --panel: rgba(14, 16, 25, 0.78);
+            --panel-2: rgba(18, 20, 30, 0.92);
+            --border: rgba(255,255,255,.08);
+            --border-hover: rgba(124,92,255,.38);
+
+            --text: #f5f7ff;
+            --muted: #8d93a7;
+            --muted-2: #656b7e;
+
+            --purple: #7c5cff;
+            --purple-2: #9b86ff;
+            --cyan: #22d3ee;
+            --green: #34d399;
+            --yellow: #fbbf24;
+            --red: #fb7185;
+            --blue: #60a5fa;
+
+            --sidebar-width: 260px;
+            --radius: 18px;
+
+            --shadow:
+                0 20px 70px rgba(0,0,0,.42),
+                inset 0 1px 0 rgba(255,255,255,.025);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(
+                    circle at 75% 5%,
+                    rgba(124,92,255,.13),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 20% 80%,
+                    rgba(34,211,238,.07),
+                    transparent 25%
+                ),
+                var(--bg);
+
+            color: var(--text);
+            font-family: Inter, sans-serif;
+            overflow-x: hidden;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* ================================
+           BACKGROUND
+        ================================= */
+
+        .background-grid {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -2;
+
+            background-image:
+                linear-gradient(
+                    rgba(255,255,255,.018) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,.018) 1px,
+                    transparent 1px
+                );
+
+            background-size: 45px 45px;
+
+            mask-image: linear-gradient(
+                to bottom,
+                black,
+                transparent 90%
+            );
+        }
+
+        .orb {
+            position: fixed;
+            width: 420px;
+            height: 420px;
+            border-radius: 50%;
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: -1;
+            opacity: .14;
+        }
+
+        .orb.one {
+            top: -250px;
+            right: 80px;
+            background: var(--purple);
+        }
+
+        .orb.two {
+            bottom: -250px;
+            left: 100px;
+            background: var(--cyan);
+        }
+
+        /* ================================
+           LAYOUT
+        ================================= */
+
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ================================
+           SIDEBAR
+        ================================= */
+
+        .sidebar {
+            width: var(--sidebar-width);
+            position: fixed;
+            inset: 0 auto 0 0;
+
+            display: flex;
+            flex-direction: column;
+
+            padding: 22px 16px;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(8,9,15,.97),
+                    rgba(5,6,10,.94)
+                );
+
+            border-right: 1px solid var(--border);
+
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 5px 10px 28px;
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 13px;
+
+            display: grid;
+            place-items: center;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    #4f3cc8
+                );
+
+            box-shadow:
+                0 8px 30px rgba(124,92,255,.35);
+
+            font-weight: 800;
+            font-size: 22.8px;
+        }
+
+        .brand-text strong {
+            display: block;
+            font-family: "Space Grotesk";
+            font-size: 21.6px;
+            letter-spacing: -.4px;
+        }
+
+        .brand-text span {
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .nav-label {
+            padding: 8px 11px;
+            margin-top: 8px;
+
+            color: var(--muted-2);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-link {
+            position: relative;
+
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            padding: 12px 13px;
+
+            color: #9298aa;
+
+            border-radius: 12px;
+
+            transition: .2s ease;
+        }
+
+        .nav-link:hover {
+            color: white;
+            background: rgba(255,255,255,.045);
+        }
+
+        .nav-link.active {
+            color: white;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(124,92,255,.19),
+                    rgba(124,92,255,.06)
+                );
+
+            box-shadow:
+                inset 0 0 0 1px rgba(124,92,255,.12);
+        }
+
+        .nav-link.active::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 9px;
+            bottom: 9px;
+            width: 3px;
+            border-radius: 3px;
+            background: var(--purple);
+            box-shadow: 0 0 14px var(--purple);
+        }
+
+        .nav-icon {
+            width: 19px;
+            height: 19px;
+            display: grid;
+            place-items: center;
+            font-size: 19.2px;
+        }
+
+        .nav-link span:nth-child(2) {
+            font-size: 15.6px;
+            font-weight: 600;
+        }
+
+        .badge {
+            margin-left: auto;
+
+            min-width: 21px;
+            height: 21px;
+            padding: 0 6px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 20px;
+
+            background: rgba(251,113,133,.13);
+            color: var(--red);
+
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+        }
+
+        .ai-status {
+            padding: 14px;
+            margin: 15px 2px;
+
+            border: 1px solid rgba(52,211,153,.15);
+            background: rgba(52,211,153,.045);
+            border-radius: 14px;
+        }
+
+        .status-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            font-size: 13.2px;
+            font-weight: 700;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 10px var(--green);
+        }
+
+        .ai-status p {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            padding: 12px 9px;
+
+            border-top: 1px solid var(--border);
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 11px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #302a61,
+                    #17152d
+                );
+
+            border: 1px solid rgba(124,92,255,.25);
+
+            font-size: 14.4px;
+            font-weight: 800;
+        }
+
+        .profile-info {
+            min-width: 0;
+        }
+
+        .profile-info strong {
+            display: block;
+            font-size: 13.2px;
+        }
+
+        .profile-info span {
+            display: block;
+            margin-top: 2px;
+            color: var(--muted);
+            font-size: 10.8px;
+        }
+
+        /* ================================
+           MAIN
+        ================================= */
+
+        .main {
+            width: calc(100% - var(--sidebar-width));
+            margin-left: var(--sidebar-width);
+            padding: 22px 28px 50px;
+        }
+
+        /* ================================
+           TOPBAR
+        ================================= */
+
+        .topbar {
+            height: 55px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 26px;
+        }
+
+        .mobile-menu {
+            display: none;
+        }
+
+        .page-heading h1 {
+            font-family: "Space Grotesk";
+            font-size: 30px;
+            letter-spacing: -.8px;
+        }
+
+        .page-heading p {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 13.2px;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon-button {
+            position: relative;
+
+            width: 39px;
+            height: 39px;
+
+            display: grid;
+            place-items: center;
+
+            color: #a8adbd;
+
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.025);
+            border-radius: 12px;
+
+            transition: .2s ease;
+        }
+
+        .icon-button:hover {
+            color: white;
+            border-color: var(--border-hover);
+            background: rgba(124,92,255,.08);
+        }
+
+        .notification-dot {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+
+            width: 6px;
+            height: 6px;
+
+            background: var(--red);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--red);
+        }
+
+        .date-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            height: 39px;
+            padding: 0 13px;
+
+            color: #aeb3c4;
+
+            border: 1px solid var(--border);
+            border-radius: 12px;
+
+            background: rgba(255,255,255,.025);
+
+            font-size: 12px;
+        }
+
+        .quick-link {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            height: 39px;
+            padding: 0 14px;
+
+            color: var(--text);
+            text-decoration: none;
+
+            border: 1px solid var(--border);
+            border-radius: 12px;
+
+            background: rgba(255,255,255,.03);
+
+            font-size: 13.2px;
+            font-weight: 600;
+
+            transition: .2s ease;
+        }
+
+        .quick-link:hover {
+            color: white;
+            border-color: var(--purple);
+            background: rgba(124,92,255,.12);
+        }
+
+        /* ================================
+           HERO
+        ================================= */
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+
+            padding: 25px 28px;
+            margin-bottom: 18px;
+
+            border: 1px solid rgba(124,92,255,.18);
+            border-radius: var(--radius);
+
+            background:
+                radial-gradient(
+                    circle at 80% 30%,
+                    rgba(124,92,255,.16),
+                    transparent 35%
+                ),
+                linear-gradient(
+                    135deg,
+                    rgba(124,92,255,.09),
+                    rgba(255,255,255,.025)
+                );
+
+            box-shadow: var(--shadow);
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            width: 260px;
+            height: 260px;
+
+            right: -100px;
+            top: -130px;
+
+            border-radius: 50%;
+
+            border: 1px solid rgba(124,92,255,.18);
+            box-shadow:
+                0 0 0 30px rgba(124,92,255,.025),
+                0 0 0 60px rgba(124,92,255,.02);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .hero-copy .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+
+            padding: 5px 9px;
+
+            border: 1px solid rgba(124,92,255,.2);
+            border-radius: 20px;
+
+            background: rgba(124,92,255,.08);
+
+            color: var(--purple-2);
+
+            font-size: 10.8px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .hero-copy h2 {
+            margin-top: 10px;
+
+            font-family: "Space Grotesk";
+            font-size: 30px;
+            letter-spacing: -.8px;
+        }
+
+        .hero-copy p {
+            max-width: 590px;
+            margin-top: 7px;
+
+            color: var(--muted);
+            font-size: 13.2px;
+            line-height: 1.65;
+        }
+
+        .hero-action {
+            display: flex;
+            gap: 9px;
+            flex-shrink: 0;
+        }
+
+        .primary-btn,
+        .secondary-btn {
+            height: 39px;
+            padding: 0 15px;
+
+            border-radius: 10px;
+
+            font-size: 13.2px;
+            font-weight: 700;
+
+            transition: .2s ease;
+        }
+
+        .primary-btn {
+            border: 0;
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    #6548e8
+                );
+
+            box-shadow:
+                0 8px 24px rgba(124,92,255,.25);
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-1px);
+            box-shadow:
+                0 12px 30px rgba(124,92,255,.38);
+        }
+
+        .secondary-btn {
+            color: #c4c8d6;
+            background: rgba(255,255,255,.035);
+            border: 1px solid var(--border);
+        }
+
+        .secondary-btn:hover {
+            border-color: rgba(255,255,255,.15);
+            color: white;
+        }
+
+        /* ================================
+           KPI GRID
+        ================================= */
+
+        .section-label {
+            margin: 23px 2px 10px;
+
+            color: var(--muted-2);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 13px;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            background: var(--panel);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .kpi {
+            position: relative;
+            overflow: hidden;
+
+            padding: 17px;
+        }
+
+        .kpi::after {
+            content: "";
+
+            position: absolute;
+            width: 100px;
+            height: 100px;
+
+            right: -40px;
+            bottom: -50px;
+
+            border-radius: 50%;
+
+            background: rgba(124,92,255,.09);
+            filter: blur(10px);
+        }
+
+        .kpi-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .kpi-title {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .kpi-icon {
+            width: 31px;
+            height: 31px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 9px;
+
+            background: rgba(124,92,255,.1);
+            color: var(--purple-2);
+
+            font-size: 16.8px;
+        }
+
+        .kpi-value {
+            margin-top: 12px;
+
+            font-family: "Space Grotesk";
+            font-size: 27.6px;
+            font-weight: 700;
+            letter-spacing: -.7px;
+        }
+
+        .kpi-bottom {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            margin-top: 6px;
+
+            font-size: 10.8px;
+        }
+
+        .positive {
+            color: var(--green);
+        }
+
+        .negative {
+            color: var(--red);
+        }
+
+        .kpi-note {
+            color: var(--muted-2);
+        }
+
+        /* ================================
+           MAIN GRID
+        ================================= */
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.7fr) minmax(300px, .9fr);
+            gap: 14px;
+            margin-top: 14px;
+        }
+
+        .panel {
+            padding: 18px;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+
+            margin-bottom: 16px;
+        }
+
+        .panel-title {
+            font-family: "Space Grotesk";
+            font-size: 16.8px;
+            font-weight: 700;
+        }
+
+        .panel-subtitle {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 10.8px;
+        }
+
+        .select {
+            height: 31px;
+            padding: 0 9px;
+
+            color: #aeb3c4;
+            background: rgba(255,255,255,.035);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+
+            font-size: 10.8px;
+            outline: none;
+        }
+
+        /* ================================
+           REVENUE CHART
+        ================================= */
+
+        .chart-card {
+            min-height: 330px;
+        }
+
+        .chart-summary {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            margin-bottom: 13px;
+        }
+
+        .chart-summary strong {
+            font-family: "Space Grotesk";
+            font-size: 26.4px;
+        }
+
+        .chart-summary span {
+            margin-bottom: 3px;
+            color: var(--green);
+            font-size: 10.8px;
+        }
+
+        .chart {
+            position: relative;
+            height: 215px;
+
+            display: flex;
+            align-items: stretch;
+
+            border-bottom: 1px solid rgba(255,255,255,.07);
+        }
+
+        .chart-grid {
+            position: absolute;
+            inset: 0;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .grid-line {
+            width: 100%;
+            border-top: 1px dashed rgba(255,255,255,.055);
+        }
+
+        .chart-svg {
+            position: absolute;
+            inset: 0;
+
+            width: 100%;
+            height: 100%;
+
+            overflow: visible;
+        }
+
+        .chart-axis {
+            display: flex;
+            justify-content: space-between;
+
+            margin-top: 8px;
+
+            color: var(--muted-2);
+            font-size: 9.6px;
+        }
+
+        /* ================================
+           RISK
+        ================================= */
+
+        .risk-score {
+            display: flex;
+            align-items: center;
+            gap: 17px;
+        }
+
+        .score-ring {
+            position: relative;
+
+            width: 112px;
+            height: 112px;
+
+            flex-shrink: 0;
+        }
+
+        .score-ring svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .ring-bg {
+            fill: none;
+            stroke: rgba(255,255,255,.06);
+            stroke-width: 8;
+        }
+
+        .ring-progress {
+            fill: none;
+            stroke: var(--green);
+            stroke-width: 8;
+            stroke-linecap: round;
+
+            stroke-dasharray: 302;
+            stroke-dashoffset: 39;
+
+            filter: drop-shadow(
+                0 0 6px rgba(52,211,153,.4)
+            );
+        }
+
+        .score-center {
+            position: absolute;
+            inset: 0;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .score-center strong {
+            font-family: "Space Grotesk";
+            font-size: 27.6px;
+        }
+
+        .score-center span {
+            color: var(--muted);
+            font-size: 9.6px;
+        }
+
+        .risk-copy h3 {
+            font-size: 14.4px;
+        }
+
+        .risk-copy p {
+            margin-top: 6px;
+
+            color: var(--muted);
+            font-size: 10.8px;
+            line-height: 1.6;
+        }
+
+        .risk-list {
+            margin-top: 18px;
+
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .risk-row {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .risk-row .risk-name {
+            width: 90px;
+            color: #9ba1b3;
+            font-size: 10.8px;
+        }
+
+        .risk-bar {
+            flex: 1;
+            height: 5px;
+
+            background: rgba(255,255,255,.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .risk-fill {
+            height: 100%;
+            border-radius: inherit;
+            background: var(--green);
+        }
+
+        .risk-percent {
+            width: 28px;
+            text-align: right;
+            color: #c5c9d6;
+            font-size: 9.6px;
+        }
+
+        /* ================================
+           SECOND GRID
+        ================================= */
+
+        .three-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+            margin-top: 14px;
+        }
+
+        /* ================================
+           FRAUD
+        ================================= */
+
+        .fraud-stat {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 11px 0;
+
+            border-bottom: 1px solid rgba(255,255,255,.055);
+        }
+
+        .fraud-stat:last-child {
+            border-bottom: 0;
+        }
+
+        .fraud-stat-label {
+            color: var(--muted);
+            font-size: 10.8px;
+        }
+
+        .fraud-stat-value {
+            font-family: "Space Grotesk";
+            font-size: 16.8px;
+            font-weight: 700;
+        }
+
+        .fraud-chart {
+            height: 75px;
+            margin: 8px 0 5px;
+        }
+
+        .fraud-legend {
+            display: flex;
+            justify-content: space-between;
+            color: var(--muted-2);
+            font-size: 9.6px;
+        }
+
+        /* ================================
+           FORECAST
+        ================================= */
+
+        .forecast-value {
+            font-family: "Space Grotesk";
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .forecast-change {
+            display: inline-flex;
+            margin-left: 5px;
+
+            color: var(--green);
+            font-size: 10.8px;
+            font-weight: 700;
+        }
+
+        .forecast-mini-chart {
+            height: 100px;
+            margin-top: 16px;
+        }
+
+        .forecast-items {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 7px;
+            margin-top: 10px;
+        }
+
+        .forecast-item {
+            padding: 8px;
+
+            background: rgba(255,255,255,.025);
+            border: 1px solid rgba(255,255,255,.05);
+            border-radius: 9px;
+        }
+
+        .forecast-item span {
+            display: block;
+            color: var(--muted);
+            font-size: 8.4px;
+        }
+
+        .forecast-item strong {
+            display: block;
+            margin-top: 4px;
+            font-size: 12px;
+        }
+
+        /* ================================
+           AI AGENTS
+        ================================= */
+
+        .agents {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .agent {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            padding: 9px;
+
+            border: 1px solid rgba(255,255,255,.055);
+            border-radius: 10px;
+
+            background: rgba(255,255,255,.018);
+
+            transition: .2s ease;
+        }
+
+        .agent:hover {
+            transform: translateX(2px);
+            border-color: rgba(124,92,255,.22);
+            background: rgba(124,92,255,.045);
+        }
+
+        .agent-icon {
+            width: 31px;
+            height: 31px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 9px;
+
+            background: rgba(124,92,255,.1);
+            color: var(--purple-2);
+        }
+
+        .agent-info {
+            flex: 1;
+        }
+
+        .agent-info strong {
+            display: block;
+            font-size: 10.8px;
+        }
+
+        .agent-info span {
+            display: block;
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 8.4px;
+        }
+
+        .agent-status {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+
+            color: var(--green);
+            font-size: 8.4px;
+        }
+
+        /* ================================
+           TRANSACTIONS
+        ================================= */
+
+        .transactions-card {
+            margin-top: 14px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            padding: 9px 8px;
+
+            text-align: left;
+
+            color: var(--muted-2);
+
+            font-size: 9.6px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .7px;
+
+            border-bottom: 1px solid rgba(255,255,255,.06);
+        }
+
+        td {
+            padding: 12px 8px;
+
+            color: #bfc4d2;
+
+            font-size: 10.8px;
+
+            border-bottom: 1px solid rgba(255,255,255,.04);
+        }
+
+        tbody tr {
+            transition: .15s ease;
+        }
+
+        tbody tr:hover {
+            background: rgba(255,255,255,.018);
+        }
+
+        .transaction-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .transaction-avatar {
+            width: 27px;
+            height: 27px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 8px;
+
+            background: rgba(124,92,255,.1);
+            color: var(--purple-2);
+
+            font-size: 9.6px;
+            font-weight: 800;
+        }
+
+        .transaction-user strong {
+            display: block;
+            color: #e5e7ef;
+            font-size: 10.8px;
+        }
+
+        .transaction-user span {
+            display: block;
+            margin-top: 2px;
+            color: var(--muted-2);
+            font-size: 8.4px;
+        }
+
+        .amount {
+            color: #e9ebf3;
+            font-weight: 700;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+
+            padding: 4px 7px;
+
+            border-radius: 20px;
+
+            font-size: 8.4px;
+            font-weight: 700;
+        }
+
+        .status::before {
+            content: "";
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+        }
+
+        .status.success {
+            color: var(--green);
+            background: rgba(52,211,153,.07);
+        }
+
+        .status.success::before {
+            background: var(--green);
+        }
+
+        .status.review {
+            color: var(--yellow);
+            background: rgba(251,191,36,.07);
+        }
+
+        .status.review::before {
+            background: var(--yellow);
+        }
+
+        .status.blocked {
+            color: var(--red);
+            background: rgba(251,113,133,.07);
+        }
+
+        .status.blocked::before {
+            background: var(--red);
+        }
+
+        .risk-low {
+            color: var(--green);
+        }
+
+        .risk-medium {
+            color: var(--yellow);
+        }
+
+        .risk-high {
+            color: var(--red);
+        }
+
+        /* ================================
+           ACTIVITY + ALERTS
+        ================================= */
+
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 14px;
+        }
+
+        .activity-list,
+        .alert-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .activity-item,
+        .alert-item {
+            display: flex;
+            gap: 10px;
+
+            padding: 11px 0;
+
+            border-bottom: 1px solid rgba(255,255,255,.045);
+        }
+
+        .activity-item:last-child,
+        .alert-item:last-child {
+            border-bottom: 0;
+        }
+
+        .activity-icon,
+        .alert-icon {
+            width: 28px;
+            height: 28px;
+
+            flex-shrink: 0;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 8px;
+
+            background: rgba(124,92,255,.09);
+            color: var(--purple-2);
+
+            font-size: 13.2px;
+        }
+
+        .activity-content,
+        .alert-content {
+            flex: 1;
+        }
+
+        .activity-content strong,
+        .alert-content strong {
+            display: block;
+            font-size: 10.8px;
+        }
+
+        .activity-content p,
+        .alert-content p {
+            margin-top: 3px;
+
+            color: var(--muted);
+            font-size: 9.6px;
+            line-height: 1.45;
+        }
+
+        .activity-time {
+            color: var(--muted-2);
+            font-size: 8.4px;
+        }
+
+        .alert-item.critical .alert-icon {
+            color: var(--red);
+            background: rgba(251,113,133,.08);
+        }
+
+        .alert-item.warning .alert-icon {
+            color: var(--yellow);
+            background: rgba(251,191,36,.08);
+        }
+
+        .alert-item.info .alert-icon {
+            color: var(--cyan);
+            background: rgba(34,211,238,.08);
+        }
+
+        /* ================================
+           TOAST
+        ================================= */
+
+        .toast {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            min-width: 270px;
+            padding: 13px 15px;
+
+            border: 1px solid rgba(124,92,255,.2);
+            background: rgba(12,14,22,.94);
+            backdrop-filter: blur(18px);
+
+            border-radius: 12px;
+
+            box-shadow: 0 20px 60px rgba(0,0,0,.5);
+
+            transform: translateY(30px);
+            opacity: 0;
+            pointer-events: none;
+
+            transition: .3s ease;
+
+            z-index: 500;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-icon {
+            width: 28px;
+            height: 28px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 8px;
+
+            background: rgba(52,211,153,.1);
+            color: var(--green);
+        }
+
+        .toast strong {
+            display: block;
+            font-size: 12px;
+        }
+
+        .toast span {
+            display: block;
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 9.6px;
+        }
+
+        /* ================================
+           MOBILE
+        ================================= */
+
+        @media (max-width: 1150px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .three-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .three-grid .card:last-child {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: .3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main {
+                width: 100%;
+                margin-left: 0;
+                padding: 17px;
+            }
+
+            .mobile-menu {
+                width: 39px;
+                height: 39px;
+
+                display: grid;
+                place-items: center;
+
+                margin-right: 10px;
+
+                border: 1px solid var(--border);
+                border-radius: 11px;
+
+                background: rgba(255,255,255,.03);
+                color: white;
+            }
+
+            .topbar {
+                justify-content: flex-start;
+            }
+
+            .top-actions {
+                margin-left: auto;
+            }
+
+            .date-pill {
+                display: none;
+            }
+
+            .dashboard-grid,
+            .bottom-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .hero {
+                padding: 20px;
+            }
+
+            .hero-content {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .hero-action {
+                width: 100%;
+            }
+
+            .hero-action button {
+                flex: 1;
+            }
+
+            .three-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .three-grid .card:last-child {
+                grid-column: auto;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-heading h1 {
+                font-size: 25.2px;
+            }
+
+            .page-heading p {
+                font-size: 10.8px;
+            }
+
+            .top-actions .icon-button:nth-child(2) {
+                display: none;
+            }
+
+            .panel {
+                padding: 14px;
+            }
+
+            .risk-score {
+                align-items: flex-start;
+            }
+
+            .score-ring {
+                width: 92px;
+                height: 92px;
+            }
+
+            th:nth-child(4),
+            td:nth-child(4),
+            th:nth-child(5),
+            td:nth-child(5) {
+                display: none;
+            }
+        }
+
+        /* =========================================
+           ADVANCED DASHBOARD STYLES
+        ========================================= */
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 28.8px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .section-subtitle {
+            color: var(--muted);
+            font-size: 14.4px;
+        }
+
+        .advanced-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .advanced-card {
+            min-height: 350px;
+        }
+
+        .wide-card {
+            grid-column: 1 / -1;
+        }
+
+        .btn-secondary {
+            padding: 10px 18px;
+            background: rgba(255,255,255,.05);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 13.2px;
+            font-weight: 600;
+            transition: .2s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,.08);
+            border-color: var(--border-hover);
+        }
+
+        .btn-secondary-small {
+            padding: 6px 12px;
+            background: rgba(255,255,255,.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .icon-btn {
+            width: 32px;
+            height: 32px;
+            background: rgba(124,92,255,.15);
+            border: 1px solid rgba(124,92,255,.3);
+            border-radius: 8px;
+            color: var(--purple);
+            font-size: 18px;
+            display: grid;
+            place-items: center;
+            transition: .2s;
+        }
+
+        .icon-btn:hover {
+            background: rgba(124,92,255,.25);
+            transform: scale(1.05);
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge-warning {
+            background: rgba(251,191,36,.15);
+            color: var(--yellow);
+        }
+
+        .badge-purple {
+            background: rgba(124,92,255,.15);
+            color: var(--purple);
+        }
+
+        .badge-red {
+            background: rgba(251,113,133,.15);
+            color: var(--red);
+        }
+
+        /* Custom Metrics Builder */
+        .metrics-builder {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .custom-metric {
+            padding: 14px;
+            background: rgba(255,255,255,.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .delete-btn {
+            width: 22px;
+            height: 22px;
+            background: rgba(251,113,133,.15);
+            border: none;
+            border-radius: 4px;
+            color: var(--red);
+            font-size: 12px;
+            display: grid;
+            place-items: center;
+            opacity: 0.6;
+            transition: .2s;
+        }
+
+        .delete-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .metric-value-large {
+            font-size: 33.6px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .metric-formula {
+            color: var(--muted-2);
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+
+        .metric-trend {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .metric-trend.positive {
+            color: var(--green);
+        }
+
+        .metric-trend.negative {
+            color: var(--red);
+        }
+
+        .add-metric-btn {
+            padding: 12px;
+            background: rgba(124,92,255,.08);
+            border: 1px dashed rgba(124,92,255,.3);
+            border-radius: 10px;
+            color: var(--purple);
+            font-size: 13px;
+            font-weight: 600;
+            transition: .2s;
+        }
+
+        .add-metric-btn:hover {
+            background: rgba(124,92,255,.15);
+            border-color: rgba(124,92,255,.5);
+        }
+
+        /* Predictive Alerts */
+        .alert-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .predictive-alert {
+            display: flex;
+            align-items: start;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255,255,255,.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            transition: .2s;
+        }
+
+        .predictive-alert:hover {
+            background: rgba(255,255,255,.05);
+            border-color: var(--border-hover);
+        }
+
+        .alert-icon {
+            font-size: 20px;
+            min-width: 32px;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-content strong {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .alert-content p {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .alert-meta {
+            display: flex;
+            gap: 8px;
+            font-size: 10px;
+            color: var(--muted-2);
+        }
+
+        .alert-action {
+            padding: 6px 12px;
+            background: rgba(124,92,255,.12);
+            border: 1px solid rgba(124,92,255,.25);
+            border-radius: 6px;
+            color: var(--purple);
+            font-size: 11px;
+            font-weight: 600;
+            transition: .2s;
+        }
+
+        .alert-action:hover {
+            background: rgba(124,92,255,.2);
+        }
+
+        /* Comparative Analysis */
+        .comparison-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .select-small {
+            padding: 6px 10px;
+            background: var(--bg-soft);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 12px;
+        }
+
+        .comparison-grid {
+            display: grid;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .comparison-metric {
+            display: grid;
+            grid-template-columns: 120px 1fr 80px;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .comparison-label {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .comparison-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .comparison-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+        }
+
+        .comparison-bar span {
+            min-width: 60px;
+            color: var(--muted);
+        }
+
+        .bar {
+            height: 24px;
+            border-radius: 4px;
+            transition: .3s;
+        }
+
+        .bar-primary {
+            background: linear-gradient(90deg, var(--purple), var(--purple-2));
+        }
+
+        .bar-secondary {
+            background: rgba(255,255,255,.08);
+        }
+
+        .comparison-change {
+            text-align: right;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .comparison-change.positive {
+            color: var(--green);
+        }
+
+        .comparison-change.negative {
+            color: var(--red);
+        }
+
+        /* Cohort Analysis */
+        .cohort-table {
+            margin-top: 16px;
+            overflow-x: auto;
+        }
+
+        .cohort-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .cohort-table th,
+        .cohort-table td {
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .cohort-table th {
+            color: var(--muted);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .cohort-table td:first-child {
+            text-align: left;
+        }
+
+        .cohort-cell {
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .cohort-100 {
+            background: rgba(124,92,255,0.25);
+            color: var(--purple);
+        }
+
+        .cohort-91 {
+            background: rgba(124,92,255,0.22);
+        }
+
+        .cohort-88 {
+            background: rgba(124,92,255,0.18);
+        }
+
+        .cohort-85 {
+            background: rgba(124,92,255,0.15);
+        }
+
+        .cohort-82 {
+            background: rgba(124,92,255,0.12);
+        }
+
+        .cohort-78 {
+            background: rgba(124,92,255,0.1);
+        }
+
+        .cohort-74 {
+            background: rgba(124,92,255,0.08);
+        }
+
+        .cohort-empty {
+            color: var(--muted-2);
+        }
+
+        .cohort-legend {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            font-size: 11px;
+        }
+
+        .cohort-legend span {
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        /* Smart Segments */
+        .segments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .segment-card {
+            padding: 12px;
+            background: rgba(255,255,255,.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            transition: .2s;
+        }
+
+        .segment-card:hover {
+            background: rgba(255,255,255,.05);
+            border-color: var(--border-hover);
+        }
+
+        .segment-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .segment-icon {
+            width: 40px;
+            height: 40px;
+            display: grid;
+            place-items: center;
+            border-radius: 10px;
+            font-size: 18px;
+        }
+
+        .segment-header strong {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+
+        .segment-header span {
+            font-size: 11px;
+            color: var(--muted-2);
+        }
+
+        .segment-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .segment-stat {
+            padding: 8px;
+            background: rgba(255,255,255,.02);
+            border-radius: 6px;
+        }
+
+        .segment-stat span {
+            display: block;
+            font-size: 10px;
+            color: var(--muted-2);
+            margin-bottom: 4px;
+        }
+
+        .segment-stat strong {
+            font-size: 13px;
+        }
+
+        /* Heat Map */
+        .heatmap-container {
+            margin-top: 16px;
+        }
+
+        .heatmap-regions {
+            display: flex;
+            align-items: flex-end;
+            gap: 16px;
+            height: 200px;
+            padding: 20px 0;
+        }
+
+        .region-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .region-bar {
+            width: 100%;
+            border-radius: 6px 6px 0 0;
+            transition: .3s;
+        }
+
+        .region-item:hover .region-bar {
+            opacity: 0.8;
+            transform: scaleY(1.05);
+        }
+
+        .region-label {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .region-value {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .heatmap-legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .live-indicator {
+            color: var(--green);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Anomaly Detection */
+        .anomalies-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .anomaly-item {
+            display: flex;
+            align-items: start;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255,255,255,.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .anomaly-item.resolved {
+            opacity: 0.5;
+        }
+
+        .anomaly-severity {
+            width: 28px;
+            height: 28px;
+            display: grid;
+            place-items: center;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .anomaly-severity.high {
+            background: rgba(251,113,133,.2);
+            color: var(--red);
+        }
+
+        .anomaly-severity.medium {
+            background: rgba(251,191,36,.2);
+            color: var(--yellow);
+        }
+
+        .anomaly-severity.low {
+            background: rgba(52,211,153,.2);
+            color: var(--green);
+        }
+
+        .anomaly-content {
+            flex: 1;
+        }
+
+        .anomaly-content strong {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .anomaly-content p {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .anomaly-time {
+            font-size: 10px;
+            color: var(--muted-2);
+        }
+
+        .anomaly-btn {
+            padding: 6px 14px;
+            background: rgba(251,113,133,.15);
+            border: 1px solid rgba(251,113,133,.3);
+            border-radius: 6px;
+            color: var(--red);
+            font-size: 11px;
+            font-weight: 600;
+            transition: .2s;
+        }
+
+        .anomaly-btn:hover {
+            background: rgba(251,113,133,.25);
+        }
+
+        /* Scenario Simulator */
+        .simulator-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255,255,255,.02);
+            border-radius: 12px;
+        }
+
+        .simulator-input {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .simulator-input label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .simulator-input input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,.1);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .simulator-input span {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--purple);
+            text-align: center;
+        }
+
+        .simulator-results {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .simulator-result {
+            padding: 16px;
+            background: rgba(124,92,255,.08);
+            border: 1px solid rgba(124,92,255,.2);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .simulator-result span {
+            display: block;
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .simulator-result strong {
+            display: block;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .sim-change {
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            color: var(--cyan) !important;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="background-grid"></div>
+<div class="orb one"></div>
+<div class="orb two"></div>
+
+<div class="app">
+
+    <!-- =========================================
+         SIDEBAR
+    ========================================== -->
+
+    <aside class="sidebar" id="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">F</div>
+
+            <div class="brand-text">
+                <strong>FinCo AI</strong>
+                <span>Intelligence Platform</span>
+            </div>
+        </div>
+
+        <div class="nav-label">Workspace</div>
+
+        <nav class="nav">
+
+            <a class="nav-link active" href="dashboard.html">
+                <span class="nav-icon">⌂</span>
+                <span>Dashboard</span>
+            </a>
+
+            <a class="nav-link" href="copilot.html">
+                <span class="nav-icon">◈</span>
+                <span>AI Copilot</span>
+            </a>
+
+            <a class="nav-link" href="agents.html">
+                <span class="nav-icon">🤖</span>
+                <span>AI Agents</span>
+            </a>
+
+            <a class="nav-link" href="ml-models.html">
+                <span class="nav-icon">🧠</span>
+                <span>ML Models</span>
+            </a>
+
+            <a class="nav-link" href="analysis.html">
+                <span class="nav-icon">📊</span>
+                <span>Analysis</span>
+            </a>
+
+            <a class="nav-link" href="collaboration.html">
+                <span class="nav-icon">🤝</span>
+                <span>Collaboration</span>
+            </a>
+
+            <a class="nav-link" href="financial.html">
+                <span class="nav-icon">⌁</span>
+                <span>Transactions</span>
+            </a>
+
+            <a class="nav-link" href="fraud.html">
+                <span class="nav-icon">⚠</span>
+                <span>Fraud & Risk</span>
+                <span class="badge">12</span>
+            </a>
+
+            <a class="nav-link" href="forecasting.html">
+                <span class="nav-icon">↗</span>
+                <span>Forecasting</span>
+            </a>
+
+            <a class="nav-link" href="documents.html">
+                <span class="nav-icon">▤</span>
+                <span>Documents</span>
+            </a>
+
+        </nav>
+
+        <div class="nav-label">Management</div>
+
+        <nav class="nav">
+
+            <a class="nav-link" href="reports.html">
+                <span class="nav-icon">▥</span>
+                <span>Reports</span>
+            </a>
+
+            <a class="nav-link" href="balance-sheet.html">
+                <span class="nav-icon">📋</span>
+                <span>Balance Sheet</span>
+            </a>
+
+            <a class="nav-link" href="alerts.html">
+                <span class="nav-icon">⚙</span>
+                <span>Settings</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+
+            <div class="ai-status">
+                <div class="status-title">
+                    <span class="status-dot"></span>
+                    AI Systems Operational
+                </div>
+
+                <p>
+                    All intelligence services are running normally.
+                    Last health check 12 seconds ago.
+                </p>
+            </div>
+
+            <div class="profile">
+
+                <div class="avatar">PA</div>
+
+                <div class="profile-info">
+                    <strong>Platform Admin</strong>
+                    <span>Administrator</span>
+                </div>
+
+                <button
+                    class="icon-button"
+                    style="margin-left:auto;width:30px;height:30px;"
+                    onclick="showToast('Settings','Settings panel coming soon')"
+                >
+                    ⚙
+                </button>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =========================================
+         MAIN CONTENT
+    ========================================== -->
+
+    <main class="main">
+
+        <!-- TOPBAR -->
+
+        <header class="topbar">
+
+            <div style="display:flex;align-items:center;">
+
+                <button
+                    class="mobile-menu"
+                    id="mobileMenu"
+                    aria-label="Open menu"
+                >
+                    ☰
+                </button>
+
+                <div class="page-heading">
+                    <h1>Executive Dashboard</h1>
+                    <p>
+                        AI-powered financial intelligence at a glance.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="top-actions">
+
+                <a href="balance-sheet.html" class="quick-link" title="Balance Sheet Generator">
+                    📋 Balance Sheet
+                </a>
+
+                <a href="reports.html" class="quick-link" title="Reports">
+                    ▥ Reports
+                </a>
+
+                <div class="date-pill">
+                    ◷
+                    September 12, 2026
+                </div>
+
+                <button
+                    class="icon-button"
+                    onclick="showToast('AI Copilot','Opening intelligent assistant...')"
+                    title="AI Copilot"
+                >
+                    ✦
+                </button>
+
+                <button
+                    class="icon-button"
+                    onclick="showToast('Notifications','7 alerts require attention')"
+                    title="Notifications"
+                >
+                    ♢
+                    <span class="notification-dot"></span>
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- HERO -->
+
+        <section class="hero">
+
+            <div class="hero-content">
+
+                <div class="hero-copy">
+
+                    <div class="eyebrow">
+                        <span>✦</span>
+                        AI Executive Intelligence
+                    </div>
+
+                    <h2>
+                        Good evening. Here's your financial pulse.
+                    </h2>
+
+                    <p>
+                        FinCo AI continuously analyzes transactions,
+                        fraud signals, financial documents and forecasts
+                        to surface the decisions that matter most.
+                    </p>
+
+                </div>
+
+                <div class="hero-action">
+
+                    <button
+                        class="primary-btn"
+                        onclick="openCopilot()"
+                    >
+                        ✦ Ask AI Copilot
+                    </button>
+
+                    <button
+                        class="secondary-btn"
+                        onclick="showToast('Report','Generating executive report...')"
+                    >
+                        Export Report
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- KPI -->
+
+        <div class="section-label">
+            Financial Overview
+        </div>
+
+        <section class="kpi-grid">
+
+            <div class="card kpi">
+
+                <div class="kpi-top">
+                    <span class="kpi-title">
+                        Total Transactions
+                    </span>
+
+                    <div class="kpi-icon">↗</div>
+                </div>
+
+                <div class="kpi-value">
+                    248.6K
+                </div>
+
+                <div class="kpi-bottom">
+                    <span class="positive">+12.8%</span>
+                    <span class="kpi-note">vs previous period</span>
+                </div>
+
+            </div>
+
+
+            <div class="card kpi">
+
+                <div class="kpi-top">
+                    <span class="kpi-title">
+                        Processed Volume
+                    </span>
+
+                    <div class="kpi-icon">＄</div>
+                </div>
+
+                <div class="kpi-value">
+                    $18.42M
+                </div>
+
+                <div class="kpi-bottom">
+                    <span class="positive">+8.4%</span>
+                    <span class="kpi-note">monthly volume</span>
+                </div>
+
+            </div>
+
+
+            <div class="card kpi">
+
+                <div class="kpi-top">
+                    <span class="kpi-title">
+                        Fraud Prevented
+                    </span>
+
+                    <div class="kpi-icon">◇</div>
+                </div>
+
+                <div class="kpi-value">
+                    $426.8K
+                </div>
+
+                <div class="kpi-bottom">
+                    <span class="positive">+17.6%</span>
+                    <span class="kpi-note">protected value</span>
+                </div>
+
+            </div>
+
+
+            <div class="card kpi">
+
+                <div class="kpi-top">
+                    <span class="kpi-title">
+                        AI Decision Accuracy
+                    </span>
+
+                    <div class="kpi-icon">✦</div>
+                </div>
+
+                <div class="kpi-value">
+                    96.8%
+                </div>
+
+                <div class="kpi-bottom">
+                    <span class="positive">+1.9%</span>
+                    <span class="kpi-note">model performance</span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- MAIN ANALYTICS -->
+
+        <section class="dashboard-grid">
+
+            <!-- REVENUE -->
+
+            <div class="card panel chart-card">
+
+                <div class="panel-header">
+
+                    <div>
+                        <div class="panel-title">
+                            Financial Performance
+                        </div>
+
+                        <div class="panel-subtitle">
+                            Revenue and processed transaction volume
+                        </div>
+                    </div>
+
+                    <select class="select" id="periodSelect">
+                        <option>Last 30 days</option>
+                        <option>Last 90 days</option>
+                        <option>Last 12 months</option>
+                    </select>
+
+                </div>
+
+                <div class="chart-summary">
+                    <strong>$18.42M</strong>
+                    <span>↑ 8.4%</span>
+                </div>
+
+                <div class="chart">
+
+                    <div class="chart-grid">
+                        <span class="grid-line"></span>
+                        <span class="grid-line"></span>
+                        <span class="grid-line"></span>
+                        <span class="grid-line"></span>
+                        <span class="grid-line"></span>
+                    </div>
+
+                    <svg
+                        class="chart-svg"
+                        viewBox="0 0 800 215"
+                        preserveAspectRatio="none"
+                    >
+
+                        <defs>
+
+                            <linearGradient
+                                id="revenueFill"
+                                x1="0"
+                                x2="0"
+                                y1="0"
+                                y2="1"
+                            >
+                                <stop
+                                    offset="0%"
+                                    stop-color="#7c5cff"
+                                    stop-opacity=".28"
+                                />
+
+                                <stop
+                                    offset="100%"
+                                    stop-color="#7c5cff"
+                                    stop-opacity="0"
+                                />
+                            </linearGradient>
+
+                            <filter id="glow">
+                                <feGaussianBlur
+                                    stdDeviation="4"
+                                    result="blur"
+                                />
+                            </filter>
+
+                        </defs>
+
+                        <path
+                            d="
+                            M0 177
+                            C40 165, 65 170, 100 153
+                            C135 137, 155 150, 190 130
+                            C225 111, 250 126, 285 110
+                            C320 94, 350 101, 385 89
+                            C420 77, 445 91, 475 70
+                            C510 47, 540 72, 570 57
+                            C605 39, 630 51, 660 40
+                            C700 26, 740 42, 800 15
+                            L800 215
+                            L0 215
+                            Z"
+                            fill="url(#revenueFill)"
+                        />
+
+                        <path
+                            d="
+                            M0 177
+                            C40 165, 65 170, 100 153
+                            C135 137, 155 150, 190 130
+                            C225 111, 250 126, 285 110
+                            C320 94, 350 101, 385 89
+                            C420 77, 445 91, 475 70
+                            C510 47, 540 72, 570 57
+                            C605 39, 630 51, 660 40
+                            C700 26, 740 42, 800 15"
+                            fill="none"
+                            stroke="#7c5cff"
+                            stroke-width="3"
+                            stroke-linecap="round"
+                        />
+
+                        <path
+                            d="
+                            M0 177
+                            C40 165, 65 170, 100 153
+                            C135 137, 155 150, 190 130
+                            C225 111, 250 126, 285 110
+                            C320 94, 350 101, 385 89
+                            C420 77, 445 91, 475 70
+                            C510 47, 540 72, 570 57
+                            C605 39, 630 51, 660 40
+                            C700 26, 740 42, 800 15"
+                            fill="none"
+                            stroke="#9b86ff"
+                            stroke-width="7"
+                            opacity=".15"
+                            filter="url(#glow)"
+                        />
+
+                        <circle
+                            cx="800"
+                            cy="15"
+                            r="5"
+                            fill="#7c5cff"
+                        />
+
+                    </svg>
+
+                </div>
+
+                <div class="chart-axis">
+                    <span>Aug 14</span>
+                    <span>Aug 21</span>
+                    <span>Aug 28</span>
+                    <span>Sep 04</span>
+                    <span>Sep 12</span>
+                </div>
+
+            </div>
+
+
+            <!-- RISK -->
+
+            <div class="card panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <div class="panel-title">
+                            Portfolio Risk Health
+                        </div>
+
+                        <div class="panel-subtitle">
+                            AI-computed risk posture
+                        </div>
+                    </div>
+
+                    <span
+                        class="status success"
+                        style="font-size: 8.4px;"
+                    >
+                        Healthy
+                    </span>
+
+                </div>
+
+                <div class="risk-score">
+
+                    <div class="score-ring">
+
+                        <svg viewBox="0 0 120 120">
+
+                            <circle
+                                class="ring-bg"
+                                cx="60"
+                                cy="60"
+                                r="48"
+                            />
+
+                            <circle
+                                class="ring-progress"
+                                cx="60"
+                                cy="60"
+                                r="48"
+                            />
+
+                        </svg>
+
+                        <div class="score-center">
+                            <strong>87</strong>
+                            <span>/ 100</span>
+                        </div>
+
+                    </div>
+
+                    <div class="risk-copy">
+
+                        <h3>
+                            Low overall exposure
+                        </h3>
+
+                        <p>
+                            AI models detect stable financial
+                            conditions with limited high-risk activity.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="risk-list">
+
+                    <div class="risk-row">
+                        <span class="risk-name">Credit Risk</span>
+
+                        <div class="risk-bar">
+                            <div
+                                class="risk-fill"
+                                style="width:91%;"
+                            ></div>
+                        </div>
+
+                        <span class="risk-percent">91%</span>
+                    </div>
+
+                    <div class="risk-row">
+                        <span class="risk-name">Fraud Risk</span>
+
+                        <div class="risk-bar">
+                            <div
+                                class="risk-fill"
+                                style="width:88%;"
+                            ></div>
+                        </div>
+
+                        <span class="risk-percent">88%</span>
+                    </div>
+
+                    <div class="risk-row">
+                        <span class="risk-name">Liquidity</span>
+
+                        <div class="risk-bar">
+                            <div
+                                class="risk-fill"
+                                style="width:82%;"
+                            ></div>
+                        </div>
+
+                        <span class="risk-percent">82%</span>
+                    </div>
+
+                    <div class="risk-row">
+                        <span class="risk-name">Market Risk</span>
+
+                        <div class="risk-bar">
+                            <div
+                                class="risk-fill"
+                                style="width:79%;"
+                            ></div>
+                        </div>
+
+                        <span class="risk-percent">79%</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- INTELLIGENCE -->
+
+        <div class="section-label">
+            AI Intelligence
+        </div>
+
+        <section class="three-grid">
+
+            <!-- FRAUD -->
+
+            <div class="card panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <div class="panel-title">
+                            Fraud Intelligence
+                        </div>
+
+                        <div class="panel-subtitle">
+                            Real-time detection performance
+                        </div>
+                    </div>
+
+                    <span style="color:var(--red);font-size: 19.2px;">
+                        ◈
+                    </span>
+
+                </div>
+
+                <div class="fraud-stat">
+
+                    <span class="fraud-stat-label">
+                        Transactions screened
+                    </span>
+
+                    <span class="fraud-stat-value">
+                        248.6K
+                    </span>
+
+                </div>
+
+                <div class="fraud-stat">
+
+                    <span class="fraud-stat-label">
+                        Suspicious detected
+                    </span>
+
+                    <span class="fraud-stat-value">
+                        1,842
+                    </span>
+
+                </div>
+
+                <div class="fraud-stat">
+
+                    <span class="fraud-stat-label">
+                        Fraud capture rate
+                    </span>
+
+                    <span
+                        class="fraud-stat-value"
+                        style="color:var(--green);"
+                    >
+                        94.7%
+                    </span>
+
+                </div>
+
+                <div class="fraud-chart">
+
+                    <svg
+                        width="100%"
+                        height="100%"
+                        viewBox="0 0 500 75"
+                        preserveAspectRatio="none"
+                    >
+
+                        <defs>
+                            <linearGradient
+                                id="fraudFill"
+                                x1="0"
+                                x2="0"
+                                y1="0"
+                                y2="1"
+                            >
+                                <stop
+                                    offset="0%"
+                                    stop-color="#fb7185"
+                                    stop-opacity=".22"
+                                />
+                                <stop
+                                    offset="100%"
+                                    stop-color="#fb7185"
+                                    stop-opacity="0"
+                                />
+                            </linearGradient>
+                        </defs>
+
+                        <path
+                            d="
+                            M0 58
+                            C45 54, 60 61, 95 45
+                            C130 29, 150 49, 185 35
+                            C220 21, 240 40, 275 26
+                            C315 10, 335 34, 370 21
+                            C410 7, 435 19, 500 9
+                            L500 75
+                            L0 75
+                            Z"
+                            fill="url(#fraudFill)"
+                        />
+
+                        <path
+                            d="
+                            M0 58
+                            C45 54, 60 61, 95 45
+                            C130 29, 150 49, 185 35
+                            C220 21, 240 40, 275 26
+                            C315 10, 335 34, 370 21
+                            C410 7, 435 19, 500 9"
+                            fill="none"
+                            stroke="#fb7185"
+                            stroke-width="2"
+                        />
+
+                    </svg>
+
+                </div>
+
+                <div class="fraud-legend">
+                    <span>7 days ago</span>
+                    <span>Today</span>
+                </div>
+
+            </div>
+
+
+            <!-- FORECAST -->
+
+            <div class="card panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <div class="panel-title">
+                            Revenue Forecast
+                        </div>
+
+                        <div class="panel-subtitle">
+                            ML predictive intelligence
+                        </div>
+                    </div>
+
+                    <span style="color:var(--cyan);font-size: 19.2px;">
+                        ↗
+                    </span>
+
+                </div>
+
+                <div>
+                    <span class="forecast-value">
+                        $21.7M
+                    </span>
+
+                    <span class="forecast-change">
+                        +17.8%
+                    </span>
+                </div>
+
+                <div class="forecast-mini-chart">
+
+                    <svg
+                        width="100%"
+                        height="100%"
+                        viewBox="0 0 500 100"
+                        preserveAspectRatio="none"
+                    >
+
+                        <path
+                            d="
+                            M0 77
+                            C45 69, 80 75, 120 61
+                            C160 48, 190 59, 230 44
+                            C270 29, 300 42, 340 28
+                            C380 14, 430 23, 500 8"
+                            fill="none"
+                            stroke="#22d3ee"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                        />
+
+                        <path
+                            d="
+                            M0 77
+                            C45 69, 80 75, 120 61
+                            C160 48, 190 59, 230 44
+                            C270 29, 300 42, 340 28
+                            C380 14, 430 23, 500 8
+                            L500 100
+                            L0 100
+                            Z"
+                            fill="rgba(34,211,238,.06)"
+                        />
+
+                        <line
+                            x1="350"
+                            y1="0"
+                            x2="350"
+                            y2="100"
+                            stroke="rgba(255,255,255,.12)"
+                            stroke-dasharray="4 4"
+                        />
+
+                    </svg>
+
+                </div>
+
+                <div class="forecast-items">
+
+                    <div class="forecast-item">
+                        <span>Next 7D</span>
+                        <strong>$4.8M</strong>
+                    </div>
+
+                    <div class="forecast-item">
+                        <span>Next 30D</span>
+                        <strong>$21.7M</strong>
+                    </div>
+
+                    <div class="forecast-item">
+                        <span>Confidence</span>
+                        <strong>93.4%</strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- AGENTS -->
+
+            <div class="card panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <div class="panel-title">
+                            Autonomous AI Agents
+                        </div>
+
+                        <div class="panel-subtitle">
+                            Current agent activity
+                        </div>
+                    </div>
+
+                    <span
+                        style="color:var(--green);font-size: 10.8px;"
+                    >
+                        5 ONLINE
+                    </span>
+
+                </div>
+
+                <div class="agents">
+
+                    <div class="agent">
+
+                        <div class="agent-icon">◈</div>
+
+                        <div class="agent-info">
+                            <strong>Fraud Agent</strong>
+                            <span>Analyzing transaction risk</span>
+                        </div>
+
+                        <div class="agent-status">
+                            ● Live
+                        </div>
+
+                    </div>
+
+                    <div class="agent">
+
+                        <div class="agent-icon">↗</div>
+
+                        <div class="agent-info">
+                            <strong>Forecast Agent</strong>
+                            <span>Updating revenue forecast</span>
+                        </div>
+
+                        <div class="agent-status">
+                            ● Live
+                        </div>
+
+                    </div>
+
+                    <div class="agent">
+
+                        <div class="agent-icon">▤</div>
+
+                        <div class="agent-info">
+                            <strong>Document Agent</strong>
+                            <span>Indexing financial documents</span>
+                        </div>
+
+                        <div class="agent-status">
+                            ● Live
+                        </div>
+
+                    </div>
+
+                    <div class="agent">
+
+                        <div class="agent-icon">✦</div>
+
+                        <div class="agent-info">
+                            <strong>Decision Agent</strong>
+                            <span>Generating recommendations</span>
+                        </div>
+
+                        <div class="agent-status">
+                            ● Live
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- TRANSACTIONS -->
+
+        <section class="card panel transactions-card">
+
+            <div class="panel-header">
+
+                <div>
+                    <div class="panel-title">
+                        Recent Transactions
+                    </div>
+
+                    <div class="panel-subtitle">
+                        Latest transactions analyzed by FinCo AI
+                    </div>
+                </div>
+
+                <button
+                    class="secondary-btn"
+                    onclick="showToast('Transactions','Opening transaction explorer...')"
+                >
+                    View all
+                </button>
+
+            </div>
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Transaction</th>
+                            <th>Amount</th>
+                            <th>Risk</th>
+                            <th>Status</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <tr>
+
+                            <td>
+                                <div class="transaction-user">
+                                    <div class="transaction-avatar">AR</div>
+
+                                    <div>
+                                        <strong>Alex Rivera</strong>
+                                        <span>Customer #10482</span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>Online purchase</td>
+
+                            <td class="amount">$2,840.00</td>
+
+                            <td class="risk-low">Low · 08</td>
+
+                            <td>
+                                <span class="status success">
+                                    Approved
+                                </span>
+                            </td>
+
+                            <td>2 min ago</td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <td>
+                                <div class="transaction-user">
+                                    <div class="transaction-avatar">SM</div>
+
+                                    <div>
+                                        <strong>Sarah Mitchell</strong>
+                                        <span>Customer #18392</span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>International transfer</td>
+
+                            <td class="amount">$14,250.00</td>
+
+                            <td class="risk-medium">Medium · 54</td>
+
+                            <td>
+                                <span class="status review">
+                                    Review
+                                </span>
+                            </td>
+
+                            <td>8 min ago</td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <td>
+                                <div class="transaction-user">
+                                    <div class="transaction-avatar">DK</div>
+
+                                    <div>
+                                        <strong>Daniel Kim</strong>
+                                        <span>Customer #23891</span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>Card payment</td>
+
+                            <td class="amount">$684.20</td>
+
+                            <td class="risk-low">Low · 12</td>
+
+                            <td>
+                                <span class="status success">
+                                    Approved
+                                </span>
+                            </td>
+
+                            <td>15 min ago</td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <td>
+                                <div class="transaction-user">
+                                    <div class="transaction-avatar">JP</div>
+
+                                    <div>
+                                        <strong>James Parker</strong>
+                                        <span>Customer #31027</span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>ATM withdrawal</td>
+
+                            <td class="amount">$6,500.00</td>
+
+                            <td class="risk-high">High · 91</td>
+
+                            <td>
+                                <span class="status blocked">
+                                    Blocked
+                                </span>
+                            </td>
+
+                            <td>21 min ago</td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <td>
+                                <div class="transaction-user">
+                                    <div class="transaction-avatar">LW</div>
+
+                                    <div>
+                                        <strong>Lisa Wong</strong>
+                                        <span>Customer #41029</span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>Merchant payment</td>
+
+                            <td class="amount">$1,290.50</td>
+
+                            <td class="risk-low">Low · 17</td>
+
+                            <td>
+                                <span class="status success">
+                                    Approved
+                                </span>
+                            </td>
+
+                            <td>32 min ago</td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- ACTIVITY -->
+
+        <section class="bottom-grid">
+
+            <div class="card panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <div class="panel-title">
+                            AI Activity
+                        </div>
+
+                        <div class="panel-subtitle">
+                            Recent intelligence events
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="activity-list">
+
+                    <div class="activity-item">
+
+                        <div class="activity-icon">◈</div>
+
+                        <div class="activity-content">
+                            <strong>
+                                Fraud Agent blocked transaction
+                            </strong>
+
+                            <p>
+                                High-risk ATM withdrawal detected
+                                and automatically prevented.
+                            </p>
+                        </div>
+
+                        <span class="activity-time">
+                            2m
+                        </span>
+
+                    </div>
+
+
+                    <div class="activity-item">
+
+                        <div class="activity-icon">↗</div>
+
+                        <div class="activity-content">
+                            <strong>
+                                Forecast Agent updated model
+                            </strong>
+
+                            <p>
+                                Revenue forecast confidence increased
+                                to 93.4%.
+                            </p>
+                        </div>
+
+                        <span class="activity-time">
+                            8m
+                        </span>
+
+                    </div>
+
+
+                    <div class="activity-item">
+
+                        <div class="activity-icon">▤</div>
+
+                        <div class="activity-content">
+                            <strong>
+                                Document Agent indexed report
+                            </strong>
+
+                            <p>
+                                Q3 financial report added to the
+                                RAG knowledge base.
+                            </p>
+                        </div>
+
+                        <span class="activity-time">
+                            14m
+                        </span>
+
+                    </div>
+
+
+                    <div class="activity-item">
+
+                        <div class="activity-icon">✦</div>
+
+                        <div class="activity-content">
+                            <strong>
+                                Decision Agent generated insight
+                            </strong>
+
+                            <p>
+                                Identified potential liquidity
+                                optimization opportunity.
+                            </p>
+                        </div>
+
+                        <span class="activity-time">
+                            23m
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ALERTS -->
+
+            <div class="card panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <div class="panel-title">
+                            Priority Alerts
+                        </div>
+
+                        <div class="panel-subtitle">
+                            Items requiring attention
+                        </div>
+                    </div>
+
+                    <button
+                        class="secondary-btn"
+                        onclick="window.location.href='alerts.html'"
+                    >
+                        View alerts
+                    </button>
+
+                </div>
+
+                <div class="alert-list">
+
+                    <div class="alert-item critical">
+
+                        <div class="alert-icon">!</div>
+
+                        <div class="alert-content">
+                            <strong>
+                                High-risk transaction detected
+                            </strong>
+
+                            <p>
+                                Transaction #TX-84921 exceeded
+                                automated fraud threshold.
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <div class="alert-item warning">
+
+                        <div class="alert-icon">△</div>
+
+                        <div class="alert-content">
+                            <strong>
+                                Forecast variance increased
+                            </strong>
+
+                            <p>
+                                Projected revenue variance reached
+                                7.2% in the current period.
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <div class="alert-item info">
+
+                        <div class="alert-icon">i</div>
+
+                        <div class="alert-content">
+                            <strong>
+                                New financial document available
+                            </strong>
+
+                            <p>
+                                Annual financial report is ready
+                                for AI-powered analysis.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ==================================
+             ADVANCED ANALYTICS SECTION
+        ==================================== -->
+
+        <section class="section-header">
+
+            <div>
+                <h2 class="section-title">Advanced Analytics</h2>
+                <p class="section-subtitle">
+                    Real-time insights powered by AI intelligence
+                </p>
+            </div>
+
+            <button class="btn-secondary" onclick="refreshAdvancedData()">
+                <span>↻</span> Refresh Data
+            </button>
+
+        </section>
+
+        <section class="dashboard-grid advanced-grid">
+
+            <!-- CUSTOM METRICS BUILDER -->
+            <div class="card panel advanced-card">
+
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">
+                            📊 Custom Metrics Builder
+                        </div>
+                        <div class="panel-subtitle">
+                            Create personalized KPIs
+                        </div>
+                    </div>
+                    <button class="icon-btn" onclick="openMetricsBuilder()">
+                        +
+                    </button>
+                </div>
+
+                <div class="metrics-builder">
+                    <div class="custom-metric">
+                        <div class="metric-header">
+                            <strong>Monthly Burn Rate</strong>
+                            <button class="delete-btn" onclick="removeMetric(this)">✕</button>
+                        </div>
+                        <div class="metric-value-large">$487.2K</div>
+                        <div class="metric-formula">= Total Expenses / 30 days</div>
+                        <div class="metric-trend negative">↓ 12.3% from last month</div>
+                    </div>
+
+                    <div class="custom-metric">
+                        <div class="metric-header">
+                            <strong>Customer Lifetime Value</strong>
+                            <button class="delete-btn" onclick="removeMetric(this)">✕</button>
+                        </div>
+                        <div class="metric-value-large">$24,891</div>
+                        <div class="metric-formula">= Avg Revenue × Retention Rate</div>
+                        <div class="metric-trend positive">↑ 8.7% vs Q2</div>
+                    </div>
+
+                    <button class="add-metric-btn" onclick="addCustomMetric()">
+                        + Add Custom Metric
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- PREDICTIVE ALERTS -->
+            <div class="card panel advanced-card">
+
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">
+                            🔔 Predictive Alerts
+                        </div>
+                        <div class="panel-subtitle">
+                            AI-powered early warnings
+                        </div>
+                    </div>
+                    <span class="badge badge-warning">3 Active</span>
+                </div>
+
+                <div class="alert-list">
+                    <div class="predictive-alert alert-warning">
+                        <div class="alert-icon">⚠️</div>
+                        <div class="alert-content">
+                            <strong>Cash Flow Warning</strong>
+                            <p>Projected shortfall of $125K in 18 days</p>
+                            <div class="alert-meta">
+                                <span>Confidence: 87%</span>
+                                <span>• High Priority</span>
+                            </div>
+                        </div>
+                        <button class="alert-action" onclick="viewAlert(1)">View →</button>
+                    </div>
+
+                    <div class="predictive-alert alert-info">
+                        <div class="alert-icon">💡</div>
+                        <div class="alert-content">
+                            <strong>Revenue Opportunity</strong>
+                            <p>Customer segment "Enterprise" showing 34% growth</p>
+                            <div class="alert-meta">
+                                <span>Confidence: 92%</span>
+                                <span>• Medium Priority</span>
+                            </div>
+                        </div>
+                        <button class="alert-action" onclick="viewAlert(2)">View →</button>
+                    </div>
+
+                    <div class="predictive-alert alert-success">
+                        <div class="alert-icon">✓</div>
+                        <div class="alert-content">
+                            <strong>Fraud Rate Declining</strong>
+                            <p>Fraud detection improved by 23% this week</p>
+                            <div class="alert-meta">
+                                <span>Confidence: 96%</span>
+                                <span>• Low Priority</span>
+                            </div>
+                        </div>
+                        <button class="alert-action" onclick="viewAlert(3)">View →</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- COMPARATIVE ANALYSIS -->
+            <div class="card panel advanced-card wide-card">
+
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">
+                            📈 Comparative Period Analysis
+                        </div>
+                        <div class="panel-subtitle">
+                            Compare performance across time periods
+                        </div>
+                    </div>
+                    <div class="comparison-controls">
+                        <select class="select-small" id="period1">
+                            <option>This Month</option>
+                            <option>Last Month</option>
+                            <option>This Quarter</option>
+                        </select>
+                        <span style="color: var(--muted);">vs</span>
+                        <select class="select-small" id="period2">
+                            <option selected>Last Month</option>
+                            <option>Last Quarter</option>
+                            <option>Last Year</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="comparison-grid">
+                    <div class="comparison-metric">
+                        <div class="comparison-label">Revenue</div>
+                        <div class="comparison-bars">
+                            <div class="comparison-bar">
+                                <span>$18.4M</span>
+                                <div class="bar bar-primary" style="width: 92%;"></div>
+                            </div>
+                            <div class="comparison-bar">
+                                <span>$17.1M</span>
+                                <div class="bar bar-secondary" style="width: 85%;"></div>
+                            </div>
+                        </div>
+                        <div class="comparison-change positive">+7.6%</div>
+                    </div>
+
+                    <div class="comparison-metric">
+                        <div class="comparison-label">Expenses</div>
+                        <div class="comparison-bars">
+                            <div class="comparison-bar">
+                                <span>$12.8M</span>
+                                <div class="bar bar-primary" style="width: 85%;"></div>
+                            </div>
+                            <div class="comparison-bar">
+                                <span>$13.2M</span>
+                                <div class="bar bar-secondary" style="width: 88%;"></div>
+                            </div>
+                        </div>
+                        <div class="comparison-change positive">-3.0%</div>
+                    </div>
+
+                    <div class="comparison-metric">
+                        <div class="comparison-label">Net Profit</div>
+                        <div class="comparison-bars">
+                            <div class="comparison-bar">
+                                <span>$5.6M</span>
+                                <div class="bar bar-primary" style="width: 75%;"></div>
+                            </div>
+                            <div class="comparison-bar">
+                                <span>$3.9M</span>
+                                <div class="bar bar-secondary" style="width: 52%;"></div>
+                            </div>
+                        </div>
+                        <div class="comparison-change positive">+43.6%</div>
+                    </div>
+
+                    <div class="comparison-metric">
+                        <div class="comparison-label">Customers</div>
+                        <div class="comparison-bars">
+                            <div class="comparison-bar">
+                                <span>8,942</span>
+                                <div class="bar bar-primary" style="width: 95%;"></div>
+                            </div>
+                            <div class="comparison-bar">
+                                <span>8,301</span>
+                                <div class="bar bar-secondary" style="width: 88%;"></div>
+                            </div>
+                        </div>
+                        <div class="comparison-change positive">+7.7%</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- COHORT ANALYSIS -->
+            <div class="card panel advanced-card">
+
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">
+                            👥 Cohort Analysis
+                        </div>
+                        <div class="panel-subtitle">
+                            Customer retention by signup month
+                        </div>
+                    </div>
+                    <select class="select-small">
+                        <option>Last 6 Months</option>
+                        <option>Last 12 Months</option>
+                    </select>
+                </div>
+
+                <div class="cohort-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cohort</th>
+                                <th>Month 0</th>
+                                <th>Month 1</th>
+                                <th>Month 2</th>
+                                <th>Month 3</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Jun 2026</strong></td>
+                                <td class="cohort-cell cohort-100">100%</td>
+                                <td class="cohort-cell cohort-85">85%</td>
+                                <td class="cohort-cell cohort-78">78%</td>
+                                <td class="cohort-cell cohort-74">74%</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Jul 2026</strong></td>
+                                <td class="cohort-cell cohort-100">100%</td>
+                                <td class="cohort-cell cohort-88">88%</td>
+                                <td class="cohort-cell cohort-82">82%</td>
+                                <td class="cohort-cell cohort-empty">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Aug 2026</strong></td>
+                                <td class="cohort-cell cohort-100">100%</td>
+                                <td class="cohort-cell cohort-91">91%</td>
+                                <td class="cohort-cell cohort-empty">-</td>
+                                <td class="cohort-cell cohort-empty">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Sep 2026</strong></td>
+                                <td class="cohort-cell cohort-100">100%</td>
+                                <td class="cohort-cell cohort-empty">-</td>
+                                <td class="cohort-cell cohort-empty">-</td>
+                                <td class="cohort-cell cohort-empty">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="cohort-legend">
+                    <span style="background: rgba(124,92,255,0.2);">90-100%</span>
+                    <span style="background: rgba(124,92,255,0.15);">80-89%</span>
+                    <span style="background: rgba(124,92,255,0.1);">70-79%</span>
+                    <span style="background: rgba(255,255,255,0.02);">&lt;70%</span>
+                </div>
+
+            </div>
+
+            <!-- SMART SEGMENTS -->
+            <div class="card panel advanced-card">
+
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">
+                            🎯 Smart Segments
+                        </div>
+                        <div class="panel-subtitle">
+                            AI-discovered customer groups
+                        </div>
+                    </div>
+                    <span class="badge badge-purple">4 Segments</span>
+                </div>
+
+                <div class="segments-list">
+                    <div class="segment-card">
+                        <div class="segment-header">
+                            <div class="segment-icon" style="background: linear-gradient(135deg, #7c5cff, #9b86ff);">💎</div>
+                            <div>
+                                <strong>High Value Enterprise</strong>
+                                <span>1,234 customers</span>
+                            </div>
+                        </div>
+                        <div class="segment-stats">
+                            <div class="segment-stat">
+                                <span>Avg Spend</span>
+                                <strong>$18.4K/mo</strong>
+                            </div>
+                            <div class="segment-stat">
+                                <span>Churn Risk</span>
+                                <strong class="risk-low">Low</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="segment-card">
+                        <div class="segment-header">
+                            <div class="segment-icon" style="background: linear-gradient(135deg, #34d399, #10b981);">📈</div>
+                            <div>
+                                <strong>Growth Potential</strong>
+                                <span>2,891 customers</span>
+                            </div>
+                        </div>
+                        <div class="segment-stats">
+                            <div class="segment-stat">
+                                <span>Avg Spend</span>
+                                <strong>$4.2K/mo</strong>
+                            </div>
+                            <div class="segment-stat">
+                                <span>Churn Risk</span>
+                                <strong class="risk-medium">Medium</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="segment-card">
+                        <div class="segment-header">
+                            <div class="segment-icon" style="background: linear-gradient(135deg, #fbbf24, #f59e0b);">⚠️</div>
+                            <div>
+                                <strong>At Risk</strong>
+                                <span>567 customers</span>
+                            </div>
+                        </div>
+                        <div class="segment-stats">
+                            <div class="segment-stat">
+                                <span>Avg Spend</span>
+                                <strong>$2.1K/mo</strong>
+                            </div>
+                            <div class="segment-stat">
+                                <span>Churn Risk</span>
+                                <strong class="risk-high">High</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- REAL-TIME HEAT MAP -->
+            <div class="card panel advanced-card wide-card">
+
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">
+                            🗺️ Transaction Heat Map
+                        </div>
+                        <div class="panel-subtitle">
+                            Real-time geographic activity
+                        </div>
+                    </div>
+                    <span class="live-indicator">● Live</span>
+                </div>
+
+                <div class="heatmap-container">
+                    <div class="heatmap-regions">
+                        <div class="region-item">
+                            <div class="region-bar" style="height: 85%; background: linear-gradient(to top, #7c5cff, #9b86ff);"></div>
+                            <span class="region-label">US West</span>
+                            <span class="region-value">$4.2M</span>
+                        </div>
+                        <div class="region-item">
+                            <div class="region-bar" style="height: 72%; background: linear-gradient(to top, #22d3ee, #67e8f9);"></div>
+                            <span class="region-label">US East</span>
+                            <span class="region-value">$3.8M</span>
+                        </div>
+                        <div class="region-item">
+                            <div class="region-bar" style="height: 58%; background: linear-gradient(to top, #34d399, #6ee7b7);"></div>
+                            <span class="region-label">Europe</span>
+                            <span class="region-value">$2.9M</span>
+                        </div>
+                        <div class="region-item">
+                            <div class="region-bar" style="height: 45%; background: linear-gradient(to top, #fbbf24, #fcd34d);"></div>
+                            <span class="region-label">Asia</span>
+                            <span class="region-value">$2.1M</span>
+                        </div>
+                        <div class="region-item">
+                            <div class="region-bar" style="height: 28%; background: linear-gradient(to top, #fb7185, #fda4af);"></div>
+                            <span class="region-label">Other</span>
+                            <span class="region-value">$1.3M</span>
+                        </div>
+                    </div>
+
+                    <div class="heatmap-legend">
+                        <span>🟢 High Activity</span>
+                        <span>🟡 Medium Activity</span>
+                        <span>🔴 Low Activity</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ANOMALY DETECTION -->
+            <div class="card panel advanced-card">
+
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">
+                            🔍 Anomaly Detection
+                        </div>
+                        <div class="panel-subtitle">
+                            Unusual patterns detected by AI
+                        </div>
+                    </div>
+                    <span class="badge badge-red">2 New</span>
+                </div>
+
+                <div class="anomalies-list">
+                    <div class="anomaly-item">
+                        <div class="anomaly-severity high">!</div>
+                        <div class="anomaly-content">
+                            <strong>Unusual Transaction Volume</strong>
+                            <p>Spike of 340% in transactions from IP 192.168.1.45</p>
+                            <div class="anomaly-time">Detected 15 minutes ago</div>
+                        </div>
+                        <button class="anomaly-btn" onclick="investigateAnomaly(1)">Investigate</button>
+                    </div>
+
+                    <div class="anomaly-item">
+                        <div class="anomaly-severity medium">!</div>
+                        <div class="anomaly-content">
+                            <strong>Revenue Dip</strong>
+                            <p>Product category "Services" down 28% today</p>
+                            <div class="anomaly-time">Detected 1 hour ago</div>
+                        </div>
+                        <button class="anomaly-btn" onclick="investigateAnomaly(2)">Investigate</button>
+                    </div>
+
+                    <div class="anomaly-item resolved">
+                        <div class="anomaly-severity low">✓</div>
+                        <div class="anomaly-content">
+                            <strong>System Latency</strong>
+                            <p>API response time increased by 45% - Now resolved</p>
+                            <div class="anomaly-time">Resolved 3 hours ago</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- SCENARIO SIMULATOR -->
+            <div class="card panel advanced-card wide-card">
+
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">
+                            🎲 Scenario Simulator
+                        </div>
+                        <div class="panel-subtitle">
+                            Test "what-if" scenarios in real-time
+                        </div>
+                    </div>
+                    <button class="btn-secondary-small" onclick="resetSimulator()">
+                        Reset
+                    </button>
+                </div>
+
+                <div class="simulator-controls">
+                    <div class="simulator-input">
+                        <label>Revenue Change</label>
+                        <input type="range" min="-50" max="50" value="0" id="revenueSlider" oninput="updateSimulation()">
+                        <span id="revenueValue">0%</span>
+                    </div>
+                    <div class="simulator-input">
+                        <label>Cost Change</label>
+                        <input type="range" min="-50" max="50" value="0" id="costSlider" oninput="updateSimulation()">
+                        <span id="costValue">0%</span>
+                    </div>
+                    <div class="simulator-input">
+                        <label>Customer Growth</label>
+                        <input type="range" min="-30" max="30" value="0" id="customerSlider" oninput="updateSimulation()">
+                        <span id="customerValue">0%</span>
+                    </div>
+                </div>
+
+                <div class="simulator-results">
+                    <div class="simulator-result">
+                        <span>Projected Revenue</span>
+                        <strong id="simRevenue">$18.4M</strong>
+                        <span class="sim-change" id="simRevenueChange">--</span>
+                    </div>
+                    <div class="simulator-result">
+                        <span>Projected Profit</span>
+                        <strong id="simProfit">$5.6M</strong>
+                        <span class="sim-change" id="simProfitChange">--</span>
+                    </div>
+                    <div class="simulator-result">
+                        <span>Profit Margin</span>
+                        <strong id="simMargin">30.4%</strong>
+                        <span class="sim-change" id="simMarginChange">--</span>
+                    </div>
+                    <div class="simulator-result">
+                        <span>Burn Rate</span>
+                        <strong id="simBurn">$487K/mo</strong>
+                        <span class="sim-change" id="simBurnChange">--</span>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- TOAST -->
+
+<div class="toast" id="toast">
+
+    <div class="toast-icon">✓</div>
+
+    <div>
+        <strong id="toastTitle">
+            Success
+        </strong>
+
+        <span id="toastMessage">
+            Operation completed successfully.
+        </span>
+    </div>
+
+</div>
+
+
+<script>
+
+    /* =========================================
+       MOBILE SIDEBAR
+    ========================================== */
+
+    const sidebar = document.getElementById("sidebar");
+    const mobileMenu = document.getElementById("mobileMenu");
+
+    mobileMenu?.addEventListener("click", () => {
+        sidebar.classList.toggle("open");
+    });
+
+
+    document.addEventListener("click", (event) => {
+
+        if (
+            window.innerWidth <= 900 &&
+            sidebar.classList.contains("open") &&
+            !sidebar.contains(event.target) &&
+            !mobileMenu.contains(event.target)
+        ) {
+            sidebar.classList.remove("open");
+        }
+
+    });
+
+
+    /* =========================================
+       TOAST
+    ========================================== */
+
+    let toastTimer;
+
+    function showToast(title, message) {
+
+        const toast = document.getElementById("toast");
+
+        document.getElementById("toastTitle").textContent = title;
+        document.getElementById("toastMessage").textContent = message;
+
+        toast.classList.add("show");
+
+        clearTimeout(toastTimer);
+
+        toastTimer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 3000);
+    }
+
+
+    /* =========================================
+       COPILOT
+    ========================================== */
+
+    function openCopilot() {
+
+        showToast(
+            "AI Copilot",
+            "Opening FinCo intelligent assistant..."
+        );
+
+        setTimeout(() => {
+            window.location.href = "copilot.html";
+        }, 700);
+    }
+
+
+    /* =========================================
+       PERIOD SELECTOR
+    ========================================== */
+
+    document
+        .getElementById("periodSelect")
+        ?.addEventListener("change", function () {
+
+            showToast(
+                "Analytics updated",
+                `Showing ${this.value.toLowerCase()} performance.`
+            );
+
+        });
+
+
+    /* =========================================
+       NAVIGATION
+    ========================================== */
+
+    document.querySelectorAll(".nav-link").forEach(link => {
+
+        link.addEventListener("click", () => {
+
+            document
+                .querySelectorAll(".nav-link")
+                .forEach(item => item.classList.remove("active"));
+
+            link.classList.add("active");
+
+        });
+
+    });
+
+
+    /* =========================================
+       KEYBOARD SHORTCUT
+    ========================================== */
+
+    document.addEventListener("keydown", event => {
+
+        if (
+            (event.ctrlKey || event.metaKey) &&
+            event.key.toLowerCase() === "k"
+        ) {
+
+            event.preventDefault();
+
+            openCopilot();
+
+        }
+
+    });
+
+
+    /* =========================================
+       DEMO REAL-TIME STATUS
+    ========================================== */
+
+    setInterval(() => {
+
+        const status = document.querySelector(".status-dot");
+
+        if (!status) return;
+
+        status.style.opacity = "0.35";
+
+        setTimeout(() => {
+            status.style.opacity = "1";
+        }, 400);
+
+    }, 3000);
+
+
+    /* =========================================
+       API INTEGRATION READY
+    ==========================================
+
+       Replace demo metrics with your FastAPI APIs.
+
+       Example:
+
+       async function loadDashboard() {
+
+           const response = await fetch(
+               "/api/dashboard/summary",
+               {
+                   headers: {
+                       Authorization:
+                           `Bearer ${localStorage.getItem("access_token")}`
+                   }
+               }
+           );
+
+           if (!response.ok) {
+               window.location.href = "login.html";
+               return;
+           }
+
+           const data = await response.json();
+
+           // Update KPI cards
+           // Update charts
+           // Update fraud metrics
+           // Update forecasts
+           // Update transactions
+           // Update alerts
+       }
+
+       loadDashboard();
+
+    ========================================== */
+
+
+    /* =========================================
+       DEMO WELCOME
+    ========================================== */
+
+    setTimeout(() => {
+
+        showToast(
+            "FinCo AI Online",
+            "All intelligence systems are operational."
+        );
+
+    }, 900);
+
+    /* =========================================================
+       ADVANCED DASHBOARD FUNCTIONS
+    ========================================================= */
+
+    // Refresh Advanced Data
+    function refreshAdvancedData() {
+        showToast('Data Refreshed', 'Advanced analytics updated');
+        // Simulate data refresh animation
+        document.querySelectorAll('.advanced-card').forEach(card => {
+            card.style.opacity = '0.5';
+            setTimeout(() => {
+                card.style.opacity = '1';
+            }, 300);
+        });
+    }
+
+    // Metrics Builder
+    function openMetricsBuilder() {
+        showToast('Metrics Builder', 'Opening custom metrics creator...');
+    }
+
+    function addCustomMetric() {
+        const metricsContainer = document.querySelector('.metrics-builder');
+        const newMetric = document.createElement('div');
+        newMetric.className = 'custom-metric';
+        newMetric.innerHTML = `
+            <div class="metric-header">
+                <strong>New Custom Metric</strong>
+                <button class="delete-btn" onclick="removeMetric(this)">✕</button>
+            </div>
+            <div class="metric-value-large">$0.00</div>
+            <div class="metric-formula">Define your formula</div>
+            <div class="metric-trend positive">Configure metric</div>
+        `;
+        metricsContainer.insertBefore(newMetric, metricsContainer.lastElementChild);
+        showToast('Metric Added', 'Configure your new custom metric');
+    }
+
+    function removeMetric(btn) {
+        btn.closest('.custom-metric').remove();
+        showToast('Metric Removed', 'Custom metric deleted');
+    }
+
+    // Alerts
+    function viewAlert(id) {
+        showToast('Alert Details', `Viewing alert #${id} details...`);
+    }
+
+    // Anomaly Detection
+    function investigateAnomaly(id) {
+        showToast('Investigating', `Opening anomaly #${id} investigation panel...`);
+    }
+
+    // Scenario Simulator
+    const baseRevenue = 18.4;
+    const baseCost = 12.8;
+    const baseProfit = 5.6;
+    const baseCustomers = 8942;
+
+    function updateSimulation() {
+        const revenueChange = document.getElementById('revenueSlider').value;
+        const costChange = document.getElementById('costSlider').value;
+        const customerChange = document.getElementById('customerSlider').value;
+
+        // Update slider displays
+        document.getElementById('revenueValue').textContent = `${revenueChange}%`;
+        document.getElementById('costValue').textContent = `${costChange}%`;
+        document.getElementById('customerValue').textContent = `${customerChange}%`;
+
+        // Calculate new values
+        const newRevenue = baseRevenue * (1 + revenueChange / 100);
+        const newCost = baseCost * (1 + costChange / 100);
+        const newProfit = newRevenue - newCost;
+        const newMargin = (newProfit / newRevenue * 100);
+        const newBurn = (newCost / 30);
+
+        // Update displays
+        document.getElementById('simRevenue').textContent = `$${newRevenue.toFixed(1)}M`;
+        document.getElementById('simProfit').textContent = `$${newProfit.toFixed(1)}M`;
+        document.getElementById('simMargin').textContent = `${newMargin.toFixed(1)}%`;
+        document.getElementById('simBurn').textContent = `$${newBurn.toFixed(0)}K/mo`;
+
+        // Update change indicators
+        const revChange = ((newRevenue - baseRevenue) / baseRevenue * 100).toFixed(1);
+        const profitChange = ((newProfit - baseProfit) / baseProfit * 100).toFixed(1);
+        const marginChange = (newMargin - 30.4).toFixed(1);
+        const burnChange = ((newBurn - 487) / 487 * 100).toFixed(1);
+
+        document.getElementById('simRevenueChange').textContent = `${revChange > 0 ? '+' : ''}${revChange}%`;
+        document.getElementById('simProfitChange').textContent = `${profitChange > 0 ? '+' : ''}${profitChange}%`;
+        document.getElementById('simMarginChange').textContent = `${marginChange > 0 ? '+' : ''}${marginChange}pp`;
+        document.getElementById('simBurnChange').textContent = `${burnChange > 0 ? '+' : ''}${burnChange}%`;
+
+        // Color code changes
+        updateChangeColor('simRevenueChange', revChange);
+        updateChangeColor('simProfitChange', profitChange);
+        updateChangeColor('simMarginChange', marginChange);
+        updateChangeColor('simBurnChange', -burnChange); // Negative is good for burn rate
+    }
+
+    function updateChangeColor(elementId, value) {
+        const element = document.getElementById(elementId);
+        if (value > 0) {
+            element.style.color = 'var(--green)';
+        } else if (value < 0) {
+            element.style.color = 'var(--red)';
+        } else {
+            element.style.color = 'var(--muted)';
+        }
+    }
+
+    function resetSimulator() {
+        document.getElementById('revenueSlider').value = 0;
+        document.getElementById('costSlider').value = 0;
+        document.getElementById('customerSlider').value = 0;
+
+        document.getElementById('revenueValue').textContent = '0%';
+        document.getElementById('costValue').textContent = '0%';
+        document.getElementById('customerValue').textContent = '0%';
+
+        document.getElementById('simRevenue').textContent = '$18.4M';
+        document.getElementById('simProfit').textContent = '$5.6M';
+        document.getElementById('simMargin').textContent = '30.4%';
+        document.getElementById('simBurn').textContent = '$487K/mo';
+
+        document.getElementById('simRevenueChange').textContent = '--';
+        document.getElementById('simProfitChange').textContent = '--';
+        document.getElementById('simMarginChange').textContent = '--';
+        document.getElementById('simBurnChange').textContent = '--';
+
+        showToast('Reset', 'Scenario simulator reset to baseline');
+    }
+
+</script>
+
+</body>
+</html>

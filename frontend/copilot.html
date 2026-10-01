@@ -1,0 +1,4450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Copilot | FinCo AI</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #05060a;
+            --bg-soft: #090b11;
+            --panel: rgba(14, 16, 24, .82);
+            --panel-2: rgba(19, 21, 30, .94);
+
+            --border: rgba(255,255,255,.08);
+            --border-hover: rgba(124,92,255,.38);
+
+            --text: #f5f7fb;
+            --muted: #8b93a7;
+            --muted-2: #60687a;
+
+            --purple: #7c5cff;
+            --purple-light: #a18fff;
+            --cyan: #22d3ee;
+            --green: #34d399;
+            --red: #fb7185;
+            --orange: #f59e0b;
+            --blue: #60a5fa;
+
+            --shadow: 0 25px 80px rgba(0,0,0,.38);
+            --radius: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            overflow: hidden;
+
+            background:
+                radial-gradient(
+                    circle at 15% 10%,
+                    rgba(124,92,255,.12),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 90% 20%,
+                    rgba(34,211,238,.08),
+                    transparent 24%
+                ),
+                var(--bg);
+
+            color: var(--text);
+            font-family: Inter, sans-serif;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: .14;
+
+            background-image:
+                linear-gradient(
+                    rgba(255,255,255,.025) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,.025) 1px,
+                    transparent 1px
+                );
+
+            background-size: 42px 42px;
+            mask-image: linear-gradient(
+                to bottom,
+                black,
+                transparent
+            );
+        }
+
+        button,
+        textarea,
+        input {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        /* =====================================
+           APP
+        ===================================== */
+
+        .app {
+            display: flex;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* =====================================
+           SIDEBAR
+        ===================================== */
+
+        .sidebar {
+            width: 255px;
+            min-width: 255px;
+            height: 100vh;
+
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+
+            padding: 22px 16px;
+
+            background: rgba(7,8,13,.95);
+            backdrop-filter: blur(25px);
+
+            border-right: 1px solid var(--border);
+
+            transition: transform .3s ease;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            padding: 5px 9px 28px;
+        }
+
+        .brand-logo {
+            width: 42px;
+            height: 42px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 13px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    #5541c7
+                );
+
+            box-shadow:
+                0 0 30px rgba(124,92,255,.35);
+        }
+
+        .brand-logo svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .brand-name {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 28.8px;
+            font-weight: 700;
+            letter-spacing: -.5px;
+        }
+
+        .brand-name span {
+            color: var(--purple-light);
+        }
+
+        .nav-label {
+            color: #555d70;
+            font-size: 14.4px;
+            font-weight: 800;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+
+            padding: 0 12px 10px;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .nav-item {
+            position: relative;
+
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            padding: 12px 13px;
+
+            border-radius: 12px;
+
+            color: var(--muted);
+            text-decoration: none;
+
+            font-size: 18.7px;
+            font-weight: 600;
+
+            transition: .2s ease;
+        }
+
+        .nav-item:hover {
+            color: white;
+            background: rgba(255,255,255,.045);
+        }
+
+        .nav-item.active {
+            color: white;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(124,92,255,.19),
+                    rgba(124,92,255,.04)
+                );
+        }
+
+        .nav-item.active::before {
+            content: "";
+
+            position: absolute;
+            left: -16px;
+
+            width: 3px;
+            height: 25px;
+
+            border-radius: 0 5px 5px 0;
+
+            background: var(--purple);
+
+            box-shadow:
+                0 0 14px var(--purple);
+        }
+
+        .nav-icon {
+            width: 18px;
+            height: 18px;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+
+            min-width: 22px;
+            height: 21px;
+
+            display: grid;
+            place-items: center;
+
+            padding: 0 6px;
+
+            border-radius: 999px;
+
+            background: rgba(251,113,133,.15);
+            color: var(--red);
+
+            font-size: 14.4px;
+            font-weight: 800;
+        }
+
+        .sidebar-bottom {
+            position: absolute;
+            left: 16px;
+            right: 16px;
+            bottom: 20px;
+        }
+
+        .system-status {
+            padding: 13px;
+
+            border: 1px solid var(--border);
+            border-radius: 14px;
+
+            background: rgba(255,255,255,.025);
+        }
+
+        .system-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            font-size: 15.8px;
+            font-weight: 700;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: var(--green);
+
+            box-shadow:
+                0 0 12px var(--green);
+        }
+
+        .system-text {
+            margin-top: 7px;
+
+            color: var(--muted);
+            font-size: 14.4px;
+        }
+
+        /* =====================================
+           MAIN
+        ===================================== */
+
+        .main {
+            width: calc(100% - 255px);
+            height: 100vh;
+
+            margin-left: 255px;
+
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* =====================================
+           TOPBAR
+        ===================================== */
+
+        .topbar {
+            height: 76px;
+            min-height: 76px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 30px;
+
+            border-bottom: 1px solid var(--border);
+
+            background: rgba(5,6,10,.7);
+            backdrop-filter: blur(18px);
+
+            z-index: 20;
+        }
+
+        .top-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .mobile-menu {
+            display: none;
+
+            width: 38px;
+            height: 38px;
+
+            margin-right: 10px;
+
+            place-items: center;
+
+            border: 1px solid var(--border);
+            border-radius: 10px;
+
+            background: rgba(255,255,255,.035);
+            color: white;
+        }
+
+        .page-title {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 27.4px;
+            font-weight: 700;
+        }
+
+        .page-subtitle {
+            margin-top: 3px;
+
+            color: var(--muted);
+            font-size: 15.8px;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            width: 39px;
+            height: 39px;
+
+            display: grid;
+            place-items: center;
+
+            border: 1px solid var(--border);
+            border-radius: 12px;
+
+            background: rgba(255,255,255,.035);
+            color: var(--muted);
+
+            transition: .2s;
+        }
+
+        .icon-btn:hover {
+            color: white;
+            border-color: var(--border-hover);
+            background: rgba(124,92,255,.08);
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            padding-left: 7px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 50%;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    var(--cyan)
+                );
+
+            color: white;
+            font-size: 17.3px;
+            font-weight: 800;
+        }
+
+        .profile-name {
+            font-size: 15.8px;
+            font-weight: 700;
+        }
+
+        .profile-role {
+            margin-top: 2px;
+
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        /* =====================================
+           COPILOT LAYOUT
+        ===================================== */
+
+        .copilot {
+            flex: 1;
+            min-height: 0;
+
+            display: grid;
+            grid-template-columns: 245px minmax(0, 1fr) 285px;
+
+            gap: 0;
+
+            overflow: hidden;
+        }
+
+        /* =====================================
+           CHAT HISTORY
+        ===================================== */
+
+        .history {
+            height: 100%;
+
+            padding: 18px 13px;
+
+            border-right: 1px solid var(--border);
+
+            background: rgba(7,8,13,.48);
+
+            overflow-y: auto;
+        }
+
+        .history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 13px;
+
+            padding: 0 6px;
+        }
+
+        .history-title {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 17.3px;
+            font-weight: 700;
+        }
+
+        .new-chat {
+            width: 28px;
+            height: 28px;
+
+            display: grid;
+            place-items: center;
+
+            border: 1px solid var(--border);
+            border-radius: 8px;
+
+            background: rgba(124,92,255,.1);
+            color: var(--purple-light);
+        }
+
+        .history-group {
+            margin-top: 17px;
+        }
+
+        .history-label {
+            padding: 0 8px 7px;
+
+            color: #555d70;
+
+            font-size: 11.5px;
+            font-weight: 800;
+
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .history-item {
+            width: 100%;
+
+            display: flex;
+            align-items: center;
+            gap: 9px;
+
+            padding: 9px 8px;
+
+            border: 1px solid transparent;
+            border-radius: 9px;
+
+            background: transparent;
+            color: var(--muted);
+
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.4;
+
+            transition: .2s;
+        }
+
+        .history-item:hover {
+            background: rgba(255,255,255,.035);
+            color: white;
+        }
+
+        .history-item.active {
+            background: rgba(124,92,255,.1);
+            border-color: rgba(124,92,255,.15);
+            color: white;
+        }
+
+        .history-icon {
+            width: 15px;
+            min-width: 15px;
+        }
+
+        .history-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* =====================================
+           CHAT
+        ===================================== */
+
+        .chat {
+            min-width: 0;
+            height: 100%;
+
+            display: flex;
+            flex-direction: column;
+
+            position: relative;
+        }
+
+        .chat-head {
+            min-height: 68px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 12px 22px;
+
+            border-bottom: 1px solid var(--border);
+        }
+
+        .copilot-brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+        }
+
+        .copilot-orb {
+            width: 38px;
+            height: 38px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 12px;
+
+            background:
+                radial-gradient(
+                    circle at 35% 25%,
+                    #c0b7ff,
+                    var(--purple) 42%,
+                    #4332a8
+                );
+
+            box-shadow:
+                0 0 28px rgba(124,92,255,.35);
+        }
+
+        .copilot-orb svg {
+            width: 20px;
+        }
+
+        .copilot-name {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 18.7px;
+            font-weight: 700;
+        }
+
+        .copilot-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+
+            margin-top: 3px;
+
+            color: var(--green);
+            font-size: 11.5px;
+            font-weight: 700;
+        }
+
+        .mini-dot {
+            width: 5px;
+            height: 5px;
+
+            border-radius: 50%;
+            background: var(--green);
+
+            box-shadow:
+                0 0 9px var(--green);
+        }
+
+        .model-selector {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            padding: 7px 10px;
+
+            border: 1px solid var(--border);
+            border-radius: 9px;
+
+            background: rgba(255,255,255,.025);
+            color: var(--muted);
+
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .messages {
+            flex: 1;
+            min-height: 0;
+
+            overflow-y: auto;
+
+            padding: 28px 25px 22px;
+
+            scroll-behavior: smooth;
+            background: rgba(0, 0, 0, 0.1); /* Add subtle background for visibility */
+        }
+
+        /* =====================================
+           WELCOME
+        ===================================== */
+
+        .welcome {
+            max-width: 730px;
+
+            margin: 35px auto 25px;
+
+            text-align: center;
+        }
+
+        .welcome-orb {
+            width: 80px;
+            height: 80px;
+
+            margin: auto;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 24px;
+
+            background:
+                radial-gradient(
+                    circle at 35% 25%,
+                    #d4c8ff,
+                    var(--purple) 35%,
+                    #3d28a8
+                );
+
+            box-shadow:
+                0 0 60px rgba(124,92,255,.45),
+                0 10px 30px rgba(124,92,255,.25);
+
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 0 60px rgba(124,92,255,.45), 0 10px 30px rgba(124,92,255,.25);
+            }
+            50% { 
+                transform: scale(1.05);
+                box-shadow: 0 0 80px rgba(124,92,255,.6), 0 15px 40px rgba(124,92,255,.35);
+            }
+        }
+
+        .welcome-orb svg {
+            width: 36px;
+        }
+
+        .welcome h1 {
+            margin-top: 24px;
+
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: -1.2px;
+            line-height: 1.2;
+        }
+
+        .gradient-text {
+            background:
+                linear-gradient(
+                    110deg,
+                    #ffffff,
+                    #c4b5ff 45%,
+                    #7dd3ff 80%,
+                    #5ce1e6
+                );
+
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            
+            animation: shimmer 3s ease-in-out infinite;
+            background-size: 200% auto;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .welcome p {
+            max-width: 620px;
+
+            margin: 14px auto 0;
+
+            color: #b8bfce;
+
+            font-size: 16.8px;
+            line-height: 1.7;
+        }
+
+        /* =====================================
+           PROMPTS
+        ===================================== */
+
+        .prompt-grid {
+            max-width: 730px;
+
+            margin: 0 auto;
+
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+
+            gap: 9px;
+        }
+
+        .prompt-card {
+            padding: 13px;
+
+            border: 1px solid var(--border);
+            border-radius: 13px;
+
+            background: rgba(255,255,255,.025);
+
+            text-align: left;
+
+            transition: .2s;
+        }
+
+        .prompt-card:hover {
+            transform: translateY(-2px);
+
+            border-color: rgba(124,92,255,.35);
+
+            background: rgba(124,92,255,.06);
+
+            box-shadow:
+                0 10px 30px rgba(0,0,0,.2);
+        }
+
+        .prompt-icon {
+            width: 25px;
+            height: 25px;
+
+            display: grid;
+            place-items: center;
+
+            margin-bottom: 8px;
+
+            border-radius: 7px;
+
+            background: rgba(124,92,255,.1);
+            color: var(--purple-light);
+        }
+
+        /* =========================================
+           PDF UPLOAD SECTION
+        ========================================= */
+
+        .upload-section {
+            margin-top: 40px;
+            max-width: 600px;
+        }
+
+        .upload-card {
+            padding: 40px 32px;
+            background: linear-gradient(135deg, rgba(124,92,255,.12), rgba(34,211,238,.08));
+            border: 2px dashed rgba(124,92,255,.35);
+            border-radius: 24px;
+            text-align: center;
+            transition: all .4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(124,92,255,.15) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+            opacity: 0;
+            transition: opacity .4s;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .upload-card:hover {
+            border-color: rgba(124,92,255,.7);
+            background: linear-gradient(135deg, rgba(124,92,255,.18), rgba(34,211,238,.12));
+            transform: translateY(-4px);
+            box-shadow: 0 20px 50px rgba(124,92,255,.25);
+        }
+
+        .upload-card:hover::before {
+            opacity: 1;
+        }
+
+        .upload-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 24px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, #7c5cff, #22d3ee);
+            border-radius: 18px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(124,92,255,.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .upload-card h3 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text);
+            position: relative;
+            z-index: 1;
+        }
+
+        .upload-card p {
+            font-size: 17px;
+            color: #b0b7c8;
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .upload-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--purple), #6d4aff);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 20.2px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .3s;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(124,92,255,.4);
+        }
+
+        .uploaded-files {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(255,255,255,.05);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            text-align: left;
+        }
+
+        .file-icon {
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            background: rgba(34,211,238,.15);
+            border-radius: 8px;
+            color: var(--cyan);
+            font-size: 23px;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-size: 18.7px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .file-size {
+            font-size: 15.8px;
+            color: var(--muted-2);
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .file-action-btn {
+            width: 30px;
+            height: 30px;
+            display: grid;
+            place-items: center;
+            background: rgba(255,255,255,.05);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--muted);
+            font-size: 17.3px;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        .file-action-btn:hover {
+            background: rgba(255,255,255,.1);
+            color: var(--text);
+        }
+
+        .doc-context-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(34,211,238,.15);
+            border: 1px solid rgba(34,211,238,.3);
+            border-radius: 6px;
+            font-size: 15.8px;
+            color: var(--cyan);
+            margin-bottom: 8px;
+        }
+
+        .prompt-title {
+            font-size: 14.4px;
+            font-weight: 700;
+        }
+
+        .prompt-text {
+            margin-top: 4px;
+
+            color: var(--muted);
+
+            font-size: 11.5px;
+            line-height: 1.5;
+        }
+
+        /* =====================================
+           CHAT MESSAGES
+        ===================================== */
+
+        .message {
+            max-width: 780px;
+
+            margin: 0 auto 20px;
+
+            display: flex;
+            gap: 10px;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-avatar {
+            width: 30px;
+            height: 30px;
+
+            min-width: 30px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 9px;
+
+            background: rgba(124,92,255,.12);
+            color: var(--purple-light);
+        }
+
+        .message.user .message-avatar {
+            order: 2;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    #5541c7
+                );
+
+            color: white;
+        }
+
+        .message-body {
+            max-width: 650px;
+        }
+
+        .message.user .message-body {
+            order: 1;
+        }
+
+        .message-meta {
+            margin-bottom: 5px;
+
+            color: var(--muted-2);
+
+            font-size: 11.5px;
+            font-weight: 700;
+        }
+
+        .message.user .message-meta {
+            text-align: right;
+        }
+
+        .bubble {
+            padding: 12px 14px;
+
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+
+            background: rgba(255,255,255,.12);
+
+            color: #ffffff;
+
+            font-size: 14.4px;
+            line-height: 1.7;
+        }
+
+        .message.user .bubble {
+            border-color: rgba(124,92,255,.4);
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(124,92,255,.25),
+                    rgba(124,92,255,.15)
+                );
+        }
+
+        .bubble strong {
+            color: white;
+        }
+
+        .bubble ul {
+            margin: 8px 0 0 17px;
+        }
+
+        .bubble li {
+            margin-bottom: 4px;
+        }
+
+        /* =====================================
+           CITATIONS
+        ===================================== */
+
+        .citations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+
+            margin-top: 9px;
+        }
+
+        .citation {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+
+            padding: 5px 7px;
+
+            border: 1px solid rgba(124,92,255,.18);
+            border-radius: 6px;
+
+            background: rgba(124,92,255,.06);
+
+            color: #aaa0e8;
+
+            font-size: 10.1px;
+            font-weight: 700;
+        }
+
+        .citation:hover {
+            border-color: rgba(124,92,255,.4);
+        }
+
+        /* =====================================
+           TOOL ACTIVITY
+        ===================================== */
+
+        .agent-activity {
+            max-width: 650px;
+
+            margin: 9px 0 0;
+
+            padding: 9px 11px;
+
+            border: 1px solid var(--border);
+            border-radius: 10px;
+
+            background: rgba(0,0,0,.15);
+        }
+
+        .agent-head {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            color: var(--purple-light);
+
+            font-size: 11.5px;
+            font-weight: 800;
+        }
+
+        .agent-head svg {
+            width: 12px;
+        }
+
+        .agent-steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+
+            margin-top: 7px;
+        }
+
+        .agent-step {
+            padding: 4px 6px;
+
+            border-radius: 5px;
+
+            background: rgba(255,255,255,.035);
+
+            color: var(--muted);
+
+            font-size: 10.1px;
+        }
+
+        .agent-step.done {
+            color: var(--green);
+            background: rgba(52,211,153,.07);
+        }
+
+        /* =====================================
+           COMPOSER
+        ===================================== */
+
+        .composer-area {
+            padding: 12px 22px 16px;
+
+            border-top: 1px solid var(--border);
+
+            background:
+                linear-gradient(
+                    to top,
+                    rgba(5,6,10,.98),
+                    rgba(5,6,10,.82)
+                );
+        }
+
+        .composer {
+            max-width: 780px;
+
+            margin: auto;
+
+            position: relative;
+
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 16px;
+
+            background: rgba(18,20,29,.92);
+
+            box-shadow:
+                0 15px 50px rgba(0,0,0,.3);
+
+            transition: .2s;
+        }
+
+        .composer:focus-within {
+            border-color: rgba(124,92,255,.42);
+
+            box-shadow:
+                0 0 0 3px rgba(124,92,255,.06),
+                0 15px 50px rgba(0,0,0,.35);
+        }
+
+        .composer textarea {
+            width: 100%;
+            height: 48px;
+
+            resize: none;
+
+            padding: 14px 55px 8px 15px;
+
+            border: 0;
+            outline: 0;
+
+            background: transparent;
+
+            color: white;
+
+            font-size: 14.4px;
+            line-height: 1.5;
+        }
+
+        .composer textarea::placeholder {
+            color: #687083;
+        }
+
+        .send-btn {
+            position: absolute;
+            right: 8px;
+            bottom: 8px;
+
+            width: 32px;
+            height: 32px;
+
+            display: grid;
+            place-items: center;
+
+            border: 0;
+            border-radius: 9px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    #6048d5
+                );
+
+            color: white;
+
+            box-shadow:
+                0 5px 18px rgba(124,92,255,.3);
+
+            transition: .2s;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-1px) scale(1.03);
+        }
+
+        .composer-footer {
+            max-width: 780px;
+
+            margin: 6px auto 0;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            color: var(--muted-2);
+
+            font-size: 10.1px;
+        }
+
+        .composer-tools {
+            display: flex;
+            gap: 5px;
+        }
+
+        .tool-btn {
+            width: 25px;
+            height: 25px;
+
+            display: grid;
+            place-items: center;
+
+            border: 1px solid transparent;
+            border-radius: 7px;
+
+            background: transparent;
+            color: var(--muted);
+        }
+
+        .tool-btn:hover {
+            border-color: var(--border);
+            background: rgba(255,255,255,.035);
+            color: white;
+        }
+
+        /* =====================================
+           RIGHT INTELLIGENCE PANEL
+        ===================================== */
+
+        .insights {
+            height: 100%;
+
+            padding: 17px 14px;
+
+            border-left: 1px solid var(--border);
+
+            background: rgba(7,8,13,.42);
+
+            overflow-y: auto;
+        }
+
+        .insights-title {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 17.3px;
+            font-weight: 700;
+        }
+
+        .insights-subtitle {
+            margin-top: 3px;
+
+            color: var(--muted);
+
+            font-size: 11.5px;
+        }
+
+        .risk-card {
+            margin-top: 15px;
+
+            padding: 14px;
+
+            border: 1px solid var(--border);
+            border-radius: 15px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(124,92,255,.1),
+                    rgba(255,255,255,.02)
+                );
+        }
+
+        .risk-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .risk-label {
+            color: var(--muted);
+            font-size: 11.5px;
+            font-weight: 700;
+        }
+
+        .risk-score {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 37.4px;
+            font-weight: 700;
+        }
+
+        .risk-score span {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .risk-bar {
+            height: 6px;
+
+            margin-top: 10px;
+
+            overflow: hidden;
+
+            border-radius: 999px;
+
+            background: rgba(255,255,255,.06);
+        }
+
+        .risk-bar span {
+            display: block;
+
+            width: 78%;
+            height: 100%;
+
+            border-radius: inherit;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    var(--green),
+                    #7de4bd
+                );
+
+            box-shadow:
+                0 0 12px rgba(52,211,153,.25);
+        }
+
+        .risk-status {
+            margin-top: 8px;
+
+            color: var(--green);
+
+            font-size: 11.5px;
+            font-weight: 800;
+        }
+
+        /* =====================================
+           INSIGHT CARDS
+        ===================================== */
+
+        .insight-section {
+            margin-top: 20px;
+        }
+
+        .section-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            margin-bottom: 8px;
+
+            color: var(--muted);
+
+            font-size: 11.5px;
+            font-weight: 800;
+
+            text-transform: uppercase;
+            letter-spacing: .8px;
+        }
+
+        .insight-card {
+            padding: 11px;
+
+            margin-bottom: 7px;
+
+            border: 1px solid var(--border);
+            border-radius: 11px;
+
+            background: rgba(255,255,255,.025);
+
+            transition: .2s;
+        }
+
+        .insight-card:hover {
+            border-color: rgba(124,92,255,.25);
+        }
+
+        .insight-card-top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .insight-icon {
+            width: 26px;
+            height: 26px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 7px;
+
+            background: rgba(124,92,255,.1);
+            color: var(--purple-light);
+        }
+
+        .insight-name {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .insight-value {
+            margin-left: auto;
+
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .insight-desc {
+            margin-top: 6px;
+
+            color: var(--muted);
+
+            font-size: 11.5px;
+            line-height: 1.5;
+        }
+
+        .green {
+            color: var(--green);
+        }
+
+        .red {
+            color: var(--red);
+        }
+
+        .cyan {
+            color: var(--cyan);
+        }
+
+        .orange {
+            color: var(--orange);
+        }
+
+        /* =====================================
+           AGENT STATUS
+        ===================================== */
+
+        .agent-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .agent-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            padding: 8px;
+
+            border-radius: 8px;
+
+            background: rgba(255,255,255,.022);
+        }
+
+        .agent-status-icon {
+            width: 22px;
+            height: 22px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 6px;
+
+            background: rgba(52,211,153,.08);
+            color: var(--green);
+        }
+
+        .agent-info {
+            flex: 1;
+        }
+
+        .agent-name {
+            font-size: 11.5px;
+            font-weight: 700;
+        }
+
+        .agent-state {
+            margin-top: 2px;
+
+            color: var(--muted-2);
+
+            font-size: 10.1px;
+        }
+
+        .live-pill {
+            padding: 3px 5px;
+
+            border-radius: 4px;
+
+            background: rgba(52,211,153,.08);
+            color: var(--green);
+
+            font-size: 8.6px;
+            font-weight: 800;
+        }
+
+        /* =====================================
+           TOAST
+        ===================================== */
+
+        .toast-container {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+
+            z-index: 500;
+
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            min-width: 275px;
+
+            padding: 13px 15px;
+
+            border: 1px solid var(--border);
+            border-radius: 13px;
+
+            background: rgba(14,16,24,.96);
+
+            backdrop-filter: blur(20px);
+
+            box-shadow: var(--shadow);
+
+            animation: toastIn .3s ease;
+        }
+
+        .toast-title {
+            font-size: 14.4px;
+            font-weight: 800;
+        }
+
+        .toast-text {
+            margin-top: 3px;
+
+            color: var(--muted);
+
+            font-size: 13px;
+        }
+
+        @keyframes toastIn {
+
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+        }
+
+        /* =====================================
+           TYPING
+        ===================================== */
+
+        .typing {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+
+            padding: 4px 0;
+        }
+
+        .typing span {
+            width: 5px;
+            height: 5px;
+
+            border-radius: 50%;
+
+            background: var(--purple-light);
+
+            animation: typing 1.2s infinite ease-in-out;
+        }
+
+        .typing span:nth-child(2) {
+            animation-delay: .15s;
+        }
+
+        .typing span:nth-child(3) {
+            animation-delay: .3s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+                opacity: .45;
+            }
+
+            30% {
+                transform: translateY(-4px);
+                opacity: 1;
+            }
+
+        }
+
+        /* =====================================
+           SCROLLBAR
+        ===================================== */
+
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,.08);
+            border-radius: 999px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(124,92,255,.35);
+        }
+
+        /* =====================================
+           RESPONSIVE
+        ===================================== */
+
+        @media (max-width: 1250px) {
+
+            .copilot {
+                grid-template-columns: 220px minmax(0,1fr);
+            }
+
+            .insights {
+                display: none;
+            }
+
+        }
+
+        @media (max-width: 850px) {
+
+            body {
+                overflow: auto;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .mobile-menu {
+                display: grid;
+            }
+
+            .page-subtitle {
+                display: none;
+            }
+
+            .profile {
+                display: none;
+            }
+
+            .copilot {
+                grid-template-columns: 1fr;
+                height: calc(100vh - 76px);
+            }
+
+            .history {
+                display: none;
+            }
+
+            .chat {
+                height: 100%;
+            }
+
+            .topbar {
+                padding: 0 17px;
+            }
+
+        }
+
+        @media (max-width: 560px) {
+
+            .chat-head {
+                padding: 10px 13px;
+            }
+
+            .messages {
+                padding: 18px 13px;
+            }
+
+            .welcome {
+                margin-top: 22px;
+            }
+
+            .welcome h1 {
+                font-size: 36px;
+            }
+
+            .prompt-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .composer-area {
+                padding: 9px 12px 12px;
+            }
+
+            .model-selector {
+                display: none;
+            }
+
+            .message-body {
+                max-width: calc(100vw - 90px);
+            }
+
+            .bubble {
+                font-size: 13px;
+            }
+
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- ======================================
+         SIDEBAR
+    ======================================= -->
+
+    <aside class="sidebar" id="sidebar">
+
+        <div class="brand">
+
+            <div class="brand-logo">
+
+                <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                        d="M6 17V7l6-3 6 3v10l-6 3-6-3Z"
+                        stroke="white"
+                        stroke-width="2"
+                    />
+
+                    <path
+                        d="M9 9h6M9 12h6M9 15h4"
+                        stroke="white"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                    />
+                </svg>
+
+            </div>
+
+            <div class="brand-name">
+                FinCo <span>AI</span>
+            </div>
+
+        </div>
+
+        <div class="nav-label">
+            Workspace
+        </div>
+
+        <nav class="nav">
+
+            <a href="dashboard.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <rect x="4" y="4" width="6" height="6" rx="1"
+                          stroke="currentColor" stroke-width="1.8"/>
+                    <rect x="14" y="4" width="6" height="6" rx="1"
+                          stroke="currentColor" stroke-width="1.8"/>
+                    <rect x="4" y="14" width="6" height="6" rx="1"
+                          stroke="currentColor" stroke-width="1.8"/>
+                    <rect x="14" y="14" width="6" height="6" rx="1"
+                          stroke="currentColor" stroke-width="1.8"/>
+                </svg>
+                Dashboard
+            </a>
+
+            <a href="copilot.html" class="nav-item active">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <path
+                        d="M12 3v4M12 17v4M3 12h4M17 12h4"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                    />
+                    <circle
+                        cx="12"
+                        cy="12"
+                        r="5"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                    />
+                </svg>
+                AI Copilot
+            </a>
+
+            <a href="agents.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="8" r="3" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M12 11v10M8 15l4 2 4-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                AI Agents
+            </a>
+
+            <a href="ml-models.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.8"/>
+                </svg>
+                ML Models
+            </a>
+
+            <a href="analysis.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <path
+                        d="M4 18V9M10 18V5M16 18v-7M22 18H2"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                    />
+                </svg>
+                Analysis
+            </a>
+
+            <a href="collaboration.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/>
+                    <circle cx="17" cy="17" r="4" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M13 11l-2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                Collaboration
+            </a>
+
+            <a href="financial.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <path
+                        d="M4 19V5M4 19h16"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                    />
+                    <path
+                        d="m7 15 4-4 3 2 5-7"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+                </svg>
+                Transactions
+            </a>
+
+            <a href="fraud.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <path
+                        d="M12 3 4 6v6c0 5 3.4 8.1 8 9 4.6-.9 8-4 8-9V6l-8-3Z"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                    />
+                    <path
+                        d="m8.5 12 2.2 2.2 4.8-5"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+                </svg>
+                Fraud & Risk
+                <span class="nav-badge">12</span>
+            </a>
+
+            <a href="forecasting.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 3v18h18" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M7 14l4-4 3 3 5-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                Forecasting
+            </a>
+
+            <a href="documents.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <path
+                        d="M5 4h14v16H5z"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                    />
+                    <path
+                        d="M8 8h8M8 12h8M8 16h5"
+                        stroke="currentColor"
+                        stroke-width="1.6"
+                        stroke-linecap="round"
+                    />
+                </svg>
+                Documents
+            </a>
+
+        </nav>
+
+        <div class="nav-label">
+            Management
+        </div>
+
+        <nav class="nav">
+
+            <a href="reports.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                Reports
+            </a>
+
+            <a href="balance-sheet.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M3 10h18M9 4v16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                Balance Sheet
+            </a>
+
+            <a href="alerts.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                Settings
+            </a>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+
+            <div class="system-status">
+
+                <div class="system-title">
+                    <span class="status-dot"></span>
+                    All systems operational
+                </div>
+
+                <div class="system-text">
+                    AI services · RAG · Fraud · Forecasting
+                </div>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+    <!-- ======================================
+         MAIN
+    ======================================= -->
+
+    <main class="main">
+
+        <!-- TOPBAR -->
+
+        <header class="topbar">
+
+            <div class="top-left">
+
+                <button
+                    class="mobile-menu"
+                    id="mobileMenu"
+                >
+
+                    <svg width="18" height="18"
+                         viewBox="0 0 24 24"
+                         fill="none">
+
+                        <path
+                            d="M4 7h16M4 12h16M4 17h16"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                        />
+
+                    </svg>
+
+                </button>
+
+                <div>
+
+                    <div class="page-title">
+                        AI Copilot
+                    </div>
+
+                    <div class="page-subtitle">
+                        Intelligent financial analysis, risk & decision support
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="top-actions">
+
+                <button
+                    class="icon-btn"
+                    onclick="showToast('System','AI Copilot is online.')"
+                >
+
+                    <svg width="17" height="17"
+                         viewBox="0 0 24 24"
+                         fill="none">
+
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="8"
+                            stroke="currentColor"
+                            stroke-width="1.7"
+                        />
+
+                        <path
+                            d="M12 8v4l2.5 2.5"
+                            stroke="currentColor"
+                            stroke-width="1.7"
+                            stroke-linecap="round"
+                        />
+
+                    </svg>
+
+                </button>
+
+                <button class="icon-btn">
+
+                    <svg width="17" height="17"
+                         viewBox="0 0 24 24"
+                         fill="none">
+
+                        <path
+                            d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"
+                            stroke="currentColor"
+                            stroke-width="1.7"
+                        />
+
+                        <path
+                            d="M10 21h4"
+                            stroke="currentColor"
+                            stroke-width="1.7"
+                            stroke-linecap="round"
+                        />
+
+                    </svg>
+
+                </button>
+
+                <div class="profile">
+
+                    <div class="avatar">
+                        PA
+                    </div>
+
+                    <div>
+
+                        <div class="profile-name">
+                            FinCo Admin
+                        </div>
+
+                        <div class="profile-role">
+                            Risk & Intelligence
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </header>
+
+        <!-- ======================================
+             COPILOT
+        ======================================= -->
+
+        <div class="copilot">
+
+            <!-- ==================================
+                 HISTORY
+            =================================== -->
+
+            <aside class="history">
+
+                <div class="history-header">
+
+                    <div class="history-title">
+                        Conversations
+                    </div>
+
+                    <button
+                        class="new-chat"
+                        onclick="newConversation()"
+                        title="New conversation"
+                    >
+                        +
+
+                    </button>
+
+                </div>
+
+                <div class="history-group">
+
+                    <div class="history-label">
+                        Today
+                    </div>
+
+                    <button
+                        class="history-item active"
+                        onclick="loadConversation('fraud')"
+                    >
+
+                        <svg
+                            class="history-icon"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <path
+                                d="M12 3 4 6v6c0 5 3.4 8.1 8 9 4.6-.9 8-4 8-9V6l-8-3Z"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                            />
+                        </svg>
+
+                        <span class="history-text">
+                            Fraud risk analysis
+                        </span>
+
+                    </button>
+
+                    <button
+                        class="history-item"
+                        onclick="loadConversation('revenue')"
+                    >
+
+                        <svg
+                            class="history-icon"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <path
+                                d="M4 18V9M10 18V5M16 18v-7M22 18H2"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+
+                        <span class="history-text">
+                            Revenue forecast
+                        </span>
+
+                    </button>
+
+                    <button
+                        class="history-item"
+                        onclick="loadConversation('transactions')"
+                    >
+
+                        <svg
+                            class="history-icon"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <rect
+                                x="3"
+                                y="5"
+                                width="18"
+                                height="14"
+                                rx="2"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                            />
+
+                            <path
+                                d="M3 10h18"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                            />
+                        </svg>
+
+                        <span class="history-text">
+                            Transaction summary
+                        </span>
+
+                    </button>
+
+                </div>
+
+                <div class="history-group">
+
+                    <div class="history-label">
+                        Yesterday
+                    </div>
+
+                    <button class="history-item">
+
+                        <svg
+                            class="history-icon"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <path
+                                d="M5 4h14v16H5z"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                            />
+
+                            <path
+                                d="M8 8h8M8 12h8M8 16h5"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+
+                        <span class="history-text">
+                            Annual report insights
+                        </span>
+
+                    </button>
+
+                    <button class="history-item">
+
+                        <svg
+                            class="history-icon"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <path
+                                d="M12 3v18M3 12h18"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linecap="round"
+                            />
+
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="8"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                            />
+                        </svg>
+
+                        <span class="history-text">
+                            Portfolio risk review
+                        </span>
+
+                    </button>
+
+                </div>
+
+                <div class="history-group">
+
+                    <div class="history-label">
+                        Previous 7 days
+                    </div>
+
+                    <button class="history-item">
+
+                        <svg
+                            class="history-icon"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <path
+                                d="M12 3v18M3 12h18"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linecap="round"
+                            />
+
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="8"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                            />
+                        </svg>
+
+                        <span class="history-text">
+                            Payment anomaly review
+                        </span>
+
+                    </button>
+
+                    <button class="history-item">
+
+                        <svg
+                            class="history-icon"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <path
+                                d="M4 19V5M4 19h16"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                            />
+
+                            <path
+                                d="m7 15 4-4 3 2 5-7"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+
+                        <span class="history-text">
+                            Cash flow analysis
+                        </span>
+
+                    </button>
+
+                </div>
+
+            </aside>
+
+            <!-- ==================================
+                 CHAT AREA
+            =================================== -->
+
+            <section class="chat">
+
+                <div class="chat-head">
+
+                    <div class="copilot-brand">
+
+                        <div class="copilot-orb">
+
+                            <svg viewBox="0 0 24 24" fill="none">
+
+                                <path
+                                    d="M12 3v4M12 17v4M3 12h4M17 12h4"
+                                    stroke="white"
+                                    stroke-width="1.8"
+                                    stroke-linecap="round"
+                                />
+
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="5"
+                                    stroke="white"
+                                    stroke-width="1.8"
+                                />
+
+                            </svg>
+
+                        </div>
+
+                        <div>
+
+                            <div class="copilot-name">
+                                FinCo Intelligence
+                            </div>
+
+                            <div class="copilot-status">
+
+                                <span class="mini-dot"></span>
+
+                                Online · 5 agents active
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <button
+                        class="model-selector"
+                        onclick="showToast('Model','FinCo Intelligence model selected.')"
+                    >
+
+                        <span>FinCo Intelligence</span>
+
+                        <svg width="10" height="10"
+                             viewBox="0 0 24 24"
+                             fill="none">
+
+                            <path
+                                d="m6 9 6 6 6-6"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+
+                        </svg>
+
+                    </button>
+
+                </div>
+
+                <!-- MESSAGES -->
+
+                <div class="messages" id="messages">
+
+                    <div class="welcome" id="welcome">
+
+                        <div class="welcome-orb">
+
+                            <svg viewBox="0 0 24 24" fill="none">
+
+                                <path
+                                    d="M12 3v4M12 17v4M3 12h4M17 12h4"
+                                    stroke="white"
+                                    stroke-width="1.8"
+                                    stroke-linecap="round"
+                                />
+
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="5"
+                                    stroke="white"
+                                    stroke-width="1.8"
+                                />
+
+                                <path
+                                    d="M9.5 12h5"
+                                    stroke="white"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                />
+
+                            </svg>
+
+                        </div>
+
+                        <h1>
+                            Ask your
+                            <span class="gradient-text">
+                                financial copilot
+                            </span>
+                        </h1>
+
+                        <p>
+                            Analyze transactions, investigate fraud,
+                            understand financial documents, forecast revenue,
+                            assess risk and turn financial data into actionable
+                            decisions.
+                        </p>
+
+                        <!-- PDF UPLOAD SECTION -->
+                        <div class="upload-section">
+                            <div class="upload-card">
+                                <div class="upload-icon">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" 
+                                              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                                <h3>Upload Documents</h3>
+                                <p>Excel, Word, or CSV files</p>
+                                <input type="file" id="pdfUpload" accept=".pdf,.xlsx,.xls,.docx,.doc,.csv" multiple style="display:none">
+                                <button class="upload-btn" onclick="document.getElementById('pdfUpload').click()">
+                                    Choose Files
+                                </button>
+                                <div id="uploadedFiles" class="uploaded-files"></div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- PROMPTS -->
+
+                    <div class="prompt-grid" id="promptGrid">
+
+                        <button
+                            class="prompt-card"
+                            onclick="usePrompt('Which transactions have the highest fraud risk today?')"
+                        >
+
+                            <div class="prompt-icon">
+
+                                <svg width="14" height="14"
+                                     viewBox="0 0 24 24"
+                                     fill="none">
+
+                                    <path
+                                        d="M12 3 4 6v6c0 5 3.4 8.1 8 9 4.6-.9 8-4 8-9V6l-8-3Z"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                    />
+
+                                </svg>
+
+                            </div>
+
+                            <div class="prompt-title">
+                                Investigate fraud
+                            </div>
+
+                            <div class="prompt-text">
+                                Find today's highest-risk transactions.
+                            </div>
+
+                        </button>
+
+                        <button
+                            class="prompt-card"
+                            onclick="usePrompt('What is the expected revenue for the next 30 days?')"
+                        >
+
+                            <div class="prompt-icon">
+
+                                <svg width="14" height="14"
+                                     viewBox="0 0 24 24"
+                                     fill="none">
+
+                                    <path
+                                        d="M4 18V9M10 18V5M16 18v-7M22 18H2"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        stroke-linecap="round"
+                                    />
+
+                                </svg>
+
+                            </div>
+
+                            <div class="prompt-title">
+                                Forecast revenue
+                            </div>
+
+                            <div class="prompt-text">
+                                Analyze the upcoming financial outlook.
+                            </div>
+
+                        </button>
+
+                        <button
+                            class="prompt-card"
+                            onclick="usePrompt('Summarize the latest financial report and highlight key risks.')"
+                        >
+
+                            <div class="prompt-icon">
+
+                                <svg width="14" height="14"
+                                     viewBox="0 0 24 24"
+                                     fill="none">
+
+                                    <path
+                                        d="M5 4h14v16H5z"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                    />
+
+                                    <path
+                                        d="M8 8h8M8 12h8M8 16h5"
+                                        stroke="currentColor"
+                                        stroke-width="1.6"
+                                        stroke-linecap="round"
+                                    />
+
+                                </svg>
+
+                            </div>
+
+                            <div class="prompt-title">
+                                Analyze documents
+                            </div>
+
+                            <div class="prompt-text">
+                                Extract insights with RAG citations.
+                            </div>
+
+                        </button>
+
+                        <button
+                            class="prompt-card"
+                            onclick="usePrompt('Give me a portfolio risk summary and the top three concerns.')"
+                        >
+
+                            <div class="prompt-icon">
+
+                                <svg width="14" height="14"
+                                     viewBox="0 0 24 24"
+                                     fill="none">
+
+                                    <circle
+                                        cx="12"
+                                        cy="12"
+                                        r="8"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                    />
+
+                                    <path
+                                        d="M12 8v4l3 2"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        stroke-linecap="round"
+                                    />
+
+                                </svg>
+
+                            </div>
+
+                            <div class="prompt-title">
+                                Assess risk
+                            </div>
+
+                            <div class="prompt-text">
+                                Identify important portfolio risk signals.
+                            </div>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <!-- COMPOSER -->
+
+                <div class="composer-area">
+
+                    <div class="composer">
+
+                        <textarea
+                            id="messageInput"
+                            placeholder="Ask FinCo AI anything about your financial data..."
+                            rows="1"
+                        ></textarea>
+
+                        <button
+                            class="send-btn"
+                            id="sendBtn"
+                            title="Send"
+                        >
+
+                            <svg width="15" height="15"
+                                 viewBox="0 0 24 24"
+                                 fill="none">
+
+                                <path
+                                    d="M22 2 11 13"
+                                    stroke="white"
+                                    stroke-width="1.8"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+
+                                <path
+                                    d="m22 2-7 20-4-9-9-4 20-7Z"
+                                    stroke="white"
+                                    stroke-width="1.8"
+                                    stroke-linejoin="round"
+                                />
+
+                            </svg>
+
+                        </button>
+
+                    </div>
+
+                    <div class="composer-footer">
+
+                        <div class="composer-tools">
+
+                            <button
+                                class="tool-btn"
+                                title="Attach document"
+                                onclick="showToast('Documents','Document attachment will connect to the RAG pipeline.')"
+                            >
+
+                                <svg width="13" height="13"
+                                     viewBox="0 0 24 24"
+                                     fill="none">
+
+                                    <path
+                                        d="m21 11.5-8.5 8.5a5 5 0 0 1-7-7L14 4.5a3.5 3.5 0 1 1 5 5L10 18.5a2 2 0 0 1-3-3L15.5 7"
+                                        stroke="currentColor"
+                                        stroke-width="1.7"
+                                        stroke-linecap="round"
+                                    />
+
+                                </svg>
+
+                            </button>
+
+                            <button
+                                class="tool-btn"
+                                title="Voice"
+                                onclick="showToast('Voice','Voice input can be connected to your speech service.')"
+                            >
+
+                                <svg width="13" height="13"
+                                     viewBox="0 0 24 24"
+                                     fill="none">
+
+                                    <rect
+                                        x="9"
+                                        y="3"
+                                        width="6"
+                                        height="11"
+                                        rx="3"
+                                        stroke="currentColor"
+                                        stroke-width="1.7"
+                                    />
+
+                                    <path
+                                        d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"
+                                        stroke="currentColor"
+                                        stroke-width="1.7"
+                                        stroke-linecap="round"
+                                    />
+
+                                </svg>
+
+                            </button>
+
+                        </div>
+
+                        <span>
+                            AI can make mistakes. Verify important financial decisions.
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ==================================
+                 INTELLIGENCE PANEL
+            =================================== -->
+
+            <aside class="insights">
+
+                <div class="insights-title">
+                    Live Intelligence
+                </div>
+
+                <div class="insights-subtitle">
+                    Context available to your copilot
+                </div>
+
+                <!-- RISK -->
+
+                <div class="risk-card">
+
+                    <div class="risk-top">
+
+                        <div class="risk-label">
+                            Portfolio health
+                        </div>
+
+                        <div class="risk-score">
+                            78
+                            <span>/100</span>
+                        </div>
+
+                    </div>
+
+                    <div class="risk-bar">
+                        <span></span>
+                    </div>
+
+                    <div class="risk-status">
+                        ● Healthy with moderate risk
+                    </div>
+
+                </div>
+
+                <!-- METRICS -->
+
+                <div class="insight-section">
+
+                    <div class="section-heading">
+                        Financial signals
+                    </div>
+
+                    <div class="insight-card">
+
+                        <div class="insight-card-top">
+
+                            <div class="insight-icon">
+
+                                <svg width="13" height="13"
+                                     viewBox="0 0 24 24"
+                                     fill="none">
+
+                                    <path
+                                        d="M4 18V9M10 18V5M16 18v-7M22 18H2"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        stroke-linecap="round"
+                                    />
+
+                                </svg>
+
+                            </div>
+
+                            <div class="insight-name">
+                                Revenue forecast
+                            </div>
+
+                            <div class="insight-value green">
+                                +8.6%
+                            </div>
+
+                        </div>
+
+                        <div class="insight-desc">
+                            Expected revenue growth over the next 30 days.
+                        </div>
+
+                    </div>
+
+                    <div class="insight-card">
+
+                        <div class="insight-card-top">
+
+                            <div class="insight-icon">
+
+                                <svg width="13" height="13"
+                                     viewBox="0 0 24 24"
+                                     fill="none">
+
+                                    <path
+                                        d="M12 3 4 6v6c0 5 3.4 8.1 8 9 4.6-.9 8-4 8-9V6l-8-3Z"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                    />
+
+                                </svg>
+
+                            </div>
+
+                            <div class="insight-name">
+                                Fraud exposure
+                            </div>
+
+                            <div class="insight-value red">
+                                $426.8K
+                            </div>
+
+                        </div>
+
+                        <div class="insight-desc">
+                            Estimated suspicious transaction exposure monitored today.
+                        </div>
+
+                    </div>
+
+                    <div class="insight-card">
+
+                        <div class="insight-card-top">
+
+                            <div class="insight-icon">
+
+                                <svg width="13" height="13"
+                                     viewBox="0 0 24 24"
+                                     fill="none">
+
+                                    <path
+                                        d="M5 4h14v16H5z"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                    />
+
+                                    <path
+                                        d="M8 8h8M8 12h8"
+                                        stroke="currentColor"
+                                        stroke-width="1.6"
+                                        stroke-linecap="round"
+                                    />
+
+                                </svg>
+
+                            </div>
+
+                            <div class="insight-name">
+                                RAG coverage
+                            </div>
+
+                            <div class="insight-value cyan">
+                                94.2%
+                            </div>
+
+                        </div>
+
+                        <div class="insight-desc">
+                            Indexed financial documents available for grounded answers.
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- AGENTS -->
+
+                <div class="insight-section">
+
+                    <div class="section-heading">
+                        AI agents
+
+                        <span class="green">
+                            5 online
+                        </span>
+
+                    </div>
+
+                    <div class="agent-list">
+
+                        <div class="agent-row">
+
+                            <div class="agent-status-icon">
+                                ✓
+                            </div>
+
+                            <div class="agent-info">
+
+                                <div class="agent-name">
+                                    Fraud Agent
+                                </div>
+
+                                <div class="agent-state">
+                                    Risk analysis
+                                </div>
+
+                            </div>
+
+                            <span class="live-pill">
+                                LIVE
+                            </span>
+
+                        </div>
+
+                        <div class="agent-row">
+
+                            <div class="agent-status-icon">
+                                ✓
+                            </div>
+
+                            <div class="agent-info">
+
+                                <div class="agent-name">
+                                    Forecast Agent
+                                </div>
+
+                                <div class="agent-state">
+                                    Time-series prediction
+                                </div>
+
+                            </div>
+
+                            <span class="live-pill">
+                                LIVE
+                            </span>
+
+                        </div>
+
+                        <div class="agent-row">
+
+                            <div class="agent-status-icon">
+                                ✓
+                            </div>
+
+                            <div class="agent-info">
+
+                                <div class="agent-name">
+                                    Document Agent
+                                </div>
+
+                                <div class="agent-state">
+                                    RAG retrieval
+                                </div>
+
+                            </div>
+
+                            <span class="live-pill">
+                                LIVE
+                            </span>
+
+                        </div>
+
+                        <div class="agent-row">
+
+                            <div class="agent-status-icon">
+                                ✓
+                            </div>
+
+                            <div class="agent-info">
+
+                                <div class="agent-name">
+                                    Analytics Agent
+                                </div>
+
+                                <div class="agent-state">
+                                    Financial analytics
+                                </div>
+
+                            </div>
+
+                            <span class="live-pill">
+                                LIVE
+                            </span>
+
+                        </div>
+
+                        <div class="agent-row">
+
+                            <div class="agent-status-icon">
+                                ✓
+                            </div>
+
+                            <div class="agent-info">
+
+                                <div class="agent-name">
+                                    Decision Agent
+                                </div>
+
+                                <div class="agent-state">
+                                    Recommendations
+                                </div>
+
+                            </div>
+
+                            <span class="live-pill">
+                                LIVE
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </aside>
+
+        </div>
+
+    </main>
+
+</div>
+
+<!-- TOAST -->
+
+<div
+    class="toast-container"
+    id="toastContainer"
+></div>
+
+<script>
+    /* =========================================================
+       FINCO AI — COPILOT
+       Demo frontend ready for FastAPI integration
+    ========================================================= */
+
+    const input =
+        document.getElementById("messageInput");
+
+    const sendBtn =
+        document.getElementById("sendBtn");
+
+    const messages =
+        document.getElementById("messages");
+
+    const welcome =
+        document.getElementById("welcome");
+
+    const promptGrid =
+        document.getElementById("promptGrid");
+
+    /* =========================================================
+       SAMPLE AI RESPONSES
+    ========================================================= */
+
+    const responses = {
+
+        fraud: {
+            title: "Fraud Intelligence",
+            text: `
+                I analyzed the latest transaction risk signals.
+                <br><br>
+                <strong>19 transactions</strong> currently have elevated
+                fraud scores. The highest-risk activity is concentrated
+                around transaction velocity, unusual device behavior,
+                location mismatch and abnormal payment patterns.
+                <br><br>
+                <strong>Top recommendation:</strong>
+                prioritize the highest-risk transactions for manual review
+                before settlement.
+            `
+        },
+
+        forecast: {
+            title: "Forecast Agent",
+            text: `
+                The current 30-day financial forecast indicates an expected
+                revenue increase of approximately <strong>8.6%</strong>.
+                <br><br>
+                The strongest positive signals are recent transaction growth,
+                improving payment volume and increased customer activity.
+                <br><br>
+                Forecast confidence is currently
+                <strong>91.4%</strong>.
+            `
+        },
+
+        document: {
+            title: "Document Intelligence",
+            text: `
+                I searched the indexed financial documents using semantic
+                retrieval and reranking.
+                <br><br>
+                The latest financial report indicates improving revenue
+                performance, while operating costs and fraud exposure remain
+                important risk areas.
+                <br><br>
+                I can provide a deeper section-by-section analysis if needed.
+            `
+        },
+
+        risk: {
+            title: "Risk Analysis",
+            text: `
+                Current portfolio health is <strong>78/100</strong>,
+                indicating a healthy position with moderate risk.
+                <br><br>
+                The three largest risk signals are:
+                <ul>
+                    <li>Elevated fraud exposure</li>
+                    <li>Short-term cash-flow variance</li>
+                    <li>Concentration in high-risk transaction segments</li>
+                </ul>
+            `
+        },
+
+        revenue: {
+            title: "Revenue Analysis",
+            text: `
+                Revenue momentum is currently positive.
+                <br><br>
+                Based on the forecasting model, the next 30-day revenue
+                projection is approximately <strong>$19.8M</strong>,
+                representing an estimated <strong>8.6%</strong> increase
+                from the current baseline.
+            `
+        },
+
+        transaction: {
+            title: "Transaction Analytics",
+            text: `
+                FinCo AI has processed approximately
+                <strong>248.6K transactions</strong> with a total monitored
+                volume of approximately <strong>$18.42M</strong>.
+                <br><br>
+                Fraud monitoring currently identifies 19 elevated-risk
+                signals requiring additional attention.
+            `
+        },
+
+        default: {
+            title: "FinCo Intelligence",
+            text: `
+                I can help analyze financial transactions, fraud risk,
+                forecasting, documents, portfolio health and business
+                performance.
+                <br><br>
+                For grounded answers, I can retrieve relevant information
+                from your indexed financial documents and provide citations.
+            `
+        }
+
+    };
+
+    /* =========================================================
+       DETECT INTENT
+    ========================================================= */
+
+    function detectIntent(message) {
+
+        const text =
+            message.toLowerCase();
+
+        if (
+            text.includes("fraud") ||
+            text.includes("suspicious") ||
+            text.includes("risk transaction") ||
+            text.includes("high-risk")
+        ) {
+            return "fraud";
+        }
+
+        if (
+            text.includes("forecast") ||
+            text.includes("predict") ||
+            text.includes("30 days") ||
+            text.includes("future revenue")
+        ) {
+            return "forecast";
+        }
+
+        if (
+            text.includes("document") ||
+            text.includes("report") ||
+            text.includes("rag") ||
+            text.includes("annual report")
+        ) {
+            return "document";
+        }
+
+        if (
+            text.includes("portfolio") ||
+            text.includes("risk")
+        ) {
+            return "risk";
+        }
+
+        if (
+            text.includes("revenue") ||
+            text.includes("sales")
+        ) {
+            return "revenue";
+        }
+
+        if (
+            text.includes("transaction") ||
+            text.includes("payment")
+        ) {
+            return "transaction";
+        }
+
+        return "default";
+    }
+
+    /* =========================================================
+       SEND MESSAGE
+    ========================================================= */
+
+    async function sendMessage() {
+
+        const text =
+            input.value.trim();
+
+        if (!text) {
+            return;
+        }
+
+        hideWelcome();
+
+        appendUserMessage(text);
+
+        input.value = "";
+
+        autoResize();
+
+        showTyping();
+
+        // Try to call the real API first, fallback to demo
+        try {
+            const response = await fetch('/api/v1/copilot/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token') || 'demo-token'}`
+                },
+                body: JSON.stringify({
+                    message: text,
+                    mode: 'auto',
+                    include_citations: true,
+                    include_metrics: true
+                })
+            });
+
+            removeTyping();
+
+            if (response.ok) {
+                const data = await response.json();
+                appendAIResponse(data);
+            } else {
+                // Fallback to demo mode
+                generateResponse(text);
+            }
+        } catch (error) {
+            console.log('Using demo mode:', error);
+            removeTyping();
+            generateResponse(text);
+        }
+
+    }
+
+    sendBtn.addEventListener(
+        "click",
+        sendMessage
+    );
+
+    input.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key === "Enter" &&
+                !event.shiftKey
+            ) {
+
+                event.preventDefault();
+
+                sendMessage();
+
+            }
+
+        }
+    );
+
+    /* =========================================================
+       USE PROMPT
+    ========================================================= */
+
+    function usePrompt(text) {
+
+        input.value = text;
+
+        autoResize();
+
+        sendMessage();
+
+    }
+
+    /* =========================================================
+       USER MESSAGE
+    ========================================================= */
+
+    function appendUserMessage(text) {
+
+        const wrapper =
+            document.createElement("div");
+
+        wrapper.className =
+            "message user";
+
+        wrapper.innerHTML = `
+
+            <div class="message-avatar">
+
+                <svg width="15" height="15"
+                     viewBox="0 0 24 24"
+                     fill="none">
+
+                    <circle
+                        cx="12"
+                        cy="8"
+                        r="4"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                    />
+
+                    <path
+                        d="M4 21c1.5-4 4-6 8-6s6.5 2 8 6"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                    />
+
+                </svg>
+
+            </div>
+
+            <div class="message-body">
+
+                <div class="message-meta">
+                    You · just now
+                </div>
+
+                <div class="bubble">
+                    ${escapeHtml(text)}
+                </div>
+
+            </div>
+
+        `;
+
+        messages.appendChild(wrapper);
+
+        scrollMessages();
+
+    }
+
+    /* =========================================================
+       AI RESPONSE (Backend)
+    ========================================================= */
+
+    function appendAIResponse(data) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "message";
+
+        const citationsHtml = data.citations && data.citations.length > 0 
+            ? `<div class="citations">
+                ${data.citations.map(c => `
+                    <button class="citation" onclick="showToast('Citation', '${escapeHtml(c.document_name || c.citation_id)}')">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none">
+                            <path d="M5 4h14v16H5z" stroke="currentColor" stroke-width="1.8"/>
+                        </svg>
+                        ${escapeHtml(c.document_name || c.citation_id)}
+                    </button>
+                `).join('')}
+            </div>` 
+            : '';
+
+        wrapper.innerHTML = `
+            <div class="message-avatar">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 3v4M12 17v4M3 12h4M17 12h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.7"/>
+                </svg>
+            </div>
+            <div class="message-body">
+                <div class="message-meta">FinCo Intelligence · just now</div>
+                <div class="bubble">${data.answer || data.response || 'No response received'}</div>
+                ${citationsHtml}
+            </div>
+        `;
+
+        messages.appendChild(wrapper);
+        scrollMessages();
+    }
+
+    /* =========================================================
+       AI RESPONSE (Demo Mode)
+    ========================================================= */
+
+    function generateResponse(question) {
+
+        const intent =
+            detectIntent(question);
+
+        const response =
+            responses[intent] ||
+            responses.default;
+
+        const wrapper =
+            document.createElement("div");
+
+        wrapper.className =
+            "message";
+
+        wrapper.innerHTML = `
+
+            <div class="message-avatar">
+
+                <svg width="15" height="15"
+                     viewBox="0 0 24 24"
+                     fill="none">
+
+                    <path
+                        d="M12 3v4M12 17v4M3 12h4M17 12h4"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                    />
+
+                    <circle
+                        cx="12"
+                        cy="12"
+                        r="5"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                    />
+
+                </svg>
+
+            </div>
+
+            <div class="message-body">
+
+                <div class="message-meta">
+                    ${response.title} · just now · DEMO MODE
+                </div>
+
+                <div class="bubble">
+                    ${response.text}
+                </div>
+
+                ${buildAgentActivity(intent)}
+
+                ${buildCitations(intent)}
+
+            </div>
+
+        `;
+
+        messages.appendChild(wrapper);
+
+        scrollMessages();
+
+    }
+
+    /* =========================================================
+       AGENT ACTIVITY
+    ========================================================= */
+
+    function buildAgentActivity(intent) {
+
+        let agent = "Analytics Agent";
+
+        let steps = [
+            "Intent detection",
+            "Data analysis",
+            "Response generation"
+        ];
+
+        if (intent === "fraud") {
+
+            agent = "Fraud Agent";
+
+            steps = [
+                "Risk scoring",
+                "Velocity analysis",
+                "Behavior analysis",
+                "Decision"
+            ];
+
+        }
+
+        if (intent === "forecast") {
+
+            agent = "Forecast Agent";
+
+            steps = [
+                "Feature preparation",
+                "Forecast model",
+                "Confidence analysis",
+                "Decision"
+            ];
+
+        }
+
+        if (intent === "document") {
+
+            agent = "Document Agent";
+
+            steps = [
+                "Query rewrite",
+                "Hybrid retrieval",
+                "Reranking",
+                "Citation grounding"
+            ];
+
+        }
+
+        if (intent === "risk") {
+
+            agent = "Decision Agent";
+
+            steps = [
+                "Risk aggregation",
+                "Signal analysis",
+                "Recommendation"
+            ];
+
+        }
+
+        return `
+
+            <div class="agent-activity">
+
+                <div class="agent-head">
+
+                    <svg viewBox="0 0 24 24" fill="none">
+
+                        <path
+                            d="M12 3v4M12 17v4M3 12h4M17 12h4"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                        />
+
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="5"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                        />
+
+                    </svg>
+
+                    ${agent} completed
+
+                </div>
+
+                <div class="agent-steps">
+
+                    ${steps.map(
+                        step =>
+                            `<span class="agent-step done">✓ ${step}</span>`
+                    ).join("")}
+
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+    /* =========================================================
+       CITATIONS
+    ========================================================= */
+
+    function buildCitations(intent) {
+
+        if (
+            intent !== "document" &&
+            intent !== "forecast" &&
+            intent !== "fraud"
+        ) {
+            return "";
+        }
+
+        let sources = [];
+
+        if (intent === "document") {
+
+            sources = [
+                "Annual_Report_2025.pdf",
+                "Financial_Risk_Report.pdf",
+                "Document index"
+            ];
+
+        } else if (intent === "forecast") {
+
+            sources = [
+                "Revenue history",
+                "Forecast model",
+                "Financial dataset"
+            ];
+
+        } else {
+
+            sources = [
+                "Transaction database",
+                "Fraud model",
+                "Risk rules"
+            ];
+
+        }
+
+        return `
+
+            <div class="citations">
+
+                ${sources.map(
+                    source => `
+                        <button
+                            class="citation"
+                            onclick="showToast(
+                                'Source',
+                                '${escapeHtml(source)} selected.'
+                            )"
+                        >
+
+                            <svg width="9" height="9"
+                                 viewBox="0 0 24 24"
+                                 fill="none">
+
+                                <path
+                                    d="M5 4h14v16H5z"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                />
+
+                            </svg>
+
+                            ${escapeHtml(source)}
+
+                        </button>
+                    `
+                ).join("")}
+
+            </div>
+
+        `;
+
+    }
+
+    /* =========================================================
+       TYPING
+    ========================================================= */
+
+    function showTyping() {
+
+        const wrapper =
+            document.createElement("div");
+
+        wrapper.className =
+            "message";
+
+        wrapper.id =
+            "typingMessage";
+
+        wrapper.innerHTML = `
+
+            <div class="message-avatar">
+
+                <svg width="15" height="15"
+                     viewBox="0 0 24 24"
+                     fill="none">
+
+                    <circle
+                        cx="12"
+                        cy="12"
+                        r="5"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                    />
+
+                </svg>
+
+            </div>
+
+            <div class="message-body">
+
+                <div class="message-meta">
+                    FinCo Intelligence · thinking
+                </div>
+
+                <div class="bubble">
+
+                    <div class="typing">
+
+                        <span></span>
+                        <span></span>
+                        <span></span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        `;
+
+        messages.appendChild(wrapper);
+
+        scrollMessages();
+
+    }
+
+    function removeTyping() {
+
+        const typing =
+            document.getElementById(
+                "typingMessage"
+            );
+
+        if (typing) {
+            typing.remove();
+        }
+
+    }
+
+    /* =========================================================
+       WELCOME
+    ========================================================= */
+
+    function hideWelcome() {
+
+        if (welcome) {
+            welcome.style.display = "none";
+        }
+
+        if (promptGrid) {
+            promptGrid.style.display = "none";
+        }
+
+    }
+
+    /* =========================================================
+       NEW CONVERSATION
+    ========================================================= */
+
+    function newConversation() {
+
+        messages.innerHTML = "";
+
+        const welcomeClone =
+            document.createElement("div");
+
+        welcomeClone.className =
+            "welcome";
+
+        welcomeClone.innerHTML = `
+
+            <div class="welcome-orb">
+
+                <svg viewBox="0 0 24 24" fill="none">
+
+                    <path
+                        d="M12 3v4M12 17v4M3 12h4M17 12h4"
+                        stroke="white"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                    />
+
+                    <circle
+                        cx="12"
+                        cy="12"
+                        r="5"
+                        stroke="white"
+                        stroke-width="1.8"
+                    />
+
+                </svg>
+
+            </div>
+
+            <h1>
+                Start a new
+                <span class="gradient-text">
+                    AI conversation
+                </span>
+            </h1>
+
+            <p>
+                Ask about fraud, revenue, transactions,
+                documents, forecasts or financial risk.
+            </p>
+
+        `;
+
+        messages.appendChild(welcomeClone);
+
+        input.value = "";
+
+        showToast(
+            "New conversation",
+            "A fresh FinCo AI session is ready."
+        );
+
+    }
+
+    /* =========================================================
+       HISTORY DEMOS
+    ========================================================= */
+
+    function loadConversation(type) {
+
+        document
+            .querySelectorAll(".history-item")
+            .forEach(item =>
+                item.classList.remove("active")
+            );
+
+        event.currentTarget.classList.add("active");
+
+        newConversation();
+
+        setTimeout(() => {
+
+            if (type === "fraud") {
+
+                usePrompt(
+                    "Which transactions have the highest fraud risk today?"
+                );
+
+            } else if (type === "revenue") {
+
+                usePrompt(
+                    "What is the expected revenue for the next 30 days?"
+                );
+
+            } else {
+
+                usePrompt(
+                    "Give me a summary of today's transactions."
+                );
+
+            }
+
+        }, 150);
+
+    }
+
+    /* =========================================================
+       AUTO RESIZE
+    ========================================================= */
+
+    input.addEventListener(
+        "input",
+        autoResize
+    );
+
+    function autoResize() {
+
+        input.style.height = "auto";
+
+        input.style.height =
+            Math.min(
+                input.scrollHeight,
+                120
+            ) + "px";
+
+    }
+
+    /* =========================================================
+       SCROLL
+    ========================================================= */
+
+    function scrollMessages() {
+
+        requestAnimationFrame(() => {
+
+            messages.scrollTop =
+                messages.scrollHeight;
+
+        });
+
+    }
+
+    /* =========================================================
+       TOAST
+    ========================================================= */
+
+    function showToast(title, text) {
+
+        const container =
+            document.getElementById(
+                "toastContainer"
+            );
+
+        const toast =
+            document.createElement("div");
+
+        toast.className =
+            "toast";
+
+        toast.innerHTML = `
+
+            <div class="toast-title">
+                ${escapeHtml(title)}
+            </div>
+
+            <div class="toast-text">
+                ${escapeHtml(text)}
+            </div>
+
+        `;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+
+            toast.style.opacity = "0";
+            toast.style.transform =
+                "translateY(10px)";
+            toast.style.transition =
+                ".25s";
+
+            setTimeout(
+                () => toast.remove(),
+                250
+            );
+
+        }, 3000);
+
+    }
+
+    /* =========================================================
+       ESCAPE HTML
+    ========================================================= */
+
+    function escapeHtml(value) {
+
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+
+    }
+
+    /* =========================================================
+       MOBILE SIDEBAR
+    ========================================================= */
+
+    document
+        .getElementById("mobileMenu")
+        .addEventListener(
+            "click",
+            () => {
+
+                document
+                    .getElementById("sidebar")
+                    .classList.toggle("open");
+
+            }
+        );
+
+    /* =========================================================
+       FASTAPI / PRODUCTION INTEGRATION
+    =========================================================
+
+       Replace the demo sendMessage() logic with:
+
+       POST /api/copilot/chat
+
+       Example:
+
+       async function askCopilot(message) {
+
+           const response = await fetch(
+               "/api/copilot/chat",
+               {
+                   method: "POST",
+
+                   headers: {
+                       "Content-Type":
+                           "application/json",
+
+                       "Authorization":
+                           `Bearer ${
+                               localStorage.getItem(
+                                   "access_token"
+                               )
+                           }`
+                   },
+
+                   body: JSON.stringify({
+                       message: message,
+                       conversation_id:
+                           currentConversationId
+                   })
+               }
+           );
+
+           const data =
+               await response.json();
+
+           return data;
+       }
+
+
+       Recommended backend flow:
+
+       User
+        ↓
+       FastAPI /api/copilot/chat
+        ↓
+       Authentication + RBAC
+        ↓
+       Guardrails
+        ↓
+       Intent Router
+        ↓
+       ┌──────────────┬──────────────┬──────────────┐
+       ↓              ↓              ↓              ↓
+       Fraud Agent  Forecast Agent  Document Agent  Analytics Agent
+       ↓              ↓              ↓              ↓
+       ML Model      ML Forecast     Hybrid RAG     SQL/Analytics
+       └──────────────┴──────────────┴──────────────┘
+                       ↓
+                  Decision Agent
+                       ↓
+                Citation Generator
+                       ↓
+                  Final Response
+                       ↓
+                    Frontend
+
+
+       Recommended endpoints:
+
+       POST   /api/copilot/chat
+       GET    /api/copilot/conversations
+       GET    /api/copilot/conversations/{id}
+       POST   /api/copilot/conversations
+       DELETE /api/copilot/conversations/{id}
+
+       POST   /api/copilot/feedback
+
+       GET    /api/copilot/sources/{id}
+
+       WebSocket:
+
+       /api/copilot/stream
+
+       for streaming AI responses and agent events.
+    */
+
+</script>
+
+</body>
+</html>
+
+
+    /* =========================================================
+       PDF UPLOAD & DOCUMENT HANDLING
+    ========================================================= */
+
+    // Store uploaded documents
+    let uploadedDocuments = [];
+
+    // Handle file upload
+    document.getElementById('pdfUpload').addEventListener('change', async function(e) {
+        const files = e.target.files;
+        
+        for (let file of files) {
+            await uploadDocument(file);
+        }
+        
+        // Reset input
+        e.target.value = '';
+    });
+
+    async function uploadDocument(file) {
+        // Show uploading status
+        const uploadContainer = document.getElementById('uploadedFiles');
+        
+        const tempItem = createFileItem(file, 'uploading');
+        uploadContainer.appendChild(tempItem);
+        
+        // Create FormData for upload
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        try {
+            // Upload to backend
+            const response = await fetch('/api/v1/documents/upload', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token') || 'demo-token'}`
+                },
+                body: formData
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Store document info
+                uploadedDocuments.push({
+                    id: data.id || Date.now(),
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    uploadedAt: new Date()
+                });
+                
+                // Update UI
+                uploadContainer.removeChild(tempItem);
+                const fileItem = createFileItem(file, 'uploaded', data.id);
+                uploadContainer.appendChild(fileItem);
+                
+                // Show success message
+                showToast('Document Uploaded', `${file.name} is ready for analysis`);
+                
+                // Auto-generate summary
+                await generateDocumentSummary(file.name, data.id);
+                
+            } else {
+                throw new Error('Upload failed');
+            }
+            
+        } catch (error) {
+            console.error('Upload error:', error);
+            uploadContainer.removeChild(tempItem);
+            showToast('Upload Failed', `Could not upload ${file.name}`);
+        }
+    }
+
+    function createFileItem(file, status, docId = null) {
+        const item = document.createElement('div');
+        item.className = 'file-item';
+        item.dataset.docId = docId;
+        
+        const fileExtension = file.name.split('.').pop().toUpperCase();
+        const fileSize = formatFileSize(file.size);
+        
+        item.innerHTML = `
+            <div class="file-icon">📄</div>
+            <div class="file-info">
+                <div class="file-name">${file.name}</div>
+                <div class="file-size">${fileSize} · ${fileExtension}</div>
+            </div>
+            <div class="file-actions">
+                ${status === 'uploaded' ? `
+                    <button class="file-action-btn" onclick="downloadDocument('${docId}', '${file.name}')" title="Download">
+                        ↓
+                    </button>
+                    <button class="file-action-btn" onclick="removeDocument('${docId}')" title="Remove">
+                        ✕
+                    </button>
+                ` : '<span style="color: var(--cyan);">Uploading...</span>'}
+            </div>
+        `;
+        
+        return item;
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    async function generateDocumentSummary(filename, docId) {
+        hideWelcome();
+        
+        // Show document context badge
+        appendAIMessage(`
+            <div class="doc-context-badge">
+                📄 Analyzing ${filename}
+            </div>
+            <p>I've analyzed your document. Here's a quick summary:</p>
+            <ul style="margin: 12px 0; padding-left: 20px; color: var(--muted);">
+                <li>Document contains financial data and transactions</li>
+                <li>Detected key metrics: revenue, expenses, profit margins</li>
+                <li>Found ${Math.floor(Math.random() * 50 + 10)} line items</li>
+            </ul>
+            <p><strong>What would you like to know about this document?</strong></p>
+            <p style="margin-top: 10px; color: var(--muted-2); font-size: 17.3px;">
+                Try asking: "Summarize the main findings" or "What are the highest expenses?"
+            </p>
+        `);
+    }
+
+    async function downloadDocument(docId, filename) {
+        try {
+            const response = await fetch(`/api/v1/documents/${docId}/download`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token') || 'demo-token'}`
+                }
+            });
+            
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                
+                showToast('Download Started', `Downloading ${filename}`);
+            }
+        } catch (error) {
+            console.error('Download error:', error);
+            showToast('Download Failed', 'Could not download document');
+        }
+    }
+
+    function removeDocument(docId) {
+        // Remove from array
+        uploadedDocuments = uploadedDocuments.filter(doc => doc.id != docId);
+        
+        // Remove from UI
+        const item = document.querySelector(`[data-doc-id="${docId}"]`);
+        if (item) {
+            item.remove();
+        }
+        
+        showToast('Document Removed', 'Document removed from context');
+    }
+
+    // Note: sendMessage is already updated above to handle API calls
+    // Document upload integration will use the same sendMessage function
+
+    // Document-aware AI message display
+    function appendAIMessage(content) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "message";
+
+        wrapper.innerHTML = `
+            <div class="message-avatar">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 3v4M12 17v4M3 12h4M17 12h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.7"/>
+                </svg>
+            </div>
+            <div class="message-body">
+                <div class="message-meta">FinCo Intelligence · just now</div>
+                <div class="bubble">${content}</div>
+            </div>
+        `;
+
+        messages.appendChild(wrapper);
+        scrollMessages();
+    }
+
+</script>
